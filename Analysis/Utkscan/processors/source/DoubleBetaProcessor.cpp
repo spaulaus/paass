@@ -16,9 +16,10 @@ namespace dammIds {
     namespace doublebeta {
         const int DD_SINGLESQDC = 0;//!< ID for the singles QDC
         const int DD_QDC = 1; //!< ID for the Bar QDC of the double beta detector
-        const int DD_TDIFF = 2;//!< ID to histo.Plot the Time Difference between ends
-        const int DD_PP = 3;//!< ID to histo.Plot the phase-phase for your favorite bar (0)
+        const int DD_TDIFF = 2;//!< ID to plot the Time Difference between ends
+        const int DD_PP = 3;//!< ID to plot the phase-phase for your favorite bar (0)
         const int DD_QDCTDIFF = 4;//!< QDC vs. TDiff for your favorite bar (0)
+        const int DD_BETAMAXXVAL = 5;//!< Max Value in your favorite beta PMT
     }
 }
 
@@ -35,6 +36,7 @@ void DoubleBetaProcessor::DeclarePlots(void) {
     histo.DeclareHistogram2D(DD_TDIFF, SB, S3, "Location vs. Time Difference");
     histo.DeclareHistogram2D(DD_PP, SC, SC, "Phase vs. Phase - Bar 0 Only");
     histo.DeclareHistogram2D(DD_QDCTDIFF, SC, SE, "TimeDiff vs. Coincident QDC");
+    histo.DeclareHistogram2D(DD_BETAMAXXVAL,SD,S3,"Max Value in the Trace");
 }
 
 bool DoubleBetaProcessor::PreProcess(RawEvent &event) {
@@ -70,13 +72,16 @@ bool DoubleBetaProcessor::PreProcess(RawEvent &event) {
         unsigned int barNum = (*it).first.first;
         histo.Plot(DD_QDC, (*it).second.GetLeftSide().GetTraceQdc(), barNum * 2);
         histo.Plot(DD_QDC, (*it).second.GetRightSide().GetTraceQdc(), barNum * 2 + 1);
-        histo.Plot(DD_TDIFF, (*it).second.GetTimeDifference() * resolution + offset,
-             barNum);
-        if (barNum == 0) {
-            histo.Plot(DD_PP, (*it).second.GetLeftSide().GetPhaseInNs() * resolution,
-                 (*it).second.GetRightSide().GetPhaseInNs() * resolution);
-            histo.Plot(DD_QDCTDIFF,
-                 (*it).second.GetTimeDifference() * resolution + offset,
+        histo.Plot(DD_TDIFF, (*it).second.GetTimeDifference()*resolution + offset, barNum);
+        histo.Plot(DD_BETAMAXXVAL,(*it).second.GetLeftSide().GetMaximumValue(),
+             barNum*2);
+        histo.Plot(DD_BETAMAXXVAL,(*it).second.GetRightSide().GetMaximumValue(),
+             barNum*2+1);
+
+        if(barNum == 0) {
+            histo.Plot(DD_PP, (*it).second.GetLeftSide().GetPhaseInNs()*resolution,
+                 (*it).second.GetRightSide().GetPhaseInNs()*resolution);
+            histo.Plot(DD_QDCTDIFF, (*it).second.GetTimeDifference()*resolution+offset,
                  (*it).second.GetQdc());
         }
     }
