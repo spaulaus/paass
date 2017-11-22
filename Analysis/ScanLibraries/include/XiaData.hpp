@@ -116,11 +116,16 @@ public:
 
     ///@return The upper 16 bits of the external time stamp provided to the
     /// module via the front panel
-    unsigned int GetExternalTimeHigh() const { return externalTimeHigh_; }
+    double GetExternalTimeHigh() const { return externalTimeHigh_; }
 
     ///@return The lower 32 bits of the external time stamp provided to the
     /// module via the front panel
     unsigned int GetExternalTimeLow() const { return externalTimeLow_; }
+
+    ///@return The external time stamp for the channel including all of the CFD information
+    /// when available.
+    double GetExternalTimeStamp() const { return externalTimeStamp_; }
+
 
     ///@return The unique ID of the channel.
     ///We can have a maximum of 208 channels in a crate, the first module (#0) is always in the second slot of the crate, and
