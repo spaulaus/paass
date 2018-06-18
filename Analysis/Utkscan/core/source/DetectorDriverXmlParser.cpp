@@ -42,6 +42,7 @@
 #include "TeenyVandleProcessor.hpp"
 #include "TemplateProcessor.hpp"
 #include "VandleProcessor.hpp"
+#include "ExtTSSenderProcessor.hpp"
 
 //These headers are for handling experiment specific processing.
 #include "Anl1471Processor.hpp"
@@ -148,6 +149,13 @@ vector<EventProcessor *> DetectorDriverXmlParser::ParseProcessors(const pugi::xm
             vecProcess.push_back(new E11027Processor());
         } else if (name == "TemplateExpProcessor") {
             vecProcess.push_back(new TemplateExpProcessor());
+        } else if (name == "ExtTSSenderProcessor") {
+            vecProcess.push_back(new ExtTSSenderProcessor(
+                    processor.attribute("type").as_string("pspmpt:dynode"),
+                    processor.attribute("host").as_string("localhost"),
+                    processor.attribute("tag").as_string("beta"),
+                    processor.attribute("port").as_int(12345),
+                    processor.attribute("buffSize").as_uint(64)));
         } else if (name == "Anl1471Processor") {
             vecProcess.push_back(new Anl1471Processor());
         } else if (name == "IS600Processor") {
@@ -194,7 +202,7 @@ vector<TraceAnalyzer *> DetectorDriverXmlParser::ParseAnalyzers(const pugi::xml_
         } else {
             stringstream ss;
             ss << "DetectorDriverXmlParser: Unknown analyzer : " << name;
-            throw PaassException(ss.str());
+            throw GeneralException(ss.str());
         }
         PrintAttributeMessage(analyzer);
     }
