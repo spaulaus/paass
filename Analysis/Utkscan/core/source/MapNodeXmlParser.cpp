@@ -32,6 +32,8 @@ void MapNodeXmlParser::ParseNode(DetectorLibrary *lib) {
         throw invalid_argument("TraceDelay must be set and greater than 0; This goes the map node head, near the verbose flag");
 
     int globalModFreq = map.attribute("frequency").as_int(-1);
+    if (globalModFreq <0)
+        throw GeneralException("MapNodeXmlParser::ParseNode : Global Frequency must be set");
 
     TreeCorrelator *tree = TreeCorrelator::get();
 
@@ -64,7 +66,7 @@ void MapNodeXmlParser::ParseNode(DetectorLibrary *lib) {
                 messenger_.detail(sstream_.str(),1);
                 sstream_.str("");
             }
-            sstream_ << "Module " << module_number << " Trace Delay= " << module_TdelayNs<<" ns";
+            sstream_ << "Module " << module_number << " Trace Delay = " << module_TdelayNs<<" ns";
             messenger_.detail(sstream_.str(),2);
             sstream_.str("");
         }
