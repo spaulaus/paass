@@ -200,6 +200,11 @@ public:
     ///@param[in] a : The value to set
     void SetExternalTimeLow(const unsigned int &a) { externalTimeLow_ = a; }
 
+    ///@brief Sets the external time stamp
+    ///@param[in] a : The value to set
+    void SetExternalTimeStamp(const unsigned long long &a) { externalTimeStamp_ = a; }
+
+
     ///@brief Sets if we had a pileup found on-board
     ///@param[in] a : The value to set
     void SetPileup(const bool &a) { isPileup_ = a; }
