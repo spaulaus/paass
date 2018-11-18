@@ -27,9 +27,18 @@ namespace dammIds {
         const int DD_POS_LOW = 1;
         const int DD_POS_HIGH = 2;
         const int DD_PLASTIC_EN = 3;
+        const int DD_MULTI = 4;
         const int D_TRANS_EFF_YSO = 10;
         const int DD_SEPAR_GATED_LOW = 11;
+        const int DD_DESI_GATED_LOW = 12;
+        const int D_DESI_ENERGY = 15;
+        const int D_DESI_YSO_GATED = 16;
+        const int DD_SEPAR_ENERGY = 17;
+        const int DD_SEPAR_YSO_GATED = 18;
 
+        const int DD_POS_ION = 20;
+        const int DD_SEPAR_GATED_ION = 21;
+        const int DD_DESI_GATED_ION = 22;
     }
 }
 
@@ -38,9 +47,18 @@ void PspmtProcessor::DeclarePlots(void) {
     histo.DeclareHistogram2D(DD_POS_LOW, SB, SB, "Low-gain Positions");
     histo.DeclareHistogram2D(DD_POS_HIGH, SB, SB, "High-gain Positions");
     histo.DeclareHistogram2D(DD_PLASTIC_EN,SD,S4, "Plastic Energy, 0-3 = VETO, 5-8 = Ion Trigger");
-    histo.DeclareHistogram2D(DD_SEPAR_GATED_LOW, SB, SB, "Separator-gated low-gain Positions");
-    histo.DeclareHistogram1D(D_TRANS_EFF_YSO, S2, "F11 events (0) in ion scint (1), YSO (2), and veto (3)");
-    histo.DeclareHistogram2D(DD_SEPAR_GATED_LOW, SB, SB, "Separator-gated high-gain Positions");
+    histo.DeclareHistogram2D(DD_MULTI,S3,S3, "Dynode:Anode(+2) Multi Low gain 0, High gain 1");
+    histo.DeclareHistogram1D(D_TRANS_EFF_YSO, S3, "Separator events (0) in ion scint (1), YSO (2), and veto (3)");
+    histo.DeclareHistogram2D(DD_SEPAR_GATED_LOW, SB, SB, "Separator-gated low-gain positions");
+    histo.DeclareHistogram2D(DD_DESI_GATED_LOW, SB, SB, "Silicon dE-gated low-gain positions");
+    histo.DeclareHistogram1D(D_DESI_ENERGY, SC, "Separator-gated dE-silicon events");
+    histo.DeclareHistogram1D(D_DESI_YSO_GATED, SC, "YSO-gated dE-silicon");
+    histo.DeclareHistogram2D(DD_SEPAR_ENERGY, S2, SC, "dE-silicon-gated separator events");
+    histo.DeclareHistogram2D(DD_SEPAR_YSO_GATED, S2, SC, "YSO-gated separator events");
+
+    histo.DeclareHistogram2D(DD_POS_ION, SB, SB, "Ion-scint positions - ungated");
+    histo.DeclareHistogram2D(DD_SEPAR_GATED_ION, SB, SB, "Ion-scint positions - separator-gated");
+    histo.DeclareHistogram2D(DD_DESI_GATED_ION, SB, SB, "Ion-scint positions - silicon dE-gated");
 }
 
 PspmtProcessor::PspmtProcessor(const std::string &vd, const double &scale, const unsigned int &offset,
@@ -79,7 +97,7 @@ bool PspmtProcessor::PreProcess(RawEvent &event){
 
     static const vector<ChanEvent *> &veto =  event.GetSummary("pspmt:veto")->GetList();
     static const vector<ChanEvent *> &ionTrig =  event.GetSummary("pspmt:ion")->GetList();
-    static const vector<ChanEvent *> &desi = event.GetSummary("generic:de_si")->GetList();
+    static const vector<ChanEvent *> &desi = event.GetSummary("generic:desi")->GetList();
     static const vector<ChanEvent *> &separatorScint = event.GetSummary("generic:f11")->GetList();
 
     //Plot Dynode QDCs
@@ -123,6 +141,12 @@ bool PspmtProcessor::PreProcess(RawEvent &event){
     double top_l = 0, top_r = 0, bottom_l = 0, bottom_r = 0;
     bool hasPosition_low = false, hasPosition_high = false;
     bool hasPosition_ion = false;
+
+    histo.Plot(DD_MULTI,lowDynode.size(),0);
+    histo.Plot(DD_MULTI,hiDynode.size(),1);
+
+    histo.Plot(DD_MULTI,lowAnode.size(),2);
+    histo.Plot(DD_MULTI,hiAnode.size(),3);
 
     for(vector<ChanEvent *>::const_iterator it = lowAnode.begin(); it != lowAnode.end(); it++){
         //check signals energy vs threshold
@@ -197,8 +221,8 @@ bool PspmtProcessor::PreProcess(RawEvent &event){
         hasPosition_ion = true;
         position_ion.first = (top_l + bottom_l - top_r - bottom_r) / (top_l + top_r + bottom_l + bottom_r);
         position_ion.second  = (top_l + top_r - bottom_l - bottom_r) / (top_l + top_r + bottom_l + bottom_r);
-       // plot(DD_POS_ION, position_ion.first * positionScale_ + positionOffset_,
-       //      position_ion.second * positionScale_ + positionOffset_);
+        histo.Plot(DD_POS_ION, position_ion.first * positionScale_ + positionOffset_,
+             position_ion.second * positionScale_ + positionOffset_);
     }
 
 
@@ -207,37 +231,87 @@ bool PspmtProcessor::PreProcess(RawEvent &event){
     //----------------------------------------------------------------------------
     //------------Check Transmission efficiencies---------------------------------
 
-        //check for valid upstream events, ion scint events, and vetos for gating
-    bool hasUpstream = false, hasVeto = false;
+        //check for valid upstream events, dE silicon events, and vetos for gating
+    bool hasUpstream = false, hasDeSi = false, hasVeto = false;
     for(auto it = separatorScint.begin(); it != separatorScint.end(); it++){
-        if ((*it)->GetEnergy() > 10 && (*it)->GetEnergy() < 1000){
+        if ((*it)->GetCalibratedEnergy() > 1 && (*it)->GetCalibratedEnergy() < 10000){
             hasUpstream = true;
             break;
         }
     }
+
+    for (auto it = desi.begin(); it != desi.end(); it++){
+        if((*it)->GetCalibratedEnergy() > 1 && (*it)->GetCalibratedEnergy() < 10000){
+            hasDeSi = true;
+            break;
+        }
+    }
+
     for(auto it = veto.begin(); it != veto.end(); it++){
-        if ((*it)->GetEnergy() > 10 && (*it)->GetEnergy() < 1000){
+        if ((*it)->GetCalibratedEnergy() > 1 && (*it)->GetCalibratedEnergy() < 10000){
             hasVeto = true;
             break;
         }
     }
 
 
-        //plot valid YSO positions gated on upstream events
+        //plot valid YSO positions and dE silicon events gated on upstream events
+        //plot upstream events gated on dE silicon
         //plot transmission efficiency from upstream to YSO and veto
 
-    if(hasUpstream && hasPosition_low) {
-        plot(DD_SEPAR_GATED_LOW, position_low.first, position_low.second);
-
+    if(hasUpstream) {
+        for(auto de_it = desi.begin(); de_it != desi.end(); de_it++) {
+            histo.Plot(D_DESI_ENERGY,(*de_it)->GetCalibratedEnergy());
+        }
+        if(hasPosition_low){
+            histo.Plot(DD_SEPAR_GATED_LOW, position_low.first * positionScale_ + positionOffset_,
+                    position_low.second * positionScale_ + positionOffset_);
+        }
+        if(hasPosition_ion){
+            histo.Plot(DD_SEPAR_GATED_ION, position_ion.first * positionScale_ + positionOffset_,
+                    position_ion.second * positionScale_ + positionOffset_);
+        }
     }
+
+    if(hasDeSi) {
+        for (auto it_sep = separatorScint.begin(); it_sep != separatorScint.end(); it_sep++) {
+            if ((*it_sep)->GetChanID().HasTag("left")) {
+                histo.Plot(DD_SEPAR_ENERGY, (*it_sep)->GetCalibratedEnergy(), 0);
+            } else if ((*it_sep)->GetChanID().HasTag("right")) {
+                histo.Plot(DD_SEPAR_ENERGY, (*it_sep)->GetCalibratedEnergy(), 1);
+            }
+        }
+
+        if (hasPosition_low) {
+            histo.Plot(DD_DESI_GATED_LOW, position_low.first * positionScale_ + positionOffset_,
+                 position_low.second * positionScale_ + positionOffset_);
+        }
+        if (hasPosition_ion) {
+            histo.Plot(DD_DESI_GATED_ION, position_ion.first * positionScale_ + positionOffset_,
+                 position_ion.second * positionScale_ + positionOffset_);
+        }
+    }
+
+    if(hasPosition_low){
+        for(auto de_it = desi.begin(); de_it != desi.end(); de_it++) {
+            histo.Plot(D_DESI_YSO_GATED,(*de_it)->GetCalibratedEnergy());
+        }
+        for (auto it_sep = separatorScint.begin(); it_sep != separatorScint.end(); it_sep++) {
+            if ((*it_sep)->GetChanID().HasTag("left")) {
+                histo.Plot(DD_SEPAR_YSO_GATED, (*it_sep)->GetCalibratedEnergy(), 0);
+            } else if ((*it_sep)->GetChanID().HasTag("right")) {
+                histo.Plot(DD_SEPAR_YSO_GATED, (*it_sep)->GetCalibratedEnergy(), 1);
+            }
+    }
+
     if(hasUpstream)
-        plot(D_TRANS_EFF_YSO, 0);
+        histo.Plot(D_TRANS_EFF_YSO, 0);
     if(hasUpstream && hasPosition_ion)
-        plot(D_TRANS_EFF_YSO, 1);
+        histo.Plot(D_TRANS_EFF_YSO, 1);
     if(hasUpstream && hasPosition_low)
-        plot(D_TRANS_EFF_YSO, 2);
+        histo.Plot(D_TRANS_EFF_YSO, 2);
     if (hasUpstream && hasVeto)
-        plot(D_TRANS_EFF_YSO, 3);
+        histo.Plot(D_TRANS_EFF_YSO, 3);
 
 
 
@@ -304,6 +378,7 @@ pair<double, double> PspmtProcessor::CalculatePosition(double &xa, double &xb, d
         case UNKNOWN:
         default:
             cerr<<"We recieved a VD_TYPE we didn't recognize " << vdtype << endl;
+
     }
     return make_pair(x, y);
 }
