@@ -302,6 +302,7 @@ bool PspmtProcessor::PreProcess(RawEvent &event){
             } else if ((*it_sep)->GetChanID().HasTag("right")) {
                 histo.Plot(DD_SEPAR_YSO_GATED, (*it_sep)->GetCalibratedEnergy(), 1);
             }
+        }
     }
 
     if(hasUpstream)
