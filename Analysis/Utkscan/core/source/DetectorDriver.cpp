@@ -16,6 +16,7 @@
 #include "RawEvent.hpp"
 #include "TraceAnalyzer.hpp"
 #include "TreeCorrelator.hpp"
+#include "../../../../install/include/ProcessorRootStruc.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -191,12 +192,20 @@ void DetectorDriver::ProcessEvent(RawEvent &rawev) {
 
             EventData data(time, energy, location);
             TreeCorrelator::get()->place(place)->activate(data);
-            if (innerEvtCounter == 0){
-                eventFirstTime_= (*it)->GetTimeSansCfd(); //sets the time of the first det event in the pixie event
+            if (innerEvtCounter == 0) {
+                eventFirstTime_ = (*it)->GetTimeSansCfd(); //sets the time of the first det event in the pixie event
             }
-            if ((*it)->GetChanID().HasTag("ets"))
-                pixie_tree_event_.externalTS = (*it)->GetExternalTimeStamp();
-
+            if ((*it)->GetChanID().HasTag("ets1")) {
+                pixie_tree_event_.externalTS1 = (*it)->GetExternalTimeStamp();
+            }
+            if ((*it)->GetChanID().HasTag("ets2")){
+                pixie_tree_event_.externalTS2 = (*it)->GetExternalTimeStamp();
+            }
+            if(pixie_tree_event_.externalTS2 != 0 && pixie_tree_event_.externalTS1 !=0 ) {
+                plot(D_INTERNAL_TS_CHECK, ((pixie_tree_event_.externalTS1 - pixie_tree_event_.externalTS2) + 1000));
+            }else {
+                plot(D_INTERNAL_TS_CHECK,100);
+            }
             innerEvtCounter++;
         }
 
@@ -354,12 +363,12 @@ int DetectorDriver::ThreshAndCal(ChanEvent *chan, RawEvent &rawev) {
 }
 
 int DetectorDriver::PlotRaw(const ChanEvent *chan) {
-    histo_.Plot(D_RAW_ENERGY + chan->GetID(), chan->GetEnergy());
+    plot(D_RAW_ENERGY + chan->GetID(), chan->GetEnergy());
     return (0);
 }
 
 int DetectorDriver::PlotCal(const ChanEvent *chan) {
-    histo_.Plot(D_CAL_ENERGY + chan->GetID(), chan->GetCalibratedEnergy());
+    plot(D_CAL_ENERGY + chan->GetID(), chan->GetCalibratedEnergy());
     return (0);
 }
 
