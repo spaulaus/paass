@@ -16,7 +16,7 @@
 #include "RawEvent.hpp"
 #include "TraceAnalyzer.hpp"
 #include "TreeCorrelator.hpp"
-#include "../../../../install/include/ProcessorRootStruc.hpp"
+#include "ProcessorRootStruc.hpp"
 
 #include <algorithm>
 #include <fstream>
