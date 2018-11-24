@@ -327,6 +327,9 @@ int DetectorDriver::ThreshAndCal(ChanEvent *chan, RawEvent &rawev) {
         //Saves the time in nanoseconds
         chan->SetHighResTime((trace.GetPhase() * Globals::get()->GetAdcClockInSeconds() +
                 chan->GetFilterTime() * Globals::get()->GetFilterClockInSeconds()) * 1e9);
+
+        //Plot max Value in trace post trace analysis
+        plot(DD_TRACE_MAX,trace.GetMaxInfo().second,id);
     } else {
         /// otherwise, use the Pixie on-board calculated energy and high res
         /// time is zero.
