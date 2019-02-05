@@ -235,7 +235,9 @@ void DetectorDriver::ProcessEvent(RawEvent &rawev) {
         throw;
     }
     if (sysrootbool_) {
-        FillLogicStruc();
+        if(fillLogic_) {
+            FillLogicStruc();
+        }
         pixie_tree_event_.eventNum = eventNumber_;
         pixie_tree_event_.fileName = Globals::get()->GetOutputFileName();
         PTree->Fill();
