@@ -35,6 +35,7 @@ install/
 *.layout
 *.save
 .idea/
+.vscode
 
 #DAMM files
 *.drr
