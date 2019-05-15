@@ -45,7 +45,7 @@ public:
     ///@return location_
     unsigned int GetLocation() const;
 
-    ///return the frequency for this channel
+    ///@return the frequency for this channel
     int GetModFreq() const { return modFreq_ ; }
 
     ///@return The channel place name : type_subtype_location

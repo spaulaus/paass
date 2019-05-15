@@ -47,15 +47,17 @@ FittingAnalyzer::~FittingAnalyzer() {
 void FittingAnalyzer::Analyze(Trace &trace, const ChannelConfiguration &cfg) {
     TraceAnalyzer::Analyze(trace, cfg);
 
-    if (trace.IsSaturated() || trace.empty() || !trace.HasValidAnalysis()) {
+    if (trace.IsSaturated() || trace.empty() || !trace.HasValidWaveformAnalysis()) {
         trace.SetPhase(0.0);
+        trace.SetHasValidFitAnalysis(false);
         EndAnalyze();
         return;
     }
     if (ignoredTypes_.find(cfg.GetType()) != ignoredTypes_.end() || 
     ignoredTypes_.find(cfg.GetType() + ":" + cfg.GetSubtype()) != ignoredTypes_.end() ||
-    ignoredTypes_.find(cfg.GetType() + ":" + cfg.GetSubtype() + ":" + cfg.GetGroup()) != ignoredTypes_.end()){
+    ignoredTypes_.find(cfg.GetType() + ":" + cfg.GetSubtype() + ":" + cfg.GetGroup()) != ignoredTypes_.end()) {
         trace.SetPhase(0.0);
+        trace.SetHasValidFitAnalysis(false);
         EndAnalyze();
         return;
     }
@@ -69,5 +71,6 @@ void FittingAnalyzer::Analyze(Trace &trace, const ChannelConfiguration &cfg) {
 
     trace.SetPhase(driver_->CalculatePhase(trace.GetWaveform(), timingConfiguration, trace.GetMaxInfo(),
                                            trace.GetBaselineInfo()) + trace.GetMaxInfo().first);
+    trace.SetHasValidFitAnalysis(true);
     EndAnalyze();
 }
