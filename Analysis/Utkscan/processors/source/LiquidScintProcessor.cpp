@@ -44,11 +44,12 @@ void LiquidScintProcessor::DeclarePlots(void) {
      * copied as is. */
 
     //To handle Liquid Scintillators
-    // histo.DeclareHistogram2D(DD_TQDCLIQUID, SC, S3, "Liquid vs. Trace QDC");
-    // histo.DeclareHistogram2D(DD_MAXLIQUID, SC, S3, "Liquid vs. Maximum");
+    histo.DeclareHistogram2D(DD_TQDCLIQUID, SC, S3, "Liquid vs. Trace QDC");
+    histo.DeclareHistogram2D(DD_MAXLIQUID, SC, S3, "Liquid vs. Maximum");
     // histo.DeclareHistogram2D(DD_DISCRIM, SA, S3, "N-Gamma Discrimination");
-    // histo.DeclareHistogram2D(DD_TOFLIQUID, SE, S3,"Liquid vs. TOF");
+    histo.DeclareHistogram2D(DD_TOFLIQUID, SE, S3,"Liquid vs. TOF");
     // histo.DeclareHistogram2D(DD_TRCLIQUID, S7, S7, "LIQUID TRACES");
+    histo.DeclareHistogram2D(DD_TQDCVSLIQTOF, SC, SE, "Trace QDC vs. Liquid TOF");
 
     // for(unsigned int i=0; i < 2; i++) {
     // 	histo.DeclareHistogram2D(DD_TQDCVSDISCRIM+i, SA, SE,"Trace QDC vs. NG Discrim");
@@ -132,9 +133,9 @@ bool LiquidScintProcessor::Process(RawEvent &event) {
                 HighResTimingData start(*(*itStart));
                 int histLoc = loc + startLoc;
                 const int resMult = 2;
-                const int resOffset = 2000;
+                const int resOffset = 1000;
 
-                if (start.GetIsValid()) {
+                if (start.GetIsValid() || (*itStart)->GetChanID().HasTag("ocfd")) {
                     double startTime;
                     //! Set the start time in ns. needed because WalkCorTime without fitting is in GetTime() Ticks
                     if ((*itStart)->GetChanID().HasTag("ocfd")){
@@ -145,11 +146,18 @@ bool LiquidScintProcessor::Process(RawEvent &event) {
                     double TOF = liquid.GetHighResTimeInNs() - startTime - cal.GetTofOffset(startLoc);;
 
                     histo.Plot(DD_TOFLIQUID, TOF * resMult + resOffset, histLoc);
-                    histo.Plot(DD_TOFVSDISCRIM + histLoc,
-                         discrimNorm * discRes + discOffset,
-                         TOF * resMult + resOffset);
-                    histo.Plot(DD_TQDCVSLIQTOF + histLoc, TOF * resMult + resOffset,
-                         liquid.GetTraceQdc());
+                    histo.Plot(DD_TOFVSDISCRIM + histLoc, discrimNorm * discRes + discOffset, TOF * resMult + resOffset);
+                    histo.Plot(DD_TQDCVSLIQTOF, TOF * resMult + resOffset, liquid.GetTraceQdc());
+
+                    if (DetectorDriver::get()->GetSysRootOutput()) {
+                        LSstruc.qdc = liquid.GetTrace().GetQdc();
+                        LSstruc.tof = TOF;
+                        LSstruc.sTime = startTime;
+                        LSstruc.barType = liquid.GetChanID().GetSubtype();
+                        LSstruc.barNum = liquid.GetChanID().GetLocation();
+                        pixie_tree_event_->vandle_vec_.emplace_back(LSstruc);
+                        LSstruc = processor_struct::VANDLES_DEFAULT_STRUCT;
+                    }
                 }
             }
         }
