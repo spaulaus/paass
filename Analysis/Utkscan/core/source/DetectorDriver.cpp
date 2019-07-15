@@ -125,7 +125,7 @@ DetectorDriver::DetectorDriver() : histo_(OFFSET, RANGE, "DetectorDriver") {
                 auto PSPMTheader = ((PspmtProcessor *) GetProcessor("PspmtProcessor"))->GetPSPMTHeader();
                 TNamed vdType_("vdType",PSPMTheader.first);
                 vdType_.Write();
-                TNamed Thresh("softThresh",PSPMTheader.second);
+                TNamed softThresh("softThresh",PSPMTheader.second);
                 softThresh.Write();
             } else if ((*itp) == "LogicProcessor") {
                 fillLogic_ = true;

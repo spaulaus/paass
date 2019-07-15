@@ -58,9 +58,10 @@
 #include <TH2.h>
 #include "CloverProcessor.hpp"
 #include "GammaScintProcessor.hpp"
-#include "VandleProcessor.hpp"
 #include "ProcessorRootStruc.hpp"
 #include "PspmtProcessor.hpp"
+#include "SingleBetaProcessor.hpp"
+#include "VandleProcessor.hpp"
 
 class Calibration;
 
