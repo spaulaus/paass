@@ -180,7 +180,7 @@ void DetectorDriver::ProcessEvent(RawEvent &rawev) {
     if (sysrootbool_) {
 	pixie_tree_event_.Reset();
     }
-    histo_.Plot(dammIds::raw::D_NUMBER_OF_EVENTS, dammIds::GENERIC_CHANNEL);
+    plot(dammIds::raw::D_NUMBER_OF_EVENTS, dammIds::GENERIC_CHANNEL);
     try {
         int innerEvtCounter=0;
         for (vector<ChanEvent *>::const_iterator it = rawev.GetEventList().begin(); it != rawev.GetEventList().end(); ++it) {
@@ -276,6 +276,14 @@ void DetectorDriver::DeclarePlots() {
             histo_.DeclareHistogram1D(D_BUFFER_END_TIME,SE, "Buffer Length in ns");
 
             DetectorLibrary *modChan = DetectorLibrary::get();
+            DeclareHistogram1D(D_NUMBER_OF_EVENTS, S4, "event counter");
+            DeclareHistogram1D(D_HAS_TRACE, S8, "channels with traces");
+            DeclareHistogram2D(DD_TRACE_MAX,SD, S8, "Max Value in Trace vs Chan Num");
+            DeclareHistogram1D(D_SUBEVENT_GAP, SE, "Time Between Channels in 10 ns / bin");
+            DeclareHistogram1D(D_EVENT_LENGTH, SE, "Event Length in ns");
+            DeclareHistogram1D(D_EVENT_GAP, SE, "Time Between Events in ns");
+            DeclareHistogram1D(D_EVENT_MULTIPLICITY, S7, "Number of Channels Event");
+            DeclareHistogram1D(D_BUFFER_END_TIME, SE, "Buffer Length in ns");
             DetectorLibrary::size_type maxChan = modChan->size();
 
             for (DetectorLibrary::size_type i = 0; i < maxChan; i++) {
@@ -330,6 +338,13 @@ int DetectorDriver::ThreshAndCal(ChanEvent *chan, RawEvent &rawev) {
         for (vector<TraceAnalyzer *>::iterator it = vecAnalyzer.begin(); it != vecAnalyzer.end(); it++)
             (*it)->Analyze(trace, chanCfg);
 
+
+        if(chan->GetTrace().HasValidWaveformAnalysis()){
+        histo_Plot(D_HAS_TRACE_2,id);
+        }
+        if(chan->GetTrace().HasValidFitAnalysis()){
+        histo_Plot(D_HAS_TRACE_3,id);
+        }
         //We are going to handle the filtered energies here.
         vector<double> filteredEnergies = trace.GetFilteredEnergies();
         if (filteredEnergies.empty()) {
