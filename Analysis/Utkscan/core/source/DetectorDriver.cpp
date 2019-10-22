@@ -274,18 +274,9 @@ void DetectorDriver::DeclarePlots() {
             histo_.DeclareHistogram1D(D_EVENT_GAP, SE, "Time Between Events in ns");
             histo_.DeclareHistogram1D(D_EVENT_MULTIPLICITY, S7, "Number of Channels Event");
             histo_.DeclareHistogram1D(D_BUFFER_END_TIME,SE, "Buffer Length in ns");
+            histo_.DeclareHistogram2D(DD_TRACE_MAX,SD, S8, "Max Value in Trace vs Chan Num");
 
-            DetectorLibrary *modChan = DetectorLibrary::get();
-            DeclareHistogram1D(D_NUMBER_OF_EVENTS, S4, "event counter");
-            DeclareHistogram1D(D_HAS_TRACE, S8, "channels with traces");
-            DeclareHistogram2D(DD_TRACE_MAX,SD, S8, "Max Value in Trace vs Chan Num");
-            DeclareHistogram1D(D_SUBEVENT_GAP, SE, "Time Between Channels in 10 ns / bin");
-            DeclareHistogram1D(D_EVENT_LENGTH, SE, "Event Length in ns");
-            DeclareHistogram1D(D_EVENT_GAP, SE, "Time Between Events in ns");
-            DeclareHistogram1D(D_EVENT_MULTIPLICITY, S7, "Number of Channels Event");
-            DeclareHistogram1D(D_BUFFER_END_TIME, SE, "Buffer Length in ns");
             DetectorLibrary::size_type maxChan = modChan->size();
-
             for (DetectorLibrary::size_type i = 0; i < maxChan; i++) {
                 if (!modChan->HasValue(i))
                     continue;
@@ -340,10 +331,10 @@ int DetectorDriver::ThreshAndCal(ChanEvent *chan, RawEvent &rawev) {
 
 
         if(chan->GetTrace().HasValidWaveformAnalysis()){
-        histo_Plot(D_HAS_TRACE_2,id);
+        histo_.Plot(D_HAS_TRACE_2,id);
         }
         if(chan->GetTrace().HasValidFitAnalysis()){
-        histo_Plot(D_HAS_TRACE_3,id);
+        histo_.Plot(D_HAS_TRACE_3,id);
         }
         //We are going to handle the filtered energies here.
         vector<double> filteredEnergies = trace.GetFilteredEnergies();
@@ -359,7 +350,7 @@ int DetectorDriver::ThreshAndCal(ChanEvent *chan, RawEvent &rawev) {
                 chan->GetFilterTime() * Globals::get()->GetFilterClockInSeconds()) * 1e9);
 
         //Plot max Value in trace post trace analysis
-        plot(DD_TRACE_MAX,trace.GetMaxInfo().second,id);
+        histo_.Plot(DD_TRACE_MAX,trace.GetMaxInfo().second,id);
     } else {
         /// otherwise, use the Pixie on-board calculated energy and high res
         /// time is zero.
@@ -397,12 +388,12 @@ int DetectorDriver::ThreshAndCal(ChanEvent *chan, RawEvent &rawev) {
 }
 
 int DetectorDriver::PlotRaw(const ChanEvent *chan) {
-    plot(D_RAW_ENERGY + chan->GetID(), chan->GetEnergy());
+    histo_.Plot(D_RAW_ENERGY + chan->GetID(), chan->GetEnergy());
     return (0);
 }
 
 int DetectorDriver::PlotCal(const ChanEvent *chan) {
-    plot(D_CAL_ENERGY + chan->GetID(), chan->GetCalibratedEnergy());
+    histo_.Plot(D_CAL_ENERGY + chan->GetID(), chan->GetCalibratedEnergy());
     return (0);
 }
 
