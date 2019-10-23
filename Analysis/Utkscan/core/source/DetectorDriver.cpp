@@ -16,7 +16,6 @@
 #include "RawEvent.hpp"
 #include "TraceAnalyzer.hpp"
 #include "TreeCorrelator.hpp"
-#include "ProcessorRootStruc.hpp"
 
 #include <algorithm>
 #include <fstream>

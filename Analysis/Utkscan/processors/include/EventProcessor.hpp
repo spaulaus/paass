@@ -13,7 +13,7 @@
 
 #include "Plots.hpp"
 #include "TreeCorrelator.hpp"
-#include "ProcessorRootStruc.hpp"
+#include "PaassRootStruct.hpp"
 
 // forward declarations
 class DetectorSummary;
