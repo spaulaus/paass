@@ -826,9 +826,9 @@ void Poll::CommandControl(){
                 }
             }
             else{
-                ofile.open("./Fallback.set");
+                ofile.open("./Param_Dump.txt");
                 if(!ofile.good()){
-                    std::cout << sys_message_head << "Failed to open output file './Fallback.set'\n";
+                    std::cout << sys_message_head << "Failed to open output file './Param_Dump.txt'\n";
                     continue;
                 }
             }
@@ -961,7 +961,7 @@ void Poll::CommandControl(){
             }
             else {
                 std::cout << sys_message_head << "Invalid number of parameters to save\n";
-                std::cout << sys_message_head << " -SYNTAX- save [setFilename]\n";
+                std::cout << sys_message_head << " -SYNTAX- save [setFilename].set\n";
                 continue;
             }
         }
