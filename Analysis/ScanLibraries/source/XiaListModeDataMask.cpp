@@ -102,7 +102,7 @@ pair<unsigned int, unsigned int> XiaListModeDataMask::GetCfdFractionalTimeMask()
 }
 
 std::pair<unsigned int, unsigned int> XiaListModeDataMask::GetEventLengthMask()
-const {
+    const {
     if (firmware_ == UNKNOWN)
         throw invalid_argument(BadMaskErrorMessage("GetEventLengthMask"));
     unsigned int mask = 0;
@@ -248,6 +248,7 @@ pair<unsigned int, unsigned int> XiaListModeDataMask::GetTraceOutOfRangeFlagMask
             mask = 0x00008000;
             bit = 15;
             break;
+        case R35207:
         case R34688:
             mask = 0x80000000;
             bit = 31;
@@ -260,7 +261,7 @@ pair<unsigned int, unsigned int> XiaListModeDataMask::GetTraceOutOfRangeFlagMask
 
 //Trace Length always starts on bit 16 of Word 3.
 pair<unsigned int, unsigned int> XiaListModeDataMask::GetTraceLengthMask()
-const {
+    const {
     if (firmware_ == UNKNOWN || frequency_ == 0)
         throw invalid_argument(BadMaskErrorMessage("GetTraceLengthMask"));
     unsigned int mask = 0;
@@ -274,6 +275,7 @@ const {
         case R30981:
             mask = 0xFFFF0000;
             break;
+        case R35207:
         case R34688:
             mask = 0x7FFF0000;
             break;
