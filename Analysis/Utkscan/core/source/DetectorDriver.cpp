@@ -325,6 +325,10 @@ int DetectorDriver::ThreshAndCal(ChanEvent *chan, RawEvent &rawev) {
     if (!trace.empty()) {
         histo_.Plot(D_HAS_TRACE, id);
 
+        //!Setting these to false initally so that we can guarante that its false either if we are ignored or if it fails in the analyzers.
+        chan->GetTrace().SetHasValidWaveformAnalysis(false);
+        chan->GetTrace().SetHasValidTimingAnalysis(false);
+
         for (vector<TraceAnalyzer *>::iterator it = vecAnalyzer.begin(); it != vecAnalyzer.end(); it++){
             if (!(*it)->IsIgnoredDetector(chanCfg)){
                 (*it)->Analyze(trace, chanCfg);
