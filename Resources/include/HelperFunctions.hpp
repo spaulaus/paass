@@ -487,11 +487,15 @@ namespace TraceFunctions {
 }
 
 namespace IeeeStandards {
-    ///This function converts an IEEE Floating Point number into a standard decimal format. This function was stolen almost
-    /// verbatim from utilities.c provided by XIA. This data format is used by XIA to store both TAU and the Baseline. Magic
-    /// numbers abound since we're literally following a prescription on how this information is stored.
+    ///This function converts an IEEE Floating Point number into a standard
+    /// decimal format. This function was stolen almost verbatim from
+    /// utilities.c provided by XIA. This data format is used by XIA to store
+    /// both TAU and the Baseline. Magic numbers abound since we're
+    /// literally following a prescription on how this information is
+    /// stored.
     ///https://en.wikipedia.org/wiki/IEEE_floating_point#IEEE_754-2008
-    ///@param[in] IeeeFloatingNumber : The IEEE Floating point number that we want to convert to decimal
+    ///@param[in] IeeeFloatingNumber : The IEEE Floating point number that we
+    /// want to convert to decimal
     ///@return The decimal number that's been decoded from the input.
     inline double IeeeFloatingToDecimal(const unsigned int &IeeeFloatingNumber) {
         short signbit = (short) (IeeeFloatingNumber >> 31);
