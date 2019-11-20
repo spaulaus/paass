@@ -713,6 +713,16 @@ bool Poll::SplitParameterArgs(const std::string &arg, int &start, int &stop) {
     }
     return true;
 }
+
+/// This method checks that the entered module is actually installed in the crate.
+bool Poll::IsValidModule(const int &modNum){
+    if (modNum > (int)n_cards - 1 ) {
+        std::cout << "ERROR: Invalid module: '" << modNum << "'\n";
+        return false;
+    } else {
+        return true;
+    }
+}
 ///////////////////////////////////////////////////////////////////////////////
 // Poll::CommandControl
 ///////////////////////////////////////////////////////////////////////////////
@@ -865,6 +875,9 @@ void Poll::CommandControl(){
                         std::cout << "ERROR: Invalid module argument: '" << arguments.at(0) << "'\n";
                         continue;
                     }
+                    if (!IsValidModule(modStart) || !IsValidModule(modStop) ){
+                        continue;
+                    }
                     int chStart, chStop;
                     if (!SplitParameterArgs(arguments.at(1), chStart, chStop)) {
                         std::cout << "ERROR: Invalid channel argument: '" << arguments.at(1) << "'\n";
@@ -909,6 +922,10 @@ void Poll::CommandControl(){
                     int modStart, modStop;
                     if (!SplitParameterArgs(arguments.at(0), modStart, modStop)) {
                         std::cout << "ERROR: Invalid module argument: '" << arguments.at(0) << "'\n";
+                        continue;
+                    }
+
+                    if (!IsValidModule(modStart) || !IsValidModule(modStop) ){
                         continue;
                     }
 
@@ -986,6 +1003,10 @@ void Poll::CommandControl(){
                         continue;
                     }
 
+                    if (!IsValidModule(modStart) || !IsValidModule(modStop)) {
+                        continue;
+                    }
+
                     ParameterChannelReader reader;
                     for (int mod = modStart; mod <= modStop; mod++) {
                         for (int ch = chStart; ch <= chStop; ch++) {
@@ -1004,6 +1025,10 @@ void Poll::CommandControl(){
                     int modStart, modStop;
                     if (!SplitParameterArgs(arguments.at(0), modStart, modStop)) {
                         std::cout << "ERROR: Invalid module argument: '" << arguments.at(0) << "'\n";
+                        continue;
+                    }
+
+                    if (!IsValidModule(modStart) || !IsValidModule(modStop)) {
                         continue;
                     }
 
@@ -1028,6 +1053,10 @@ void Poll::CommandControl(){
                 int modStart, modStop;
                 if (!SplitParameterArgs(arguments.at(0), modStart, modStop)) {
                     std::cout << "ERROR: Invalid module argument: '" << arguments.at(0) << "'\n";
+                    continue;
+                }
+
+                if (!IsValidModule(modStart) || !IsValidModule(modStop) ) {
                     continue;
                 }
 
@@ -1082,6 +1111,11 @@ void Poll::CommandControl(){
                     std::cout << "ERROR: Invalid module argument: '" << arguments.at(0) << "'\n";
                     continue;
                 }
+
+                if (!IsValidModule(modStart) || !IsValidModule(modStop)  ) {
+                    continue;
+                }
+
                 int chStart, chStop;
                 if (!SplitParameterArgs(arguments.at(1), chStart, chStop)) {
                     std::cout << "ERROR: Invalid channel argument: '" << arguments.at(1) << "'\n";
@@ -1127,7 +1161,8 @@ void Poll::CommandControl(){
             BitFlipper flipper;
 
             if(p_args >= 4){
-                if(!StringManipulation::IsNumeric(arguments.at(0))) {
+                if(!StringManipulation::IsNumeric(arguments.at(0))  ||
+                    !IsValidModule(atoi(arguments.at(0).c_str()))) {
                     std::cout << sys_message_head << "Invalid module specification" << std::endl;
                     continue;
                 } else if(!StringManipulation::IsNumeric(arguments.at(1))) {
