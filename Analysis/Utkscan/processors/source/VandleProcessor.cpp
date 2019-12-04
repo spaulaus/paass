@@ -56,8 +56,8 @@ VandleProcessor::VandleProcessor() : EventProcessor(OFFSET, RANGE, "VandleProces
 }
 
 VandleProcessor::VandleProcessor(const std::vector<std::string> &typeList, const double &res, const double &offset,
-                                 const unsigned int &numStarts, const double &compression/*=1.0*/,const double &qdcmin,
-                                 const double &tofcut, const double &idealFP) :
+                                 const unsigned int &numStarts, const double &compression,const double &qdcmin,
+                                 const double &tofcut, const double &idealFP, const bool &onlyDoubles) :
         EventProcessor(OFFSET,RANGE,"VandleProcessor") {
     associatedTypes.insert("vandle");
     plotMult_ = res;
@@ -66,6 +66,8 @@ VandleProcessor::VandleProcessor(const std::vector<std::string> &typeList, const
     qdcComp_ = compression;
     qdcmin_ = qdcmin;
     tofcut_ = tofcut;
+    idealFP_ = idealFP;
+    onlyDoubles_ = onlyDoubles;
 
     if(typeList.empty())
         requestedTypes_.insert("small");
@@ -132,9 +134,6 @@ bool VandleProcessor::Process(RawEvent &event) {
     if (!EventProcessor::Process(event))
         return false;
 
-    if (DetectorDriver::get()->GetSysRootOutput()) {
-        VanVec.clear();
-    }
     histo.Plot(D_DEBUGGING, 30);
 
     geSummary_ = event.GetSummary("clover");
@@ -198,8 +197,7 @@ void VandleProcessor::AnalyzeBarStarts(const BarDetector &bar, unsigned int &bar
             double corTof = CorrectTOF(tof, bar.GetFlightPath(), idealFP_);
             double NCtof = bar.GetCorTimeAve() - start.GetCorTimeAve() ;
 
-            PlotTofHistograms(tof, corTof,NCtof, bar.GetQdc(), barLoc * numStarts_ + startLoc,
-                              ReturnOffset(bar.GetType()),caled);
+            PlotTofHistograms(tof, corTof,NCtof, bar.GetQdc(), barLoc * numStarts_ + startLoc, ReturnOffset(bar.GetType()),caled);
 
             if (DetectorDriver::get()->GetSysRootOutput()){
                 //Fill Root struct
@@ -246,8 +244,7 @@ void VandleProcessor::AnalyzeStarts(const BarDetector &bar, unsigned int &barLoc
             double corTof = CorrectTOF(tof, bar.GetFlightPath(), idealFP_);
             double NCtof =bar.GetCorTimeAve() - startTime ;
 
-            PlotTofHistograms(tof, corTof, NCtof,bar.GetQdc(), barLoc * numStarts_ + startLoc,
-                              ReturnOffset(bar.GetType()),caled);
+            PlotTofHistograms(tof, corTof, NCtof,bar.GetQdc(), barLoc * numStarts_ + startLoc, ReturnOffset(bar.GetType()),caled);
             if (DetectorDriver::get()->GetSysRootOutput()){
 
                 if (tof>= tofcut_ && bar.GetQdc()>qdcmin_) {
@@ -318,6 +315,7 @@ void VandleProcessor::PlotTofHistograms(const double &tof, const double &cortof,
 void VandleProcessor::FillVandleOnlyHists(void) {
     for (BarMap::const_iterator it = bars_.begin(); it != bars_.end(); it++) {
         TimingDefs::TimingIdentifier barId = (*it).first;
+        BarDetector bar = (*it).second;
         unsigned int OFFSET = ReturnOffset(barId.second).first;
         unsigned int NOCALOFFSET = ReturnOffset(barId.second).second;
         double NoCalTDiff = (*it).second.GetLeftSide().GetHighResTimeInNs()-(*it).second.GetRightSide().GetHighResTimeInNs();
@@ -333,6 +331,21 @@ void VandleProcessor::FillVandleOnlyHists(void) {
 
         if (RDecay_)
             histo.Plot(DD_TDIFF_DECAY+ OFFSET, (*it).second.GetTimeDifference() * plotMult_ + plotOffset_, barId.first);
+        if (DetectorDriver::get()->GetSysRootOutput() && onlyDoubles_) {
+            //Fill Root struct
+            vandles.qdc = bar.GetQdc();
+            vandles.barNum = barId.first;
+
+            vandles.barType = bar.GetType();
+            vandles.tDiff = bar.GetTimeDifference();
+            vandles.qdcPos = bar.GetQdcPosition();
+            vandles.tAvg = bar.GetTimeAverage();
+            vandles.wcTavg = bar.GetCorTimeAve();
+            vandles.wcTdiff = bar.GetCorTimeDiff();
+
+            pixie_tree_event_->vandle_vec_.emplace_back(vandles);
+            vandles = processor_struct::VANDLES_DEFAULT_STRUCT;
+        }
     }
 }
 
