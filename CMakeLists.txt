@@ -46,7 +46,7 @@ endif (CMAKE_BUILD_TYPE MATCHES "Debug")
 include(CMakeDependentOption)
 
 #Install options
-option(PAASS_BUILD_ACQ "Build and install Acquisition software" ON)
+option(PAASS_BUILD_ACQ "Build and install Acquisition software" OFF)
 option(PAASS_BUILD_ANALYSIS "Build analysis related programs" ON)
 option(PAASS_BUILD_SETUP "Include the older setup programs in installation" OFF)
 option(PAASS_BUILD_SHARED_LIBS "Install only scan libraries" ON)
