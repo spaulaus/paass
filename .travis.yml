@@ -21,6 +21,7 @@ matrix:
         - libgsl0-dev
         - libncurses5-dev
         - libroot*
+        - python3
     env:
     - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
     - BUILD_OPTIONS="-DPAASS_BUILD_TESTS=ON -DPAASS_BUILD_UTKSCAN=ON -DPAASS_BUILD_ROOT_SCANNER=OFF -DPAASS_BUILD_SETUP=ON"
@@ -35,6 +36,7 @@ matrix:
         - libgsl0-dev
         - libncurses5-dev
         - libroot*
+        - python3
     env:
     - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
     - BUILD_OPTIONS="-DPAASS_BUILD_TESTS=ON -DPAASS_BUILD_UTKSCAN=ON -DPAASS_BUILD_ROOT_SCANNER=OFF -DPAASS_BUILD_SETUP=ON"
@@ -49,6 +51,7 @@ matrix:
         - libgsl0-dev
         - libncurses5-dev
         - libroot*
+        - python3
     env:
     - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
     - BUILD_OPTIONS="-DPAASS_BUILD_TESTS=ON -DPAASS_BUILD_UTKSCAN=ON -DPAASS_BUILD_ROOT_SCANNER=OFF -DPAASS_BUILD_SETUP=ON"
@@ -63,6 +66,7 @@ matrix:
         - libgsl0-dev
         - libncurses5-dev
         - libroot*
+        - python3
     env:
     - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
     - BUILD_OPTIONS="-DPAASS_BUILD_TESTS=ON -DPAASS_BUILD_UTKSCAN=ON -DPAASS_BUILD_ROOT_SCANNER=OFF -DPAASS_BUILD_SETUP=ON"
@@ -77,7 +81,7 @@ before_install:
   - git clone https://github.com/spaulaus/plx-api.git && ln -s plx-api current && cd plx-api
   - export PLX_SDK_DIR=$PWD && make all && cd $ORIG_DIR
   - git clone https://github.com/spaulaus/xia-api.git && cd xia-api
-  - mkdir build && cd build && cmake ../ -DCMAKE_INSTALL_PREFIX=/opt && make install && cd $ORIG_DIR
+  - python3 waf configure build install --prefix=/opt && cd $ORIG_DIR
   - ln -s /opt/xia/api /opt/xia/current
 
 script:
