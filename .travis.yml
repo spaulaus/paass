@@ -18,7 +18,7 @@ matrix:
         packages:
         - g++-4.9
         - gsl-bin
-        - libgsl0-dev
+        - libgsl-dev
         - libncurses5-dev
         - libroot*
         - python3
@@ -33,7 +33,7 @@ matrix:
         packages:
         - g++-5
         - gsl-bin
-        - libgsl0-dev
+        - libgsl-dev
         - libncurses5-dev
         - libroot*
         - python3
@@ -48,7 +48,7 @@ matrix:
         packages:
         - g++-6
         - gsl-bin
-        - libgsl0-dev
+        - libgsl-dev
         - libncurses5-dev
         - libroot*
         - python3
@@ -63,7 +63,7 @@ matrix:
         packages:
         - g++-7
         - gsl-bin
-        - libgsl0-dev
+        - libgsl-dev
         - libncurses5-dev
         - libroot*
         - python3
@@ -81,7 +81,7 @@ before_install:
   - git clone https://github.com/spaulaus/plx-api.git && ln -s plx-api current && cd plx-api
   - export PLX_SDK_DIR=$PWD && make all && cd $ORIG_DIR
   - git clone https://github.com/spaulaus/xia-api.git && cd xia-api
-  - python3 waf configure build install --prefix=/opt && cd $ORIG_DIR
+  - sudo python3 waf configure build install --prefix=/opt && cd $ORIG_DIR
   - ln -s /opt/xia/api /opt/xia/current
 
 script:
