@@ -8,10 +8,9 @@
 # ROOT_LIBRARY_DIR    PATH to the library directory 
 #
 # @authors K. Smith, S. V. Paulauskas
-#Last updated by S. V. Paulauskas (stanpaulauskas AT gmail DOT com) on May 27, 2017
 
 #Find the root-config executable
-set(ROOTSYS $ENV{ROOTSYS} CACHE Path "ROOT directory.")
+set(ROOTSYS $ENV{ROOTSYS} CACHE PATH "ROOT directory.")
 find_program(ROOT_CONFIG_EXECUTABLE root-config
         PATHS ${ROOTSYS}/bin)
 find_program(ROOTCINT_EXECUTABLE rootcint PATHS $ENV{ROOTSYS}/bin)

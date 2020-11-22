@@ -8,14 +8,28 @@
 # XIA_FOUND - true if XIA was found.
 # XIA_FIRMWARE_DIR - Directory to be searched for firmwares for pixie.cfg.
 #
+# Expected Structure:
+#    - **/opt**
+#      - **xia**
+#        - **api**  - files provided by the XIA API
+#          - **lib** - API libraries
+#          - **include**  - API includes
+#        - **share**
+#          - **pxisys** - contains the pxisys*.ini files provided in the API
+#          - **slotdef** - probably just a single slot def, can be added to the API install
+#        - **firmware**
+#          - **2016-02-02-12b250m-vandle**  (and other specific firmware)
+#            - **config** - not something that XIA distributes on their website, **DO NOT** add to repos
+#            - **dsp**
+#            - **fpga**
 # @authors K. Smith, C. R. Thornsberry, S. V. Paulauskas
 
 #Find the library path by looking for the library.
 find_path(XIA_LIBRARY_DIR
         NAMES libPixie16App.a libPixie16Sys.a
-        HINTS ${XIA_ROOT_DIR}
+        HINTS $ENV{XIA_ROOT_DIR}
         PATHS /opt/xia
-        PATH_SUFFIXES api current/software
+        PATH_SUFFIXES api/lib current/software
         DOC "Path to pixie library.")
 
 get_filename_component(XIA_LIBRARY_DIR "${XIA_LIBRARY_DIR}" REALPATH)
@@ -61,7 +75,7 @@ function(XIA_CONFIG)
 
     get_filename_component(XIA_ROOT_DIR "${XIA_LIBRARY_DIR}/.." REALPATH)
 
-    #Write some useful info.
+#    Write some useful info.
     file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/pixie.cfg
             "#Pixie Configuration\n"
             "#\n"
@@ -85,10 +99,10 @@ function(XIA_CONFIG)
 
     file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/pixie.cfg "# Global Tags\n\n")
 
-    #Write the base directory
+#    Write the base directory
     file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/pixie.cfg "PixieBaseDir\t\t${XIA_ROOT_DIR}\n")
 
-    #Following are lists of keys and the glob expr to find the files
+#    Following are lists of keys and the glob expr to find the files
     set(CONFIG_NAME CrateConfig SlotFile DspSetFile)
     set(CONFIG_EXPR
             share/pxisys/pxisys*.ini #CrateConfig
@@ -102,18 +116,18 @@ function(XIA_CONFIG)
             )
 
     foreach (CONFIG_STEP RANGE 0 2)
-        #Get key name and expression form the list
+    #    Get key name and expression form the list
         list(GET CONFIG_NAME ${CONFIG_STEP} KEY)
         list(GET CONFIG_EXPR ${CONFIG_STEP} GLOB_EXPR)
         list(GET ALT_CONFIG_EXPR ${CONFIG_STEP} ALT_GLOB_EXPR)
 
-        #Find all files matching the expression
-        # Returns the path of the file relative to the base directory.
+    #    Find all files matching the expression
+    #     Returns the path of the file relative to the base directory.
         file(GLOB FILE_MATCHES RELATIVE ${XIA_ROOT_DIR}
             ${XIA_ROOT_DIR}/${GLOB_EXPR}
             ${XIA_ROOT_DIR}/${ALT_GLOB_EXPR})
 
-        #Check that a unique match was found
+    #    Check that a unique match was found
         list(LENGTH FILE_MATCHES NUM_MATCHES)
         if (NOT NUM_MATCHES EQUAL 1)
             message(STATUS "WARNING: Unable to autocomplete global configuration!\n\tUnique ${KEY} file (${GLOB_EXPR}) not found!")
@@ -137,18 +151,18 @@ function(XIA_CONFIG)
             if (NUM_MATCHES EQUAL 1)
                 install(FILES ${XIA_ROOT_DIR}/${FILE_MATCHES} PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
                         DESTINATION ${CMAKE_INSTALL_PREFIX}/share/config)
-                #Rename set file to current.set to maintain default.set for backup
+            #    Rename set file to current.set to maintain default.set for backup
                 install(FILES ${XIA_ROOT_DIR}/${FILE_MATCHES} RENAME current.set DESTINATION
                         ${CMAKE_INSTALL_PREFIX}/share/config)
                 set(FILE_MATCHES ./current.set)
             endif ()
         endif ()
 
-        #Append the config file
+    #    Append the config file
         file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/pixie.cfg "${KEY}\t\t${FILE_MATCHES}\n")
     endforeach (CONFIG_STEP RANGE 0 2)
 
-    #Added the working set file name
+#    Added the working set file name
     file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/pixie.cfg "DspWorkingSetFile\t./current.set\n")
 
     file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/pixie.cfg "\n# Module Tags\n")
@@ -165,14 +179,14 @@ function(XIA_CONFIG)
                 "#ERROR: No firmware found to configure! Add your firmware to ${XIA_FIRMWARE_DIR}\n")
     endif(NOT XIA_FIRMWARE_DIRS)
 
-    #remove directories without subdirectories fpga and dsp.
+#    remove directories without subdirectories fpga and dsp.
     foreach (FIRMWARE_DIR ${XIA_FIRMWARE_DIRS})
         if (NOT ((EXISTS ${FIRMWARE_DIR}/fpga OR EXISTS ${FIRMWARE_DIR}/firmware) AND EXISTS ${FIRMWARE_DIR}/dsp))
             list(REMOVE_ITEM XIA_FIRMWARE_DIRS ${FIRMWARE_DIR})
         endif (NOT ((EXISTS ${FIRMWARE_DIR}/fpga OR EXISTS ${FIRMWARE_DIR}/firmware) AND EXISTS ${FIRMWARE_DIR}/dsp))
     endforeach (FIRMWARE_DIR ${XIA_ROOT_DIRS})
 
-    #Following are lists of keys and the glob expr to find the files
+#    Following are lists of keys and the glob expr to find the files
     set(CONFIG_NAME SpFpgaFile ComFpgaFile DspConfFile DspVarFile)
     set(CONFIG_EXPR
             fpga/fippixie16*.bin #SpFpgaFile
@@ -188,24 +202,24 @@ function(XIA_CONFIG)
             )
 
     foreach (FIRMWARE_DIR ${XIA_FIRMWARE_DIRS})
-        #determine the module type from the fippi SpFpga File
+    #    determine the module type from the fippi SpFpga File
         unset(MODULE_TYPE)
         file(GLOB FILE_MATCHES RELATIVE ${FIRMWARE_DIR}
             ${FIRMWARE_DIR}/fpga/fippixie16*.bin ${FIRMWARE_DIR}/firmware/fippixie16*.bin)
         foreach (FILENAME ${FILE_MATCHES})
             string(REGEX MATCH "[01234567890]+b[0123456789]+m" TYPE ${FILENAME})
             string(REGEX MATCH "rev[abcdf]" REVISION ${FILENAME})
-            #If type is missing we set it to "unknown"
+        #    If type is missing we set it to "unknown"
             if ("${TYPE}" STREQUAL "")
                 set(TYPE "unknown")
             endif ()
 
-            #If revision is missing we set it to "revUnknown"
+        #    If revision is missing we set it to "revUnknown"
             if ("${REVISION}" STREQUAL "")
                 set(REVISION "revUnknown")
             endif ()
 
-            #Only add the module type if it is not in the list.
+        #    Only add the module type if it is not in the list.
             if (NOT MODULE_TYPE MATCHES "${TYPE}-${REVISION}")
                 list(APPEND MODULE_TYPE "${TYPE}-${REVISION}")
             endif (NOT MODULE_TYPE MATCHES "${TYPE}-${REVISION}")
@@ -238,20 +252,20 @@ function(XIA_CONFIG)
         file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/pixie.cfg "ModuleType\t\t${MODULE_TYPE}\n")
         file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/pixie.cfg "ModuleBaseDir\t\t${FIRMWARE_DIR}\n")
 
-        #We loop over each item in the list and search for a matching file
+    #    We loop over each item in the list and search for a matching file
         foreach (CONFIG_STEP RANGE 0 3)
-            #Get key name and expression form the list
+        #    Get key name and expression form the list
             list(GET CONFIG_NAME ${CONFIG_STEP} KEY)
             list(GET CONFIG_EXPR ${CONFIG_STEP} GLOB_EXPR)
             list(GET ALT_CONFIG_EXPR ${CONFIG_STEP} ALT_GLOB_EXPR)
 
-            #Find all files matching the expression
-            # Returns the path of the file relative to the base directory.
+        #    Find all files matching the expression
+        #     Returns the path of the file relative to the base directory.
             file(GLOB FILE_MATCHES RELATIVE ${FIRMWARE_DIR}
                  ${FIRMWARE_DIR}/${GLOB_EXPR} ${FIRMWARE_DIR}/${ALT_GLOB_EXPR})
             list(REMOVE_DUPLICATES FILE_MATCHES)
 
-            #Check that a unique match was found
+        #    Check that a unique match was found
             list(LENGTH FILE_MATCHES NUM_MATCHES)
             if (NOT NUM_MATCHES EQUAL 1)
                 if (NOT ERROR)
@@ -268,7 +282,7 @@ function(XIA_CONFIG)
                 endif (NUM_MATCHES EQUAL 0)
             endif ()
 
-            #Append the config file
+        #    Append the config file
             file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/pixie.cfg "${KEY}\t\t${FILE_MATCHES}\n")
         endforeach (CONFIG_STEP RANGE 0 3)
     endforeach (FIRMWARE_DIR ${XIA_ROOT_DIRS})
