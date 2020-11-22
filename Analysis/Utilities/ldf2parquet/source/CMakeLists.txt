@@ -1,4 +1,4 @@
 # @authors S. V. Paulauskas
-add_executable(Ldf2Parquet Ldf2Parquet.cpp Ldf2ParquetUnpacker.cpp Ldf2ParquetInterface.cpp)
-target_link_libraries(Ldf2Parquet PaassScanStatic PugixmlStatic PaassResourceStatic)
-install(TARGETS Ldf2Parquet DESTINATION bin)
+add_executable(ldf2parquet ldf2parquet.cpp ldf2ParquetInterface.cpp ldf2ParquetUnpacker.cpp)
+target_link_libraries(ldf2parquet PaassScanStatic PugixmlStatic PaassResourceStatic parquet)
+install(TARGETS ldf2parquet DESTINATION bin)
