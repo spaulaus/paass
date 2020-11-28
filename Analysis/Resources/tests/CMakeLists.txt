@@ -1,9 +1,4 @@
 #author S. V. Paulauskas
-add_executable(unittest-ChannelConfiguration unittest-ChannelConfiguration.cpp ../source/ChannelConfiguration.cpp
-        ../source/TimingConfiguration.cpp)
-target_link_libraries(unittest-ChannelConfiguration UnitTest++ ${LIBS})
-add_test(ChannelConfiguration unittest-ChannelConfiguration)
-
 set(GSL_FITTER_SOURCES ${GSL_FITTER_SOURCES} unittest-GslFitter.cpp ../source/GslFitter.cpp ../source/TimingConfiguration.cpp)
 add_executable(unittest-GslFitter ${GSL_FITTER_SOURCES})
 target_link_libraries(unittest-GslFitter ${GSL_LIBRARIES} UnitTest++)
