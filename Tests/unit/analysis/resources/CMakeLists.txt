@@ -1,31 +1,24 @@
-target_sources(tests PUBLIC
-        ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/resources/test_ChannelConfiguration.cpp
-        ${PROJECT_SOURCE_DIR}/Analysis/Resources/source/ChannelConfiguration.cpp
-        ${PROJECT_SOURCE_DIR}/Analysis/Resources/source/TimingConfiguration.cpp)
 target_include_directories(tests PUBLIC
         ${PROJECT_SOURCE_DIR}/Analysis/Resources/include
         ${PROJECT_SOURCE_DIR}/Resources/include)
+target_sources(tests PUBLIC ${PROJECT_SOURCE_DIR}/Analysis/Resources/source/TimingConfiguration.cpp)
 
-#set(GSL_FITTER_SOURCES ${GSL_FITTER_SOURCES} unittest-GslFitter.cpp ../source/GslFitter.cpp ../source/TimingConfiguration.cpp)
-#add_executable(unittest-GslFitter ${GSL_FITTER_SOURCES})
-#target_link_libraries(unittest-GslFitter ${GSL_LIBRARIES} UnitTest++)
-#add_test(GslFitter unittest-GslFitter)
-#
-#add_executable(unittest-PolynomialCfd unittest-PolynomialCfd.cpp ../source/PolynomialCfd.cpp ../source/TimingConfiguration.cpp)
-#target_link_libraries(unittest-PolynomialCfd UnitTest++)
-#add_test(PolynomialCfd unittest-PolynomialCfd)
-#
-#add_executable(unittest-TraditionalCfd unittest-TraditionalCfd.cpp ../source/TraditionalCfd.cpp
-#        ../source/TimingConfiguration.cpp)
-#target_link_libraries(unittest-TraditionalCfd UnitTest++)
-#add_test(TraditionalCfd unittest-TraditionalCfd)
-#
-#add_executable(unittest-XiaCfd unittest-XiaCfd.cpp ../source/XiaCfd.cpp ../source/TimingConfiguration.cpp)
-#target_link_libraries(unittest-XiaCfd UnitTest++)
-#install(TARGETS unittest-XiaCfd DESTINATION bin/unittests)
-#add_test(XiaCfd unittest-XiaCfd)
-#
-#add_executable(unittest-RootFitter unittest-RootFitter.cpp ../source/RootFitter.cpp
-#        ../source/VandleTimingFunction.cpp ../source/TimingConfiguration.cpp)
-#target_link_libraries(unittest-RootFitter ${ROOT_LIBRARIES} UnitTest++)
-#add_test(RootFitter unittest-RootFitter)
+
+target_sources(tests PUBLIC ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/resources/test_ChannelConfiguration.cpp
+        ${PROJECT_SOURCE_DIR}/Analysis/Resources/source/ChannelConfiguration.cpp)
+
+target_sources(tests PUBLIC ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/resources/test_GslFitter.cpp
+        ${PROJECT_SOURCE_DIR}/Analysis/Resources/source/GslFitter.cpp)
+
+target_sources(tests PUBLIC ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/resources/test_PolynomialCfd.cpp
+        ${PROJECT_SOURCE_DIR}/Analysis/Resources/source/PolynomialCfd.cpp)
+
+target_sources(tests PUBLIC ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/resources/test_TraditionalCfd.cpp
+        ${PROJECT_SOURCE_DIR}/Analysis/Resources/source/TraditionalCfd.cpp)
+
+target_sources(tests PUBLIC ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/resources/test_XiaCfd.cpp
+        ${PROJECT_SOURCE_DIR}/Analysis/Resources/source/XiaCfd.cpp)
+
+target_sources(tests PUBLIC ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/resources/test_RootFitter.cpp
+        ${PROJECT_SOURCE_DIR}/Analysis/Resources/source/RootFitter.cpp
+        ${PROJECT_SOURCE_DIR}/Analysis/Resources/source/VandleTimingFunction.cpp)

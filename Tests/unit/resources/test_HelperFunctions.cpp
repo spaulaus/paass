@@ -12,7 +12,7 @@ using namespace unittest_helper_functions;
 
 TEST_SUITE ("Resources/include/HelperFunctions.hpp") {
     TEST_CASE ("TrapezoidalFiltering") {
-        CHECK_THROWS_AS(Filtering::TrapezoidalFilter(empty_vector_double, 0, 0), invalid_argument);
+        CHECK_THROWS_AS(Filtering::TrapezoidalFilter(vector<double>(), 0, 0), invalid_argument);
         CHECK_THROWS_AS(Filtering::TrapezoidalFilter(trace_sans_baseline, trace_sans_baseline.size() + 10, 2),
                         invalid_argument);
         CHECK_THROWS_AS(Filtering::TrapezoidalFilter(trace_sans_baseline, 4, trace_sans_baseline.size() + 10),
@@ -35,7 +35,7 @@ TEST_SUITE ("Resources/include/HelperFunctions.hpp") {
         /// expected. This also verifies the Statistics functions CalculateAverage
         /// and CalculateStandardDeviation
         CHECK_THROWS_AS(TraceFunctions::CalculateBaseline(trace, make_pair(0, 1)), range_error);
-        CHECK_THROWS_AS(TraceFunctions::CalculateBaseline(empty_vector_uint, make_pair(0, 16)), range_error);
+        CHECK_THROWS_AS(TraceFunctions::CalculateBaseline(vector<unsigned int>(), make_pair(0, 16)), range_error);
         CHECK_THROWS_AS(TraceFunctions::CalculateBaseline(trace, make_pair(17, 1)), range_error);
         CHECK_THROWS_AS(TraceFunctions::CalculateBaseline(trace, make_pair(0, trace.size() + 100)), range_error);
 
@@ -45,7 +45,7 @@ TEST_SUITE ("Resources/include/HelperFunctions.hpp") {
     }
 
     TEST_CASE ("FindMaxiumum") {
-        CHECK_THROWS_AS(TraceFunctions::FindMaximum(empty_vector_uint, trace_delay), range_error);
+        CHECK_THROWS_AS(TraceFunctions::FindMaximum(vector<unsigned int>(), trace_delay), range_error);
         CHECK_THROWS_AS(TraceFunctions::FindMaximum(trace, trace.size() + 100), range_error);
         CHECK_THROWS_AS(TraceFunctions::FindMaximum(trace, 5), range_error);
         CHECK_THROWS_AS(TraceFunctions::FindMaximum(const_vector_uint, trace_delay), range_error);
@@ -58,7 +58,7 @@ TEST_SUITE ("Resources/include/HelperFunctions.hpp") {
 
     TEST_CASE ("FindLeadingEdge") {
         CHECK_THROWS_AS(TraceFunctions::FindLeadingEdge(trace, bad_fraction, max_pair), range_error);
-        CHECK_THROWS_AS(TraceFunctions::FindLeadingEdge(empty_vector_uint, leading_edge_fraction, max_pair),
+        CHECK_THROWS_AS(TraceFunctions::FindLeadingEdge(vector<unsigned int>(), leading_edge_fraction, max_pair),
                         range_error);
         CHECK_THROWS_AS(TraceFunctions::FindLeadingEdge(trace, leading_edge_fraction, make_pair(trace.size() + 10, 3.)),
                         range_error);
@@ -68,7 +68,7 @@ TEST_SUITE ("Resources/include/HelperFunctions.hpp") {
     }
 
     TEST_CASE ("CalculatePoly3") {
-        CHECK_THROWS_AS(Polynomial::CalculatePoly3(empty_vector_uint, 0), range_error);
+        CHECK_THROWS_AS(Polynomial::CalculatePoly3(vector<unsigned int>(), 0), range_error);
 
         pair<double, vector<double> > result = Polynomial::CalculatePoly3(poly3_data, 0);
 
@@ -82,7 +82,7 @@ TEST_SUITE ("Resources/include/HelperFunctions.hpp") {
     TEST_CASE ("ExtrapolateMaximum") {
         //For determination of the extrapolated maximum value of the trace. This trace
         // favors the left side since f(max+1) is less than f(max - 1).
-        CHECK_THROWS_AS(TraceFunctions::ExtrapolateMaximum(empty_vector_uint, max_pair), range_error);
+        CHECK_THROWS_AS(TraceFunctions::ExtrapolateMaximum(vector<unsigned int>(), max_pair), range_error);
 
         pair<double, vector<double> > result = TraceFunctions::ExtrapolateMaximum(trace, max_pair);
 
@@ -93,7 +93,7 @@ TEST_SUITE ("Resources/include/HelperFunctions.hpp") {
     }
 
     TEST_CASE ("CalculatePoly2") {
-        CHECK_THROWS_AS(Polynomial::CalculatePoly2(empty_vector_uint, 0), range_error);
+        CHECK_THROWS_AS(Polynomial::CalculatePoly2(vector<unsigned int>(), 0), range_error);
 
         pair<double, vector<double> > result = Polynomial::CalculatePoly2(poly2_data, 0);
 
@@ -105,19 +105,19 @@ TEST_SUITE ("Resources/include/HelperFunctions.hpp") {
     }
 
     TEST_CASE ("CalculateIntegral") {
-        CHECK_THROWS_AS(Statistics::CalculateIntegral(empty_vector_uint), range_error);
+        CHECK_THROWS_AS(Statistics::CalculateIntegral(vector<unsigned int>()), range_error);
         CHECK(integral == Statistics::CalculateIntegral(integration_data));
     }
 
     TEST_CASE ("CalculateQdc") {
-        CHECK_THROWS_AS(TraceFunctions::CalculateQdc(empty_vector_uint, make_pair(0, 4)), range_error);
+        CHECK_THROWS_AS(TraceFunctions::CalculateQdc(vector<unsigned int>(), make_pair(0, 4)), range_error);
         CHECK_THROWS_AS(TraceFunctions::CalculateQdc(trace, make_pair(0, trace.size() + 10)), range_error);
         CHECK_THROWS_AS(TraceFunctions::CalculateQdc(trace, make_pair(1000, 0)), range_error);
         CHECK(integration_qdc == TraceFunctions::CalculateQdc(integration_data, qdc_pair));
     }
 
     TEST_CASE ("CalculateTailRatio") {
-        CHECK_THROWS_AS(TraceFunctions::CalculateTailRatio(empty_vector_uint, make_pair(0, 4), 100.0), range_error);
+        CHECK_THROWS_AS(TraceFunctions::CalculateTailRatio(vector<unsigned int>(), make_pair(0, 4), 100.0), range_error);
         CHECK_THROWS_AS(TraceFunctions::CalculateTailRatio(trace, make_pair(0, trace.size() + 10), 100.0), range_error);
         CHECK_THROWS_AS(TraceFunctions::CalculateTailRatio(trace, make_pair(0, 4), 0.0), range_error);
 
