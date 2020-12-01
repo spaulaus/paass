@@ -1,17 +1,24 @@
 #@author S. V. Paulauskas
+target_include_directories(tests PUBLIC ${PROJECT_SOURCE_DIR}/Analysis/Utkscan/core/include)
 
-#add_executable(unittest-DetectorSummary unittest-DetectorSummary.cpp ../source/DetectorSummary.cpp
-#        ../source/DetectorLibrary.cpp ../source/MapNodeXmlParser.cpp ../source/TreeCorrelator.cpp
-#        ../source/TreeCorrelatorXmlParser.cpp ../source/WalkCorrector.cpp ../source/Calibrator.cpp
-#        ../source/PlaceBuilder.cpp ../source/Places.cpp ../source/RawEvent.cpp)
-#target_link_libraries(unittest-DetectorSummary UnitTest++ PaassScanStatic PaassCoreStatic PugixmlStatic
-#        PaassResourceStatic ${LIBS})
-#install(TARGETS unittest-DetectorSummary DESTINATION bin/unittests)
+# TODO: This is more of an integration test than a strict unit test. We're not going to fight with it until we decide what to do with mocks.
+#target_sources(tests PUBLIC ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/utkscan/core/test_DetectorSummary.cpp
+#        ${PROJECT_SOURCE_DIR}/Analysis/Utkscan/core/source/DetectorSummary.cpp
+#        ${PROJECT_SOURCE_DIR}/Analysis/Utkscan/core/source/DetectorLibrary.cpp
+#        ${PROJECT_SOURCE_DIR}/Analysis/Utkscan/core/source/MapNodeXmlParser.cpp
+#        ${PROJECT_SOURCE_DIR}/Analysis/Utkscan/core/source/TreeCorrelator.cpp
+#        ${PROJECT_SOURCE_DIR}/Analysis/Utkscan/core/source/TreeCorrelatorXmlParser.cpp
+#        ${PROJECT_SOURCE_DIR}/Analysis/Utkscan/core/source/WalkCorrector.cpp
+#        ${PROJECT_SOURCE_DIR}/Analysis/Utkscan/core/source/Calibrator.cpp
+#        ${PROJECT_SOURCE_DIR}/Analysis/Utkscan/core/source/PlaceBuilder.cpp
+#        ${PROJECT_SOURCE_DIR}/Analysis/Utkscan/core/source/Places.cpp
+#        ${PROJECT_SOURCE_DIR}/Analysis/Utkscan/core/source/RawEvent.cpp
+#)
 
-add_executable(unittest-RootHandler unittest-RootHandler.cpp ../source/RootHandler.cpp)
-target_link_libraries(unittest-RootHandler UnitTest++ ${LIBS} ${ROOT_LIBRARIES})
-add_test(RootHandler unittest-RootHandler)
+target_sources(tests PUBLIC ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/utkscan/core/test_Identifier.cpp)
 
-add_executable(unittest-WalkCorrector unittest-WalkCorrector.cpp ../source/WalkCorrector.cpp)
-target_link_libraries(unittest-WalkCorrector UnitTest++ ${LIBS} ResourceStatic)
-add_test(WalkCorrector unittest-WalkCorrector)
+target_sources(tests PUBLIC ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/utkscan/core/test_RootHandler.cpp
+        ${PROJECT_SOURCE_DIR}/Analysis/Utkscan/core/source/RootHandler.cpp)
+
+target_sources(tests PUBLIC ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/utkscan/core/test_WalkCorrector.cpp
+        ${PROJECT_SOURCE_DIR}/Analysis/Utkscan/core/source/WalkCorrector.cpp)
