@@ -2,15 +2,15 @@
 ///@brief A program that will execute unit tests on XiaData
 ///@author S. V. Paulauskas
 ///@date December 5, 2016
+#include "XiaData.hpp"
+#include "UnitTestSampleData.hpp"
+#include "HelperFunctions.hpp"
+
+#include <doctest.h>
+
 #include <vector>
 
 #include <cmath>
-
-#include <UnitTest++.h>
-
-#include "UnitTestSampleData.hpp"
-#include "HelperFunctions.hpp"
-#include "XiaData.hpp"
 
 using namespace std;
 using namespace unittest_trace_variables;
@@ -18,159 +18,157 @@ using namespace unittest_decoded_data;
 
 XiaData lhs, rhs;
 
-TEST_FIXTURE (XiaData, Test_GetBaseline) {
-    SetFilterBaseline(baseline);
-    CHECK_EQUAL(baseline, GetFilterBaseline());
-}
+TEST_SUITE ("Analysis/Scan Libraries/XIA Data") {
+    TEST_CASE_FIXTURE (XiaData, "GetBaseline") {
+        SetFilterBaseline(baseline);
+        CHECK(baseline == GetFilterBaseline());
+    }
 
-TEST_FIXTURE (XiaData, Test_GetId) {
-    SetSlotNumber(slotId);
-    SetChannelNumber(channelNumber);
-    SetCrateNumber(crateId);
-    CHECK_EQUAL(crateId*208 + GetModuleNumber() * 16 + channelNumber, GetId());
-}
+    TEST_CASE_FIXTURE (XiaData, "GetId") {
+        SetSlotNumber(slotId);
+        SetChannelNumber(channelNumber);
+        SetCrateNumber(crateId);
+        CHECK(crateId * 208 + GetModuleNumber() * 16 + channelNumber == GetId());
+    }
 
-TEST_FIXTURE (XiaData, Test_GetSetCfdForcedTrig) {
-    SetCfdForcedTriggerBit(cfd_forced_trigger);
-    CHECK (GetCfdForcedTriggerBit());
-}
+    TEST_CASE_FIXTURE (XiaData, "GetSetCfdForcedTrig") {
+        SetCfdForcedTriggerBit(cfd_forced_trigger);
+        CHECK (GetCfdForcedTriggerBit());
+    }
 
-TEST_FIXTURE (XiaData, Test_GetSetCfdFractionalTime) {
-    SetCfdFractionalTime(cfd_fractional_time);
-    CHECK_EQUAL(cfd_fractional_time, GetCfdFractionalTime());
-}
+    TEST_CASE_FIXTURE (XiaData, "GetSetCfdFractionalTime") {
+        SetCfdFractionalTime(cfd_fractional_time);
+        CHECK(cfd_fractional_time == GetCfdFractionalTime());
+    }
 
-TEST_FIXTURE (XiaData, Test_GetSetCfdTriggerSourceBit) {
-    SetCfdTriggerSourceBit(cfd_source_trigger_bit);
-    CHECK (GetCfdTriggerSourceBit());
-}
+    TEST_CASE_FIXTURE (XiaData, "GetSetCfdTriggerSourceBit") {
+        SetCfdTriggerSourceBit(cfd_source_trigger_bit);
+        CHECK (GetCfdTriggerSourceBit());
+    }
 
-TEST_FIXTURE (XiaData, Test_GetSetChannelNumber) {
-    SetChannelNumber(channelNumber);
-    CHECK_EQUAL(channelNumber, GetChannelNumber());
-}
+    TEST_CASE_FIXTURE (XiaData, "GetSetChannelNumber") {
+        SetChannelNumber(channelNumber);
+        CHECK(channelNumber == GetChannelNumber());
+    }
 
-TEST_FIXTURE (XiaData, Test_GetSetCrateNumber) {
-    SetCrateNumber(crateId);
-    CHECK_EQUAL(crateId, GetCrateNumber());
-}
+    TEST_CASE_FIXTURE (XiaData, "GetSetCrateNumber") {
+        SetCrateNumber(crateId);
+        CHECK(crateId == GetCrateNumber());
+    }
 
-TEST_FIXTURE (XiaData, Test_GetSetEnergy) {
-    SetEnergy(energy);
-    CHECK_EQUAL(energy, GetEnergy());
-}
+    TEST_CASE_FIXTURE (XiaData, "GetSetEnergy") {
+        SetEnergy(energy);
+        CHECK(energy == GetEnergy());
+    }
 
-TEST_FIXTURE (XiaData, Test_GetSetEnergySums) {
-    SetEnergySums(energy_sums);
-    CHECK_ARRAY_EQUAL(energy_sums, GetEnergySums(), energy_sums.size());
-}
+    TEST_CASE_FIXTURE (XiaData, "GetSetEnergySums") {
+        SetEnergySums(energy_sums);
+        CHECK(energy_sums == GetEnergySums());
+    }
 
-TEST_FIXTURE (XiaData, Test_GetSetEventTimeHigh) {
-    SetEventTimeHigh(ts_high);
-    CHECK_EQUAL(ts_high, GetEventTimeHigh());
-}
+    TEST_CASE_FIXTURE (XiaData, "GetSetEventTimeHigh") {
+        SetEventTimeHigh(ts_high);
+        CHECK(ts_high == GetEventTimeHigh());
+    }
 
-TEST_FIXTURE (XiaData, Test_GetSetEventTimeLow) {
-    SetEventTimeLow(ts_low);
-    CHECK_EQUAL(ts_low, GetEventTimeLow());
-}
+    TEST_CASE_FIXTURE (XiaData, "GetSetEventTimeLow") {
+        SetEventTimeLow(ts_low);
+        CHECK(ts_low == GetEventTimeLow());
+    }
 
-TEST_FIXTURE(XiaData, Test_GetSetExternalTimestamp) {
-    SetExternalTimestamp(Conversions::ConcatenateWords(ex_ts_low, ex_ts_high, 32));
-    CHECK_EQUAL(Conversions::ConcatenateWords(ex_ts_low, ex_ts_high, 32), GetExternalTimestamp());
-}
+    TEST_CASE_FIXTURE (XiaData, "GetSetExternalTimestamp") {
+        SetExternalTimestamp(Conversions::ConcatenateWords(ex_ts_low, ex_ts_high, 32));
+        CHECK(Conversions::ConcatenateWords(ex_ts_low, ex_ts_high, 32) == GetExternalTimestamp());
+    }
 
-TEST_FIXTURE (XiaData, Test_GetSetExternalTimeHigh) {
-    SetExternalTimeHigh(ex_ts_high);
-    CHECK_EQUAL(ex_ts_high, GetExternalTimeHigh());
-}
+    TEST_CASE_FIXTURE (XiaData, "GetSetExternalTimeHigh") {
+        SetExternalTimeHigh(ex_ts_high);
+        CHECK(ex_ts_high == GetExternalTimeHigh());
+    }
 
-TEST_FIXTURE (XiaData, Test_GetSetExternalTimeLow) {
-    SetExternalTimeLow(ex_ts_low);
-    CHECK_EQUAL(ex_ts_low, GetExternalTimeLow());
-}
+    TEST_CASE_FIXTURE (XiaData, "GetSetExternalTimeLow") {
+        SetExternalTimeLow(ex_ts_low);
+        CHECK(ex_ts_low == GetExternalTimeLow());
+    }
 
-TEST_FIXTURE (XiaData, Test_GetSetPileup) {
-    SetPileup(pileup_bit);
-    CHECK (IsPileup());
-}
+    TEST_CASE_FIXTURE (XiaData, "GetSetPileup") {
+        SetPileup(pileup_bit);
+        CHECK (IsPileup());
+    }
 
-TEST_FIXTURE (XiaData, Test_GetSetQdc) {
-    SetQdc(qdc);
-    CHECK_ARRAY_EQUAL(qdc, GetQdc(), qdc.size());
-}
+    TEST_CASE_FIXTURE (XiaData, "GetSetQdc") {
+        SetQdc(qdc);
+        CHECK(qdc == GetQdc());
+    }
 
-TEST_FIXTURE (XiaData, Test_GetSetSaturation) {
-    SetSaturation(trace_out_of_range);
-    CHECK (IsSaturated());
-}
+    TEST_CASE_FIXTURE (XiaData, "GetSetSaturation") {
+        SetSaturation(trace_out_of_range);
+        CHECK (IsSaturated());
+    }
 
-TEST_FIXTURE (XiaData, Test_GetSetSlotNumber) {
-    SetSlotNumber(slotId);
-    CHECK_EQUAL(slotId, GetSlotNumber());
-}
+    TEST_CASE_FIXTURE (XiaData, "GetSetSlotNumber") {
+        SetSlotNumber(slotId);
+        CHECK(slotId == GetSlotNumber());
+    }
 
-TEST_FIXTURE (XiaData, Test_GetSetTrace) {
-    SetTrace(trace);
-    CHECK_ARRAY_EQUAL(trace, GetTrace(), trace.size());
-}
+    TEST_CASE_FIXTURE (XiaData, "GetSetTrace") {
+        SetTrace(trace);
+        CHECK(trace == GetTrace());
+    }
 
-TEST_FIXTURE (XiaData, Test_GetSetVirtualChannel) {
-    SetVirtualChannel(virtual_channel);
-    CHECK (IsVirtualChannel());
-}
+    TEST_CASE_FIXTURE (XiaData, "GetSetVirtualChannel") {
+        SetVirtualChannel(virtual_channel);
+        CHECK (IsVirtualChannel());
+    }
 
-TEST_FIXTURE (XiaData, Test_GetTime) {
-    SetTime(unittest_decoded_data::R30474_250::ts);
-    CHECK_EQUAL(unittest_decoded_data::R30474_250::ts, GetTime());
-}
+    TEST_CASE_FIXTURE (XiaData, "GetTime") {
+        SetTime(unittest_decoded_data::R30474_250::ts);
+        CHECK(unittest_decoded_data::R30474_250::ts == GetTime());
+    }
 
 ///This will test that the Time for the rhs is greater than the lhs
-TEST (Test_CompareTime) {
-    lhs.Initialize();
-    rhs.Initialize();
+    TEST_CASE ("CompareTime") {
+        lhs.Initialize();
+        rhs.Initialize();
 
-    lhs.SetFilterTime(unittest_decoded_data::R30474_250::ts);
-    rhs.SetFilterTime(unittest_decoded_data::R30474_250::ts + 10);
+        lhs.SetFilterTime(unittest_decoded_data::R30474_250::ts);
+        rhs.SetFilterTime(unittest_decoded_data::R30474_250::ts + 10);
 
-    CHECK(lhs.CompareTime(&lhs, &rhs));
-}
+        CHECK(lhs.CompareTime(&lhs, &rhs));
+    }
 
 //This will test that the ID for the rhs is greater than the lhs
-TEST (Test_CompareId) {
-    lhs.Initialize();
-    rhs.Initialize();
-    lhs.SetChannelNumber(channelNumber);
-    lhs.SetSlotNumber(slotId);
-    lhs.SetCrateNumber(crateId);
+    TEST_CASE ("CompareId") {
+        lhs.Initialize();
+        rhs.Initialize();
+        lhs.SetChannelNumber(channelNumber);
+        lhs.SetSlotNumber(slotId);
+        lhs.SetCrateNumber(crateId);
 
-    rhs.SetChannelNumber(channelNumber);
-    rhs.SetSlotNumber(slotId + 2);
-    rhs.SetCrateNumber(crateId);
+        rhs.SetChannelNumber(channelNumber);
+        rhs.SetSlotNumber(slotId + 2);
+        rhs.SetCrateNumber(crateId);
 
-    CHECK(lhs.CompareId(&lhs, &rhs));
-}
+        CHECK(lhs.CompareId(&lhs, &rhs));
+    }
 
-TEST (Test_Equality) {
-    lhs.Initialize();
-    rhs.Initialize();
-    lhs.SetChannelNumber(channelNumber);
-    lhs.SetSlotNumber(slotId);
-    lhs.SetCrateNumber(crateId);
-    rhs = lhs;
-    CHECK(lhs == rhs);
-}
+    TEST_CASE ("Equality") {
+        lhs.Initialize();
+        rhs.Initialize();
+        lhs.SetChannelNumber(channelNumber);
+        lhs.SetSlotNumber(slotId);
+        lhs.SetCrateNumber(crateId);
+        rhs = lhs;
+        CHECK(lhs == rhs);
+    }
 
-TEST (Test_LessThanOperator) {
-    lhs.Initialize();
-    rhs.Initialize();
-    lhs.SetFilterTime(unittest_decoded_data::R30474_250::ts);
-    rhs = lhs;
-    rhs.SetFilterTime(unittest_decoded_data::R30474_250::ts + 10);
-    CHECK(lhs < rhs);
-}
-
-int main(int argv, char *argc[]) {
-    return (UnitTest::RunAllTests());
+    TEST_CASE ("LessThanOperator") {
+        lhs.Initialize();
+        rhs.Initialize();
+        lhs.SetFilterTime(unittest_decoded_data::R30474_250::ts);
+        rhs = lhs;
+        rhs.SetFilterTime(unittest_decoded_data::R30474_250::ts + 10);
+        CHECK(lhs < rhs);
+    }
 }
 

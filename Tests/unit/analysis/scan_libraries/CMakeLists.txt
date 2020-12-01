@@ -4,8 +4,8 @@ target_include_directories(tests PUBLIC ${PROJECT_SOURCE_DIR}/Analysis/ScanLibra
 
 target_sources(tests PUBLIC ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/scan_libraries/test_Trace.cpp)
 
-#target_sources(tests PUBLIC ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/scan_libraries/test_XiaData.cpp
-#        ${PROJECT_SOURCE_DIR}/Analysis/ScanLibraries/source/XiaData.cpp)
+target_sources(tests PUBLIC ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/scan_libraries/test_XiaData.cpp
+        ${PROJECT_SOURCE_DIR}/Analysis/ScanLibraries/source/XiaData.cpp)
 #
 #target_sources(tests PUBLIC ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/scan_libraries/test_XiaListModeDataDecoder.cpp
 #        ${PROJECT_SOURCE_DIR}/Analysis/ScanLibraries/source/XiaListModeDataDecoder.cpp)
