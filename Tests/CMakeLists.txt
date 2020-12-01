@@ -8,7 +8,7 @@ endif (${GSL_VERSION} LESS 2.0)
 
 add_executable(tests tests.cpp)
 target_include_directories(tests PUBLIC ${PROJECT_SOURCE_DIR}/ThirdParty/doctest include)
-target_link_libraries(tests PUBLIC ${ROOT_LIBRARIES} ${GSL_LIBRARIES} PugixmlStatic)
+target_link_libraries(tests PUBLIC ${ROOT_LIBRARIES} ${GSL_LIBRARIES})
 
 add_subdirectory(unit/analysis/resources)
 add_subdirectory(unit/analysis/scan_libraries)
