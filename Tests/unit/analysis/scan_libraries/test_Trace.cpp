@@ -36,28 +36,23 @@ TEST_SUITE ("Analysis/ScanLibraries/Trace") {
 
         SUBCASE ("Trace sans baseline") {
             SetTraceSansBaseline(trace_sans_baseline);
-            for (unsigned int i = 0; i < trace_sans_baseline.size(); i++)
-                CHECK (trace_sans_baseline.at(i) == GetTraceSansBaseline().at(i));
+            CHECK (trace_sans_baseline == GetTraceSansBaseline());
         }
 
         SUBCASE ("Waveform") {
             SetTraceSansBaseline(trace_sans_baseline);
             SetWaveformRange(waveform_range);
-            for (unsigned int i = 0; i < waveform.size(); i++)
-                CHECK (waveform.at(i) == GetWaveform().at(i));
+            CHECK (waveform == GetWaveform());
         }
 
         SUBCASE("Trigger Filter") {
             SetTriggerFilter(trace_sans_baseline);
-
-            for (unsigned int i = 0; i < trace_sans_baseline.size(); i++)
-                CHECK (trace_sans_baseline.at(i) == GetTriggerFilter().at(i));
+            CHECK (trace_sans_baseline == GetTriggerFilter());
         }
 
         SUBCASE ("Energy Sums") {
             SetEnergySums(waveform);
-            for (unsigned int i = 0; i < waveform.size(); i++)
-                CHECK (waveform.at(i) == GetEnergySums().at(i));
+            CHECK (waveform == GetEnergySums());
         }
 
         SUBCASE ("QDC") {
@@ -85,8 +80,6 @@ TEST_SUITE ("Analysis/ScanLibraries/Trace") {
             SetTau(double_input);
             CHECK(double_input == GetTau());
         }
-
     }
-
 }
 
