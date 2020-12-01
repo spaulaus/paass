@@ -10,8 +10,7 @@ target_sources(tests PUBLIC ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/scan_libra
 target_sources(tests PUBLIC ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/scan_libraries/test_XiaListModeDataDecoder.cpp
         ${PROJECT_SOURCE_DIR}/Analysis/ScanLibraries/source/XiaListModeDataDecoder.cpp)
 
-target_sources(tests PUBLIC
-#        ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/scan_libraries/test_XiaListModeDataEncoder.cpp
+target_sources(tests PUBLIC ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/scan_libraries/test_XiaListModeDataEncoder.cpp
         ${PROJECT_SOURCE_DIR}/Analysis/ScanLibraries/source/XiaListModeDataEncoder.cpp)
 
 target_sources(tests PUBLIC
