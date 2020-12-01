@@ -52,16 +52,16 @@ namespace unittest_decoded_data {
 /// function properly.
 namespace unittest_encoded_data {
     //A buffer with zero length
-    extern const std::vector<unsigned int> empty_buffer;
+    extern std::vector<unsigned int> empty_buffer;
 
     //A buffer that for an empty module
-    extern const std::vector<unsigned int> empty_module_buffer;
+    extern std::vector<unsigned int> empty_module_buffer;
 
     ///A header with a header length 20 instead of the true header length 4
-    extern const std::vector<unsigned int> header_w_bad_headerlen;
+    extern std::vector<unsigned int> header_w_bad_headerlen;
 
     ///A header where the event length doesn't match what it should be.
-    extern const std::vector<unsigned int> header_w_bad_eventlen;
+    extern std::vector<unsigned int> header_w_bad_eventlen;
 
     extern const unsigned int encodedFilterBaseline;
 
@@ -85,37 +85,37 @@ namespace unittest_encoded_data {
         extern const unsigned int word3_headerWithTrace;
 
         /// Just the header, including the first two words inserted by poll2
-        extern const std::vector<unsigned int> header;
+        extern std::vector<unsigned int> header;
 
         /// This header has the CFD fractional time.
-        extern const std::vector<unsigned int> headerWithCfd;
+        extern std::vector<unsigned int> headerWithCfd;
 
         /// Header that includes an external time stamp.
-        extern const std::vector<unsigned int> headerWithExternalTimestamp;
+        extern std::vector<unsigned int> headerWithExternalTimestamp;
 
         ///Header that has Esums
-        extern const std::vector<unsigned int> headerWithEnergySums;
+        extern std::vector<unsigned int> headerWithEnergySums;
 
         ///Header that has Esums and an External Timestamp
-        extern const std::vector<unsigned int> headerWithEnergySumsExternalTimestamp;
+        extern std::vector<unsigned int> headerWithEnergySumsExternalTimestamp;
 
         ///A header that also contains a QDC
-        extern const std::vector<unsigned int> headerWithQdc;
+        extern std::vector<unsigned int> headerWithQdc;
 
         ///Header that has QDCs and External Timestamps
-        extern const std::vector<unsigned int> headerWithQdcExternalTimestamp;
+        extern std::vector<unsigned int> headerWithQdcExternalTimestamp;
 
         ///Header that has Esums and a QDC
-        extern const std::vector<unsigned int> headerWithEnergySumsQdc;
+        extern std::vector<unsigned int> headerWithEnergySumsQdc;
 
         ///Header that has Esums, QDC, and External Timestamp
-        extern const std::vector<unsigned int> headerWithEnergySumsQdcExternalTimestamp;
+        extern std::vector<unsigned int> headerWithEnergySumsQdcExternalTimestamp;
 
         //The header is the standard 4 words. The trace is 62 words, which gives a trace length of 124. This gives us an event
         // length of 66. We have 2 words for the Pixie Module Data Header.
-        extern const std::vector<unsigned int> headerWithTrace;
+        extern std::vector<unsigned int> headerWithTrace;
 
-        extern const std::vector<unsigned int> headerWithQdcTrace;
+        extern std::vector<unsigned int> headerWithQdcTrace;
     }
 }
 
