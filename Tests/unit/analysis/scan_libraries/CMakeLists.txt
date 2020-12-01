@@ -1,24 +1,17 @@
 # @author S. V. Paulauskas
 
-add_executable(unittest-XiaListModeDataDecoder unittest-XiaListModeDataDecoder.cpp ../source/XiaData.cpp
-        ../source/XiaListModeDataDecoder.cpp ../source/XiaListModeDataMask.cpp)
-target_link_libraries(unittest-XiaListModeDataDecoder UnitTest++ ${LIBS})
-add_test(XiaListModeDataDecoder unittest-XiaListModeDataDecoder)
+target_include_directories(tests PUBLIC ${PROJECT_SOURCE_DIR}/Analysis/ScanLibraries/include)
 
-add_executable(unittest-XiaListModeDataEncoder unittest-XiaListModeDataEncoder.cpp ../source/XiaData.cpp
-        ../source/XiaListModeDataEncoder.cpp ../source/XiaListModeDataMask.cpp)
-target_link_libraries(unittest-XiaListModeDataEncoder UnitTest++ ${LIBS})
-add_test(XiaListModeDataEncoder unittest-XiaListModeDataEncoder)
+target_sources(tests PUBLIC ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/scan_libraries/test_Trace.cpp)
 
-add_executable(unittest-XiaListModeDataMask unittest-XiaListModeDataMask.cpp ../source/XiaData.cpp
-        ../source/XiaListModeDataMask.cpp)
-target_link_libraries(unittest-XiaListModeDataMask UnitTest++ ${LIBS})
-add_test(XiaListModeDataMask unittest-XiaListModeDataMask)
-
-add_executable(unittest-XiaData unittest-XiaData.cpp ../source/XiaData.cpp)
-target_link_libraries(unittest-XiaData UnitTest++ ${LIBS})
-add_test(XiaListModeData unittest-XiaData)
-
-add_executable(unittest-Trace unittest-Trace.cpp)
-target_link_libraries(unittest-Trace UnitTest++ ${LIBS})
-add_test(Trace unittest-Trace)
+#target_sources(tests PUBLIC ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/scan_libraries/test_XiaData.cpp
+#        ${PROJECT_SOURCE_DIR}/Analysis/ScanLibraries/source/XiaData.cpp)
+#
+#target_sources(tests PUBLIC ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/scan_libraries/test_XiaListModeDataDecoder.cpp
+#        ${PROJECT_SOURCE_DIR}/Analysis/ScanLibraries/source/XiaListModeDataDecoder.cpp)
+#
+#target_sources(tests PUBLIC ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/scan_libraries/test_XiaListModeDataEncoder.cpp
+#        ${PROJECT_SOURCE_DIR}/Analysis/ScanLibraries/source/XiaListModeDataEncoder.cpp)
+#
+#target_sources(tests PUBLIC ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/scan_libraries/test_XiaListModeDataMask.cpp
+#        ${PROJECT_SOURCE_DIR}/Analysis/ScanLibraries/source/XiaListModeDataMask.cpp)

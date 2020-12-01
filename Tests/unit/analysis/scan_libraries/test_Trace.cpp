@@ -2,61 +2,91 @@
 ///@brief A program that will execute unit tests on Trace
 ///@author S. V. Paulauskas
 ///@date February 3, 2017
-#include <vector>
-
-#include <cmath>
-
-#include <UnitTest++.h>
+#include "Trace.hpp"
 
 #include "UnitTestSampleData.hpp"
-#include "Trace.hpp"
+#include "doctest.h"
 
 using namespace std;
 using namespace unittest_trace_variables;
 using namespace unittest_decoded_data;
 
-TEST_FIXTURE(Trace, TestingGettersAndSetters){
-    double double_input = 100.;
-    SetBaseline(baseline_pair);
-    CHECK_EQUAL(baseline_pair.first, GetBaselineInfo().first);
-    CHECK_EQUAL(baseline_pair.second, GetBaselineInfo().second);
+TEST_SUITE ("Analysis/ScanLibraries/Trace") {
+    TEST_CASE_FIXTURE (Trace, "TestingGettersAndSetters") {
+        double double_input = 100.;
 
-    SetMax(max_pair);
-    CHECK_EQUAL(max_pair.first, GetMaxInfo().first);
-    CHECK_EQUAL(max_pair.second, GetMaxInfo().second);
+        SUBCASE ("Baseline") {
+            SetBaseline(baseline_pair);
+            CHECK(baseline_pair.first == GetBaselineInfo().first);
+            CHECK(baseline_pair.second == GetBaselineInfo().second);
+        }
 
-    SetWaveformRange(waveform_range);
-    CHECK_EQUAL(waveform_range.first, GetWaveformRange().first);
-    CHECK_EQUAL(waveform_range.second, GetWaveformRange().second);
+        SUBCASE("Max") {
+            SetMax(max_pair);
+            CHECK(max_pair.first == GetMaxInfo().first);
+            CHECK(max_pair.second == GetMaxInfo().second);
 
-    SetTraceSansBaseline(trace_sans_baseline);
-    CHECK_ARRAY_EQUAL(trace_sans_baseline, GetTraceSansBaseline(), trace_sans_baseline.size());
+        }
 
-    CHECK_ARRAY_EQUAL(waveform, GetWaveform(), waveform.size());
+        SUBCASE("Waveform range") {
+            SetWaveformRange(waveform_range);
+            CHECK(waveform_range.first == GetWaveformRange().first);
+            CHECK(waveform_range.second == GetWaveformRange().second);
+        }
 
-    SetTriggerFilter(trace_sans_baseline);
-    CHECK_ARRAY_EQUAL(trace_sans_baseline, GetTriggerFilter(), trace_sans_baseline.size());
+        SUBCASE ("Trace sans baseline") {
+            SetTraceSansBaseline(trace_sans_baseline);
+            for (unsigned int i = 0; i < trace_sans_baseline.size(); i++)
+                CHECK (trace_sans_baseline.at(i) == GetTraceSansBaseline().at(i));
+        }
 
-    SetEnergySums(waveform);
-    CHECK_ARRAY_EQUAL(waveform, GetEnergySums(), waveform.size());
+        SUBCASE ("Waveform") {
+            SetTraceSansBaseline(trace_sans_baseline);
+            SetWaveformRange(waveform_range);
+            for (unsigned int i = 0; i < waveform.size(); i++)
+                CHECK (waveform.at(i) == GetWaveform().at(i));
+        }
 
-    SetQdc(double_input);
-    CHECK_EQUAL(double_input, GetQdc());
+        SUBCASE("Trigger Filter") {
+            SetTriggerFilter(trace_sans_baseline);
 
-    SetExtrapolatedMax(extrapolated_maximum_pair);
-    CHECK_EQUAL(extrapolated_maximum_pair.first, GetExtrapolatedMaxInfo().first);
-    CHECK_EQUAL(extrapolated_maximum_pair.second, GetExtrapolatedMaxInfo().second);
+            for (unsigned int i = 0; i < trace_sans_baseline.size(); i++)
+                CHECK (trace_sans_baseline.at(i) == GetTriggerFilter().at(i));
+        }
 
-    SetIsSaturated(true);
-    CHECK (IsSaturated());
+        SUBCASE ("Energy Sums") {
+            SetEnergySums(waveform);
+            for (unsigned int i = 0; i < waveform.size(); i++)
+                CHECK (waveform.at(i) == GetEnergySums().at(i));
+        }
 
-    SetPhase(double_input);
-    CHECK_EQUAL(double_input, GetPhase());
+        SUBCASE ("QDC") {
+            SetQdc(double_input);
+            CHECK(double_input == GetQdc());
+        }
 
-    SetTau(double_input);
-    CHECK_EQUAL(double_input, GetTau());
+        SUBCASE ("Extrapolated Max") {
+            SetExtrapolatedMax(extrapolated_maximum_pair);
+            CHECK(extrapolated_maximum_pair.first == GetExtrapolatedMaxInfo().first);
+            CHECK(extrapolated_maximum_pair.second == GetExtrapolatedMaxInfo().second);
+        }
+
+        SUBCASE ("Saturation") {
+            SetIsSaturated(true);
+            CHECK (IsSaturated());
+        }
+
+        SUBCASE ("Phase") {
+            SetPhase(double_input);
+            CHECK(double_input == GetPhase());
+        }
+
+        SUBCASE ("Tau") {
+            SetTau(double_input);
+            CHECK(double_input == GetTau());
+        }
+
+    }
+
 }
 
-int main(int argv, char *argc[]) {
-    return (UnitTest::RunAllTests());
-}
