@@ -7,7 +7,7 @@
 #include "HelperEnumerations.hpp"
 #include "UnitTestSampleData.hpp"
 
-#include <UnitTest++.h>
+#include <doctest.h>
 
 #include <stdexcept>
 
