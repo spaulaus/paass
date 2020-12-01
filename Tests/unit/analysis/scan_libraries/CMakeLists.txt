@@ -13,6 +13,5 @@ target_sources(tests PUBLIC ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/scan_libra
 target_sources(tests PUBLIC ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/scan_libraries/test_XiaListModeDataEncoder.cpp
         ${PROJECT_SOURCE_DIR}/Analysis/ScanLibraries/source/XiaListModeDataEncoder.cpp)
 
-target_sources(tests PUBLIC
-#        ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/scan_libraries/test_XiaListModeDataMask.cpp
+target_sources(tests PUBLIC ${PROJECT_SOURCE_DIR}/Tests/unit/analysis/scan_libraries/test_XiaListModeDataMask.cpp
         ${PROJECT_SOURCE_DIR}/Analysis/ScanLibraries/source/XiaListModeDataMask.cpp)
