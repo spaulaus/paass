@@ -90,7 +90,7 @@ endif (PAASS_BUILD_TESTS)
 #------------------------------------------------------------------------------
 #Put all the include directories that we might need at this point. Third party includes must come before the Resources.
 # TODO : We will need to update all these to be target_include calls paired with the right executable.
-include_directories(ThirdParty/include Resources/include Core/include)
+include_directories(ThirdParty/pugixml/include Resources/include Core/include)
 
 add_subdirectory(ThirdParty)
 add_subdirectory(Resources)
