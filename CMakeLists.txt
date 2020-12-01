@@ -4,9 +4,6 @@ cmake_minimum_required(VERSION 3.11)
 
 project(PAASS)
 
-#Set the C++ standard to c++11.
-set(CMAKE_CXX_STANDARD_REQUIRED YES)
-
 #Use rpath on Mac OS
 set(CMAKE_MACOSX_RPATH TRUE)
 
@@ -57,11 +54,11 @@ option(PAASS_BUILD_TESTS "Builds programs designed to test the package. Includin
 
 #------------------------------------------------------------------------------
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/Cmake/modules/")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/Cmake/modules/")
 
 find_package(Threads REQUIRED)
 
-if(PAASS_BUILD_ACQ)
+if (PAASS_BUILD_ACQ)
     #Find the PLX Library
     find_package(PLX REQUIRED)
     link_directories(${PLX_LIBRARY_DIR})
@@ -79,19 +76,16 @@ find_package(Curses REQUIRED)
 add_definitions("-D USE_NCURSES")
 mark_as_advanced(FORCE CURSES_HAVE_CURSES_H CURSES_CURSES_H_PATH CURSES_FORM_LIBRARY)
 
-# https://github.com/unittest-cpp/unittest-cpp.git
-if (PAASS_BUILD_TESTS)
-    find_package(UnitTest++ REQUIRED)
-    link_directories(${UNITTEST++_LIBRARY_DIR})
-    include_directories(${UNITTEST++_INCLUDE_DIR})
-    enable_testing()
-endif (PAASS_BUILD_TESTS)
-
 find_package(ROOT REQUIRED COMPONENTS TreePlayer)
 mark_as_advanced(FORCE GENREFLEX_EXECUTABLE ROOTCINT_EXECUTABLE ROOT_CONFIG_EXECUTABLE)
 include_directories(${ROOT_INCLUDE_DIR})
 link_directories(${ROOT_LIBRARY_DIR})
 add_definitions("-D USE_ROOT")
+
+if (PAASS_BUILD_TESTS)
+    add_subdirectory(Tests)
+    enable_testing()
+endif (PAASS_BUILD_TESTS)
 
 #------------------------------------------------------------------------------
 #Put all the include directories that we might need at this point. Third party includes must come before the Resources.
@@ -112,9 +106,9 @@ else ()
 endif (PAASS_BUILD_ACQ)
 
 #Build any of the analysis related things that we need to build.
-if(PAASS_BUILD_ANALYSIS)
+if (PAASS_BUILD_ANALYSIS)
     add_subdirectory(Analysis)
-endif(PAASS_BUILD_ANALYSIS)
+endif (PAASS_BUILD_ANALYSIS)
 
 #Build/install the miscellaneous stuff
 add_subdirectory(Share)
