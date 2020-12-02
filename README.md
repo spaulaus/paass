@@ -1,11 +1,6 @@
 # Pixie Acquisition and Analysis Software Suite (PAASS)
-<!-- Author: S. Paulauskas -->
 ## Build Status spaulaus/paass
-Branch | Build status
----------|-------------:
-Master | [![Build Status](https://travis-ci.org/spaulaus/paass-lc.svg?branch=master)](https://travis-ci.org/spaulaus/paass-lc)
-Test | [![Build Status](https://travis-ci.org/spaulaus/paass-lc.svg?branch=test)](https://travis-ci.org/spaulaus/paass-lc)
-Dev | [![Build Status](https://travis-ci.org/spaulaus/paass-lc.svg?branch=dev)](https://travis-ci.org/spaulaus/paass-lc)
+[![Build Status](https://travis-ci.com/spaulaus/paass.svg?branch=master)](https://travis-ci.com/spaulaus/paass)
 
 ## Introduction
 Our goals are to create a 
