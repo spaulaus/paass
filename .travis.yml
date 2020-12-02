@@ -52,8 +52,6 @@ before_install:
   - sudo apt-get -qq update --install-suggests
   - eval "${MATRIX_EVAL}"
   - export ORIG_DIR=$PWD
-  - git clone https://github.com/unittest-cpp/unittest-cpp.git && cd unittest-cpp/builds/
-  - cmake ../ && sudo make install && cd $ORIG_DIR
   - mkdir -p /opt/plx/ && cd /opt/plx
   - git clone https://github.com/spaulaus/plx-api.git && ln -s plx-api current && cd plx-api
   - export PLX_SDK_DIR=$PWD && make all && cd ${ORIG_DIR}
@@ -66,4 +64,4 @@ before_install:
 
 script:
   - mkdir paass-build && cd paass-build
-  - cmake ../ ${BUILD_OPTIONS} && make -j8 && ctest -j8
+  - cmake ../ ${BUILD_OPTIONS} && make -j8 && ./Tests/tests
