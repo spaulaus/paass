@@ -2,7 +2,7 @@
 /// @brief Implementation for AcquisitionConfig class, which reads configuration file defining modules.
 /// @author K. Smith, S. V. Paulauskas
 /// @date August 11, 2018
-#include <AcquisitionConfig.hpp>
+#include "AcquisitionConfig.hpp"
 
 #include "Constants.hpp"
 #include "Display.h"
