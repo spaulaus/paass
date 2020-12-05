@@ -25,7 +25,7 @@
 
 using namespace std;
 
-FittingAnalyzer::FittingAnalyzer(const std::string &s) {
+FittingAnalyzer::FittingAnalyzer(const std::string &s ,const std::set<std::string> &ignoredTypes) {
     name = "FittingAnalyzer";
     if (s == "GSL" || s == "gsl")
         driver_ = new GslFitter();
@@ -37,17 +37,31 @@ FittingAnalyzer::FittingAnalyzer(const std::string &s) {
            << "\" was unknown. Please choose a valid driver.";
         throw PaassException(ss.str());
     }
+    ignoredTypes_ = ignoredTypes; 
 }
 
 FittingAnalyzer::~FittingAnalyzer() {
     delete driver_;
 }
 
+bool FittingAnalyzer::IsIgnoredDetector(const ChannelConfiguration &id) {
+    if (IsIgnored(ignoredTypes_, id)) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 void FittingAnalyzer::Analyze(Trace &trace, const ChannelConfiguration &cfg) {
     TraceAnalyzer::Analyze(trace, cfg);
 
-    if (trace.IsSaturated() || trace.empty() || !trace.HasValidAnalysis()) {
-        trace.SetPhase(0.0);
+    //non destructive return if we have already done timing analysis on this channel
+    if (trace.HasValidTimingAnalysis()){
+        return;
+    }
+
+    if (trace.IsSaturated() || trace.empty() || !trace.HasValidWaveformAnalysis() || IsIgnored(ignoredTypes_,cfg)) {
+        trace.SetHasValidTimingAnalysis(false);
         EndAnalyze();
         return;
     }
@@ -61,5 +75,6 @@ void FittingAnalyzer::Analyze(Trace &trace, const ChannelConfiguration &cfg) {
 
     trace.SetPhase(driver_->CalculatePhase(trace.GetWaveform(), timingConfiguration, trace.GetMaxInfo(),
                                            trace.GetBaselineInfo()) + trace.GetMaxInfo().first);
+    trace.SetHasValidTimingAnalysis(true);
     EndAnalyze();
 }

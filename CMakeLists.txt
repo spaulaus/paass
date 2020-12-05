@@ -50,7 +50,27 @@ option(PAASS_BUILD_ACQ "Build and install Acquisition software" ON)
 option(PAASS_BUILD_ANALYSIS "Build analysis related programs" ON)
 option(PAASS_BUILD_SETUP "Include the older setup programs in installation" OFF)
 option(PAASS_BUILD_SHARED_LIBS "Install only scan libraries" ON)
-option(PAASS_BUILD_TESTS "Builds programs designed to test the package. Including UnitTest++ test." OFF)
+option(PAASS_BUILD_TESTS "Builds programs designed to test the package." OFF)
+option(PAASS_BUILD_UTKSCAN "Build utkscan" OFF)
+option(PAASS_USE_DAMM "Use DAMM for MCA" ON)
+option(PAASS_USE_NCURSES "Use ncurses for terminal" ON)
+option(PAASS_USE_ROOT "Use ROOT (Currently REQUIRED!!)" ON)
+
+mark_as_advanced(PAASS_USE_NCURSES)
+mark_as_advanced(PAASS_USE_DAMM)
+mark_as_advanced(PAASS_USE_ROOT)
+
+option(PAASS_EXPORT_COMPILE_COMMANDS "CMAKE_EXPORT_COMPILE_COMMANDS WRAPPER" ON)
+mark_as_advanced(PAASS_EXPORT_COMPILE_COMMANDS)
+
+#Generate the compile_commands.json file which is used by VSCode (among others) to generate the clang autocomplete
+#Needs the PAASS_EXPORT_COMPILE_COMMANDS wrapper because of the "FORCE" which is required to even set the var from CMakeList.txt,
+#while maintaining the ability to toggle it on/off without wiping the build dir
+if(PAASS_EXPORT_COMPILE_COMMANDS)
+    set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "Generates compile_commands.json, needed for some IDEs among other things" FORCE)
+else ()
+    set(CMAKE_EXPORT_COMPILE_COMMANDS OFF CACHE BOOL "Generates compile_commands.json, needed for some IDEs among other things" FORCE)   
+endif (PAASS_EXPORT_COMPILE_COMMANDS)
 
 #------------------------------------------------------------------------------
 

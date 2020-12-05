@@ -23,7 +23,7 @@ namespace DataProcessing {
     ///See https://github.com/spaulaus/paass-laughing-conqueror/wiki/Pixie-Firmware-Information
     enum FIRMWARE {
         R17562=17562, R20466=20466, R27361=27361, R29432=29432, R30474=30474, R30980=30980, R30981=30981, R34688=34688,
-        UNKNOWN
+        R35207=35207, UNKNOWN
     };
 
     ///An enumeration that tells how long headers from the XIA List mode data

@@ -10,10 +10,11 @@
 #include <cmath>
 
 #include "EventProcessor.hpp"
+#include "PaassRootStruct.hpp"
 #include "RawEvent.hpp"
 
 namespace dammIds {
-    //! Namespace containing histogram definitions for the GE
+    //! Namespace containing histogram definitions for the Clover
     namespace clover {
         /**
         * Naming conventions:
@@ -50,6 +51,7 @@ namespace dammIds {
         const int DD_TDIFF__GAMMA_GAMMA_ENERGY_SUM = 156;//!< Tdiff vs. Gamma-Gamma Energy sum
 
         const int DD_ADD_ENERGY__TIMEX = 170;//!< Addback Energy vs. Time
+        const int D_NONCYCGATEDENERGY = 200; //!<Same as D_ENERGY but without the cycling requirement, Useful for Cf and other tests
 
         //! Namespace for the beta gated Ge histograms
         namespace betaGated {
@@ -86,6 +88,7 @@ namespace dammIds {
             const int DD_ADD_ENERGY = 160;//!< Beta Gated Gamma-Gamma Addback
             const int DD_ADD_ENERGY_PROMPT = 161;//!< Beta Gated Gamma-Gamma Prompt addback
             const int DD_ADD_ENERGY__TIMEX = 180;//!< Beta Gated Addback Energy vs. Time
+            const int D_NONCYCGATEDENERGY = 210; //!<Same as D_ENERGY but without the cycling requirement, Useful for Cf and other tests
         }
 
         //! namespace for the multi-gated spectra
@@ -102,7 +105,7 @@ namespace dammIds {
                 const int DD_ADD_ENERGY_PROMPT = 163;//!< beta/multi gated addback energy
             }
         }
-    } // end namespace ge
+    } // end namespace clover
 }
 
 #ifdef GGATES
@@ -154,22 +157,24 @@ class AddBackEvent {
 public:
     /** Default constructor setting things to zero */
     AddBackEvent() {
-        energy = time = multiplicity = 0;
+        energy = time = multiplicity = ftime = 0;
     }
 
     /** Default constructor setting default values
      * \param [in] ienergy : the initial energy
      * \param [in] itime : the initial time
      * \param [in] imultiplicity : multiplicity of the event */
-    AddBackEvent(double ienergy, double itime, unsigned imultiplicity) {
+    AddBackEvent(double ienergy, double itime, unsigned imultiplicity,double ifirsttime) {
         energy = ienergy;
         time = itime;
         multiplicity = imultiplicity;
+        ftime = ifirsttime;
     }
 
     double energy;//!< Energy of the addback event
     double time;//!< time of the addback event
     unsigned multiplicity;//!< multiplicity of the event
+    double ftime;//!<first time in the event
 };
 
 //! Processor to handle Ge (read as clover) events
@@ -209,8 +214,7 @@ public:
     std::vector<ChanEvent *> GetGeEvents(void) { return (geEvents_); }
 
     /** Returns the events that were added to the addbackEvents_ */
-    std::vector<std::vector<AddBackEvent>>
-    GetAddbackEvents(void) { return (addbackEvents_); }
+    std::vector<std::vector<AddBackEvent>> GetAddbackEvents(void) { return (addbackEvents_); }
 
     /** Returns the events that were added to the tas_ */
     std::vector<AddBackEvent> GetTasEvents(void) { return (tas_); }
@@ -264,6 +268,7 @@ protected:
      * \param [in] bin2 : the second bin to plot into */
     void symplot(int dammID, double bin1, double bin2);
 
+
     /** addbackEvents vector of vectors, where first vector
      * enumerates cloves, second events */
     std::vector<std::vector<AddBackEvent>> addbackEvents_;
@@ -297,6 +302,8 @@ protected:
     double cycle_gate1_max_;//!< high value for first cycle gate
     double cycle_gate2_min_;//!< low value for second cycle gate
     double cycle_gate2_max_;//!< high value for second cycle gate
+
+    processor_struct::CLOVERS Cstruct;
 };
 
 #endif // __CloverProcessor_HPP_

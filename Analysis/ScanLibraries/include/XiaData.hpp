@@ -27,8 +27,10 @@ public:
     /// channel (i.e. the ID and Time are identical)
     ///@param[in] rhs : The right hand side of the comparison
     ///@return True if the two XiaData classes are equal.
-    bool operator==(const XiaData &rhs) const { return GetId() == rhs.GetId() && GetFilterTime() == rhs.GetFilterTime()
-                                                       && energy_ == rhs.GetEnergy(); }
+    bool operator==(const XiaData &rhs) const {
+        return GetId() == rhs.GetId() && GetFilterTime() == rhs.GetFilterTime()
+               && energy_ == rhs.GetEnergy();
+    }
 
     ///@brief The conjugate of the equality operator
     ///@param[in] rhs : The right hand side for the comparison
@@ -116,11 +118,16 @@ public:
 
     ///@return The upper 16 bits of the external time stamp provided to the
     /// module via the front panel
-    unsigned int GetExternalTimeHigh() const { return externalTimeHigh_; }
+    double GetExternalTimeHigh() const { return externalTimeHigh_; }
 
     ///@return The lower 32 bits of the external time stamp provided to the
     /// module via the front panel
     unsigned int GetExternalTimeLow() const { return externalTimeLow_; }
+
+    ///@return The external time stamp for the channel including all of the CFD information
+    /// when available.
+    double GetExternalTimeStamp() const { return externalTimestamp_; }
+
 
     ///@return The unique ID of the channel.
     ///We can have a maximum of 208 channels in a crate, the first module (#0) is always in the second slot of the crate, and
@@ -194,6 +201,10 @@ public:
     ///@brief Sets the lower 32 bits of the external event time
     ///@param[in] a : The value to set
     void SetExternalTimeLow(const unsigned int &a) { externalTimeLow_ = a; }
+
+    ///@brief Sets the external time stamp
+    ///@param[in] a : The value to set
+    void SetExternalTimeStamp(const unsigned long long &a) { externalTimestamp_ = a; }
 
     ///@brief Sets if we had a pileup found on-board
     ///@param[in] a : The value to set

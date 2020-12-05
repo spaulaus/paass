@@ -25,16 +25,23 @@ namespace dammIds {
         const unsigned int BIG_OFFSET = 20; //!< Offset for big bars
         const unsigned int MED_OFFSET = 40;//!< Offset for medium bars
         const unsigned int DEBUGGING_OFFSET = 60;//!< Offset for debugging hists
+        const unsigned int SMALLNOCAL_OFFSET = 100;//!< Offset for Unclaibrated hists
+        const unsigned int MEDNOCALTYPE_OFFSET = 110;//!< Offset for Unclaibrated hists MEDIUM BARS
+        const unsigned int BIGNOCALTYPE_OFFSET = 120;//!< Offset for Unclaibrated hists LARGE BARS
 
         const int DD_TQDCBARS = 0;//!< QDC for the bars
-        const int DD_TIMEDIFFBARS = 1;//!< time difference in the bars
-        const int DD_TOFBARS = 2;//!< time of flight for the bars
-        const int DD_CORTOFBARS = 3;//!< corrected time of flight
-        const int DD_TQDCAVEVSTOF = 4;//!< Ave QDC vs. ToF
-        const int DD_TQDCAVEVSCORTOF = 5;//!< Ave QDC vs. Cor ToF
-        const int DD_GAMMAENERGYVSTOF = 6;//!< Gamma Energy vs. ToF
-        const int DD_TQDCAVEVSTOF_VETO = 7;//!< QDC vs. ToF - Vetoed
-        const int DD_TOFBARS_VETO = 8;//!< ToF - Vetoed
+        const int DD_MAXIMUMBARS  = 1;//!< Maximum values for the bars
+        const int DD_TIMEDIFFBARS = 2;//!< time difference in the bars
+        const int DD_TOFBARS = 3;//!< time of flight for the bars
+        const int DD_CORTOFBARS = 4;//!< corrected time of flight
+        const int DD_TQDCAVEVSTOF = 5;//!< Ave QDC vs. ToF
+        const int DD_TQDCAVEVSCORTOF = 6;//!< Ave QDC vs. Cor ToF
+        const int DD_GAMMAENERGYVSTOF = 7;//!< Gamma Energy vs. ToF
+        const int DD_TQDCAVEVSTOF_VETO = 8;//!< QDC vs. ToF - Vetoed
+        const int DD_TOFBARS_VETO = 9;//!< ToF - Vetoed
+        const int DD_QDCTOF_DECAY = 10;//!< QDC vs. ToF rough decay gated
+        const int DD_TDIFF_DECAY = 11;//!< TDIFF rough decay gated
+        const int DD_TOFBARS_DECAY = 12;//!< Tof per bar rough decay gated
 
         const int D_DEBUGGING = 0 + DEBUGGING_OFFSET;//!< Debugging countable problems
         const int DD_DEBUGGING = 1 + DEBUGGING_OFFSET;//!< 2D Hist to count problems
@@ -49,13 +56,17 @@ VandleProcessor::VandleProcessor() : EventProcessor(OFFSET, RANGE, "VandleProces
 }
 
 VandleProcessor::VandleProcessor(const std::vector<std::string> &typeList, const double &res, const double &offset,
-                                 const unsigned int &numStarts, const double &compression/*=1.0*/) :
+                                 const unsigned int &numStarts, const double &compression/*=1.0*/,const double &qdcmin,
+                                 const double &tofcut, const double &idealFP) :
         EventProcessor(OFFSET,RANGE,"VandleProcessor") {
     associatedTypes.insert("vandle");
     plotMult_ = res;
     plotOffset_ = offset;
     numStarts_ = numStarts;
     qdcComp_ = compression;
+    qdcmin_ = qdcmin;
+    tofcut_ = tofcut;
+    idealFP_ = idealFP;
 
     if(typeList.empty())
         requestedTypes_.insert("small");
@@ -65,15 +76,25 @@ VandleProcessor::VandleProcessor(const std::vector<std::string> &typeList, const
 
 void VandleProcessor::DeclarePlots(void) {
     for(set<string>::iterator it = requestedTypes_.begin(); it != requestedTypes_.end(); it++) {
-        unsigned int offset = ReturnOffset(*it);
-        histo.DeclareHistogram2D(DD_TQDCBARS + offset, SD, S8, "Det Loc vs Trace QDC - Left Even - Right Odd");
-        histo.DeclareHistogram2D(DD_TIMEDIFFBARS + offset, SB, S6, "Bars vs. Time Differences");
-        histo.DeclareHistogram2D(DD_TOFBARS + offset, SC, S8, "Bar vs. Time of Flight");
-        histo.DeclareHistogram2D(DD_CORTOFBARS + offset, SC, S8, "Bar vs  Cor Time of Flight");
-        histo.DeclareHistogram2D(DD_TQDCAVEVSTOF + offset, SC, SD, "<E> vs. TOF(0.5ns/bin)");
-        histo.DeclareHistogram2D(DD_TQDCAVEVSCORTOF + offset, SC, SD, "<E> vs. CorTOF(0.5ns/bin)");
-        histo.DeclareHistogram2D(DD_GAMMAENERGYVSTOF + offset, SC, S9, "C-ToF vs. E_gamma");
+        pair<unsigned int,unsigned int> offset = ReturnOffset(*it);
+        histo.DeclareHistogram2D(DD_TQDCBARS + offset.first, SD, S8, "Det Loc vs Trace QDC - Right Even - Left Odd");
+        histo.DeclareHistogram2D(DD_MAXIMUMBARS + offset.first, SD, S8,"Det Loc vs Maximum - Right Even - Left Odd");
+        histo.DeclareHistogram2D(DD_TIMEDIFFBARS + offset.first, SB, S6, "Bars vs. Time Differences");
+        histo.DeclareHistogram2D(DD_TOFBARS + offset.first, SC, S6, "Bar vs. Time of Flight");
+        histo.DeclareHistogram2D(DD_CORTOFBARS + offset.first, SC, S6, "Bar vs  Cor Time of Flight");
+        histo.DeclareHistogram2D(DD_TQDCAVEVSTOF + offset.first, SC, SD, "<E> vs. TOF(0.5ns/bin)");
+        histo.DeclareHistogram2D(DD_TQDCAVEVSCORTOF + offset.first, SC, SD, "<E> vs. CorTOF(0.5ns/bin)");
+        histo.DeclareHistogram2D(DD_GAMMAENERGYVSTOF + offset.first, SC, S9, "C-ToF vs. E_gamma");
+
+        histo.DeclareHistogram2D(DD_TIMEDIFFBARS + offset.second, SB, S7, "UNCALIBRATED: Bars vs. Time Differences (0.5ns/bin)");
+        histo.DeclareHistogram2D(DD_TOFBARS + offset.second, SC, S7, "UNCALIBRATED: Bar vs. Time of Flight (0.5ns/bin)");
+        histo.DeclareHistogram2D(DD_TQDCAVEVSTOF+ offset.second, SC, SD, "UNCALIBRATED: <E> vs. TOF (0.5ns/bin)");
+
+        histo.DeclareHistogram2D(DD_QDCTOF_DECAY+offset.first,SC,SD, "<E> vs. TOF (0.5ns/bin) Rough Decay Gated ");
+        histo.DeclareHistogram2D(DD_TOFBARS_DECAY+offset.first,SC,S6, "Bar vs. TOF (0.5ns/bin) Rough Decay Gated ");
+        histo.DeclareHistogram2D(DD_TDIFF_DECAY+offset.first,SC,S6, "Bar vs. TDiff(0.5ns/bin) Rough Decay Gated ");
     }
+
     histo.DeclareHistogram1D(D_DEBUGGING, S5, "1D Debugging");
     histo.DeclareHistogram2D(DD_DEBUGGING, S8, S8, "2D Debugging");
 }
@@ -118,10 +139,17 @@ bool VandleProcessor::Process(RawEvent &event) {
 
     static const vector<ChanEvent *> &betaStarts = event.GetSummary("beta_scint:beta")->GetList();
     static const vector<ChanEvent *> &liquidStarts = event.GetSummary("liquid:scint:start")->GetList();
+    static const vector<ChanEvent *> &pspmtStarts = event.GetSummary("pspmt:dynode_high:start")->GetList();
+    static const vector<ChanEvent *> &singleBetaStarts = event.GetSummary("beta:single:start")->GetList();
+
+    static const vector<ChanEvent *> &LIonVeto =  event.GetSummary("pspmt:veto")->GetList();
+    static const vector<ChanEvent *> &IondE=  event.GetSummary("pspmt:ion")->GetList();
 
     vector<ChanEvent *> startEvents;
     startEvents.insert(startEvents.end(), betaStarts.begin(), betaStarts.end());
     startEvents.insert(startEvents.end(), liquidStarts.begin(), liquidStarts.end());
+    startEvents.insert(startEvents.end(),pspmtStarts.begin(),pspmtStarts.end());
+    startEvents.insert(startEvents.end(),singleBetaStarts.begin(),singleBetaStarts.end());
 
     TimingMapBuilder bldStarts(startEvents);
     starts_ = bldStarts.GetMap();
@@ -130,6 +158,15 @@ bool VandleProcessor::Process(RawEvent &event) {
     BarBuilder startBars(doubleBetaStarts);
     startBars.BuildBars();
     barStarts_ = startBars.GetBarMap();
+
+    if (DetectorDriver::get()->GetSysRootOutput()){
+        vandles.vMulti = (int)bars_.size();
+    }
+
+    RDecay_=false;
+    if (LIonVeto.empty() && IondE.empty()){
+    RDecay_=true;
+    }
 
     for (BarMap::iterator it = bars_.begin(); it != bars_.end(); it++) {
         TimingDefs::TimingIdentifier barId = (*it).first;
@@ -142,6 +179,7 @@ bool VandleProcessor::Process(RawEvent &event) {
             AnalyzeBarStarts(bar, barId.first);
         else
             AnalyzeStarts(bar, barId.first);
+
     }
 
     EndProcess();
@@ -153,44 +191,124 @@ void VandleProcessor::AnalyzeBarStarts(const BarDetector &bar, unsigned int &bar
             unsigned int startLoc = (*itStart).first.first;
             BarDetector start = (*itStart).second;
 
+            bool caled = ( bar.GetCalibration().GetZ0() != 0 );
             double tof = bar.GetCorTimeAve() - start.GetCorTimeAve() + bar.GetCalibration().GetTofOffset(startLoc);
-            double corTof = CorrectTOF(tof, bar.GetFlightPath(), bar.GetCalibration().GetZ0());
+            double corTof = CorrectTOF(tof, bar.GetFlightPath(), idealFP_);
+            double NCtof = bar.GetCorTimeAve() - start.GetCorTimeAve() ;
 
-            PlotTofHistograms(tof, corTof, bar.GetQdc(), barLoc * numStarts_ + startLoc, ReturnOffset(bar.GetType()));
+            PlotTofHistograms(tof, corTof,NCtof, bar.GetQdc(), barLoc * numStarts_ + startLoc,
+                              ReturnOffset(bar.GetType()),caled);
+
+            if (DetectorDriver::get()->GetSysRootOutput()){
+                //Fill Root struct
+                vandles.sNum = startLoc;
+                vandles.sTime = start.GetTimeAverage();
+                vandles.sQdc = start.GetQdc();
+
+                vandles.qdc = bar.GetQdc();
+                vandles.barNum = barLoc;
+                vandles.tof = tof;
+                vandles.corTof = corTof;
+
+                vandles.barType = bar.GetType();
+                vandles.tDiff = bar.GetTimeDifference();
+                vandles.qdcPos = bar.GetQdcPosition();
+                vandles.tAvg = bar.GetTimeAverage();
+                vandles.wcTavg = bar.GetCorTimeAve();
+                vandles.wcTdiff = bar.GetCorTimeDiff();
+
+                pixie_tree_event_->vandle_vec_.emplace_back(vandles);
+                vandles = processor_struct::VANDLES_DEFAULT_STRUCT;
+            }
         }
 }
 
 void VandleProcessor::AnalyzeStarts(const BarDetector &bar, unsigned int &barLoc) {
         for (TimingMap::iterator itStart = starts_.begin(); itStart != starts_.end(); itStart++) {
-            if (!(*itStart).second.GetIsValid())
+            if (!(*itStart).second.GetIsValid() && !(*itStart).second.GetChanID().HasTag("ocfd"))
                 continue;
 
             unsigned int startLoc = (*itStart).first.first;
             HighResTimingData start = (*itStart).second;
+            
+            double startTime;
+            //! Set the start time in ns. needed because WalkCorTime without fitting is in GetTime() Ticks
+            if ((*itStart).second.GetChanID().HasTag("ocfd")){
+                startTime = start.GetWalkCorrectedTime() * Globals::get()->GetAdcClockInSeconds(((*itStart).second.GetChanID().GetModFreq()));
+            } else {
+                startTime = start.GetWalkCorrectedTime(); //! with Fitting the HRTimeInNs() is used so no need to convert
+            }
 
-            double tof = bar.GetCorTimeAve() - start.GetWalkCorrectedTime() + bar.GetCalibration().GetTofOffset(startLoc);
-            double corTof = CorrectTOF(tof, bar.GetFlightPath(), bar.GetCalibration().GetZ0());
+            bool caled = ( bar.GetCalibration().GetZ0() != 0 );
+            double tof = bar.GetCorTimeAve() - startTime + bar.GetCalibration().GetTofOffset(startLoc);
+            double corTof = CorrectTOF(tof, bar.GetFlightPath(), idealFP_);
+            double NCtof =bar.GetCorTimeAve() - startTime ;
 
-            PlotTofHistograms(tof, corTof, bar.GetQdc(), barLoc * numStarts_ + startLoc, ReturnOffset(bar.GetType()));
+            PlotTofHistograms(tof, corTof, NCtof,bar.GetQdc(), barLoc * numStarts_ + startLoc,
+                              ReturnOffset(bar.GetType()),caled);
+            if (DetectorDriver::get()->GetSysRootOutput()){
+
+                if (tof>= tofcut_ && bar.GetQdc()>qdcmin_) {
+                    //Fill Root struct
+                    vandles.sNum = startLoc;
+                    vandles.sTime = startTime;
+                    if ((*itStart).second.GetTrace().HasValidWaveformAnalysis()){
+                        vandles.sQdc = start.GetTraceQdc();
+                    }
+                    vandles.qdc = bar.GetQdc();
+                    vandles.barNum = barLoc;
+                    vandles.tof = tof;
+                    vandles.corTof = corTof;
+                    
+                    vandles.barType = bar.GetType();
+                    vandles.tDiff = bar.GetTimeDifference();
+                    vandles.qdcPos = bar.GetQdcPosition();
+                    vandles.tAvg = bar.GetTimeAverage();
+                    vandles.wcTavg = bar.GetCorTimeAve();
+                    vandles.wcTdiff = bar.GetCorTimeDiff();
+                    
+                    pixie_tree_event_->vandle_vec_.emplace_back(vandles);
+                    vandles = processor_struct::VANDLES_DEFAULT_STRUCT;
+                }
+            }
         }
 }
 
-void VandleProcessor::PlotTofHistograms(const double &tof, const double &cortof, const double &qdc,
-                                        const unsigned int &barPlusStartLoc, const unsigned int &offset) {
-    histo.Plot(DD_TOFBARS + offset, tof * plotMult_ + plotOffset_, barPlusStartLoc);
-    histo.Plot(DD_TQDCAVEVSTOF + offset, tof * plotMult_ + plotOffset_, qdc / qdcComp_);
+void VandleProcessor::PlotTofHistograms(const double &tof, const double &cortof,const double &NCtof, const double &qdc,
+                                        const unsigned int &barPlusStartLoc,
+                                        const pair<unsigned int, unsigned int>&offset ,bool &calibrated) {
 
-    histo.Plot(DD_CORTOFBARS + offset, cortof * plotMult_ + plotOffset_, barPlusStartLoc);
-    histo.Plot(DD_TQDCAVEVSCORTOF + offset, cortof * plotMult_ + plotOffset_, qdc / qdcComp_);
+    //Plotting Normal Histograms
+    histo.Plot(DD_TOFBARS + offset.first, tof * plotMult_ + plotOffset_, barPlusStartLoc);
+    histo.Plot(DD_CORTOFBARS + offset.first, cortof * plotMult_ + plotOffset_, barPlusStartLoc);
+    //making these histograms only plot if t cal exists. since no tcal causes strange looking behavior.
+    if (calibrated) {
+        histo.Plot(DD_TQDCAVEVSTOF + offset.first, tof * plotMult_ + plotOffset_, qdc / qdcComp_);
+        histo.Plot(DD_TQDCAVEVSCORTOF + offset.first, cortof * plotMult_ + plotOffset_, qdc / qdcComp_);
+    }
+    /*Plotting the Non Time Calibrated Histograms;
+    *The ones above would be the same as these when no time calibration is present in the Config.xml
+     * This allows for easier timecals since we dont have to rerun the data before we can run timecal.bash
+    */
+    histo.Plot(DD_TOFBARS + offset.second, NCtof* plotMult_ + plotOffset_, barPlusStartLoc);
+    histo.Plot(DD_TQDCAVEVSTOF + offset.second, NCtof* plotMult_ + plotOffset_, qdc / qdcComp_);
+
+    //Plotting Rough Decay Histograms
+    if( RDecay_){
+        histo.Plot(DD_TOFBARS_DECAY + offset.first, tof * plotMult_ + plotOffset_, barPlusStartLoc);
+        if (calibrated) //same as before, causes strange behavior when non TCal'd
+            histo.Plot(DD_QDCTOF_DECAY + offset.first, tof * plotMult_ + plotOffset_, qdc / qdcComp_);
+    }
+
 
     if (geSummary_) {
         if (geSummary_->GetMult() > 0) {
             const vector<ChanEvent *> &geList = geSummary_->GetList();
             for (vector<ChanEvent *>::const_iterator itGe = geList.begin(); itGe != geList.end(); itGe++)
-                histo.Plot(DD_GAMMAENERGYVSTOF + offset, (*itGe)->GetCalibratedEnergy(), tof);
+                histo.Plot(DD_GAMMAENERGYVSTOF + offset.first, (*itGe)->GetCalibratedEnergy(), tof);
         } else {
-            histo.Plot(DD_TQDCAVEVSTOF_VETO + offset, tof, qdc / qdcComp_);
-            histo.Plot(DD_TOFBARS_VETO + offset, tof, barPlusStartLoc);
+            histo.Plot(DD_TQDCAVEVSTOF_VETO + offset.first, tof, qdc / qdcComp_);
+            histo.Plot(DD_TOFBARS_VETO + offset.first, tof, barPlusStartLoc);
         }
     }
 }
@@ -198,20 +316,31 @@ void VandleProcessor::PlotTofHistograms(const double &tof, const double &cortof,
 void VandleProcessor::FillVandleOnlyHists(void) {
     for (BarMap::const_iterator it = bars_.begin(); it != bars_.end(); it++) {
         TimingDefs::TimingIdentifier barId = (*it).first;
-        unsigned int OFFSET = ReturnOffset(barId.second);
+        BarDetector bar = (*it).second;
+        unsigned int OFFSET = ReturnOffset(barId.second).first;
+        unsigned int NOCALOFFSET = ReturnOffset(barId.second).second;
+        double NoCalTDiff = (*it).second.GetLeftSide().GetHighResTimeInNs()-(*it).second.GetRightSide().GetHighResTimeInNs();
+
+        histo.Plot(DD_MAXIMUMBARS + OFFSET,(*it).second.GetLeftSide().GetMaximumValue(), barId.first*2);
+        histo.Plot(DD_MAXIMUMBARS + OFFSET,(*it).second.GetRightSide().GetMaximumValue(), barId.first*2+1);
 
         histo.Plot(DD_TQDCBARS + OFFSET, (*it).second.GetLeftSide().GetTraceQdc() / qdcComp_, barId.first * 2);
         histo.Plot(DD_TQDCBARS + OFFSET, (*it).second.GetRightSide().GetTraceQdc() / qdcComp_, barId.first * 2 + 1);
+
         histo.Plot(DD_TIMEDIFFBARS + OFFSET, (*it).second.GetTimeDifference() * plotMult_ + plotOffset_, barId.first);
+        histo.Plot(DD_TIMEDIFFBARS + NOCALOFFSET, NoCalTDiff* plotMult_ + plotOffset_, barId.first);
+
+        if (RDecay_)
+            histo.Plot(DD_TDIFF_DECAY+ OFFSET, (*it).second.GetTimeDifference() * plotMult_ + plotOffset_, barId.first);
     }
 }
 
-unsigned int VandleProcessor::ReturnOffset(const std::string &type) {
+std::pair<unsigned int, unsigned int> VandleProcessor::ReturnOffset(const std::string &type) {
     if (type == "small")
-        return 0;
+        return (make_pair((unsigned int )0,SMALLNOCAL_OFFSET));
     if (type == "big")
-        return (BIG_OFFSET);
+        return (make_pair(BIG_OFFSET,BIGNOCALTYPE_OFFSET));
     if (type == "medium")
-        return (MED_OFFSET);
-    return numeric_limits<unsigned int>::max();
+        return (make_pair(MED_OFFSET,MEDNOCALTYPE_OFFSET));
+    return make_pair(numeric_limits<unsigned int>::max(),numeric_limits<unsigned int>::max());
 }

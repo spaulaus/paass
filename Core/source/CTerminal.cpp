@@ -307,6 +307,8 @@ void Terminal::clear_() {
     refresh_();
 }
 
+void Terminal::ClearCmd() {Terminal::clear_();}
+
 /**Creates a status window and the refreshes the output. Takes an optional number of lines, defaulted to 1.
  *
  * \param[in] numLines Vertical size of status window.
@@ -1000,9 +1002,13 @@ std::string Terminal::GetCommand(std::string &args, const int &prev_cmd_return_/
                 wdelch(input_window);
                 //Remove character from cmd string
                 cmd.erase(cursX - offset, 1);
-            } else if (keypress ==
-                       KEY_IC) { insertMode_ = true; } // Insert key (331)
-            else if (keypress == KEY_HOME) { cursX = offset; }
+            } else if (keypress == KEY_IC) { // Insert key (331)
+                if (insertMode_){
+                    insertMode_ = false;
+                } else {
+                    insertMode_ = true; 
+                }
+            }else if (keypress == KEY_HOME) { cursX = offset; }
             else if (keypress == KEY_END) { cursX = cmd.length() + offset; }
             else if (keypress == KEY_MOUSE) { //Handle mouse events
                 MEVENT mouseEvent;

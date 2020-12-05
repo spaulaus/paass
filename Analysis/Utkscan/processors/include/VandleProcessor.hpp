@@ -21,6 +21,8 @@
 #include "EventProcessor.hpp"
 #include "HighResTimingData.hpp"
 
+#include "PaassRootStruct.hpp"
+
 /// Class to process VANDLE related events
 class VandleProcessor : public EventProcessor {
 public:
@@ -39,7 +41,8 @@ public:
     ///@param [in] offset : The offset of the DAMM histograms 
     ///@param [in] numStarts : number of starts we have to process */
     VandleProcessor(const std::vector<std::string> &typeList, const double &res, const double &offset,
-                    const unsigned int &numStarts, const double &compression = 1.0);
+                    const unsigned int &numStarts, const double &compression , const double &qdcmin,
+                    const double &tofcut, const double &idealFP);
 
     ///Preprocess the VANDLE data
     ///@param [in] event : the event to preprocess
@@ -82,24 +85,30 @@ private:
     ///Fill up the basic histograms
     void FillVandleOnlyHists();
 
-    void PlotTofHistograms(const double &tof, const double &cortof, const double &qdc,
-                           const unsigned int &barPlusStartLoc, const unsigned int &offset);
+    void PlotTofHistograms(const double &tof, const double &cortof,const double &NCtof, const double &qdc,
+                           const unsigned int &barPlusStartLoc, const std::pair<unsigned int, unsigned int> &offset,
+                           bool &calibrated );
 
-    ///@return Returns the appropriate offset based off the VANDLE bar type
+    ///@return Returns a pair of the appropriate offsets based off the VANDLE bar type <calibrated, NonCalibrated>
     ///@param [in] type : The type of bar that we are dealing with
-    unsigned int ReturnOffset(const std::string &type);
+    std::pair<unsigned int, unsigned int> ReturnOffset(const std::string &type);
 
     BarMap bars_;//!< A map to hold all the bars
     TimingMap starts_;//!< A map to to hold all the starts
     BarMap barStarts_;//!< A map that holds all of the bar starts
     DetectorSummary *geSummary_;//!< The Detector Summary for Ge Events
 
-    bool hasDecay_; //!< True if there was a correlated beta decay
-    double decayTime_; //!< the time of the decay
+    bool RDecay_; //!< True if there is a rough decay match (no rear veto and no plastic dE)
+
 
     double plotMult_;//!< The resolution multiplier for DAMM histograms
     double plotOffset_;//!< The offset multiplier for DAMM histograms
     double qdcComp_; //!<QDC compression value as read from the config file
+    double idealFP_; //!<Ideal Flight Path to correct the Tof to. 
+
+    double qdcmin_;//!<min qdc to add to root tree, used to help speed up nearline mergers etc
+    double tofcut_;//!< min tof to add to root tree for speeding up near line merger
+
 
     bool hasSmall_; //!< True if small bars were requested in the Config
     bool hasBig_; //!< True if big bars were requested in the Config
@@ -108,6 +117,8 @@ private:
     unsigned int numStarts_; //!< The number of starts set in the Config File
 
     std::set<std::string> requestedTypes_;//!< The list of bar types to expect
+
+    processor_struct::VANDLES vandles; //!<Working structure  
 };
 
 #endif

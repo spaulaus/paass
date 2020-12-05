@@ -29,6 +29,10 @@
  * KM  - Dec. '12, Jan. '13
  *       Huge changes due to switching to XML configuration file.
  *       See git commits comments.
+ *
+ * TTK - June 2018
+ *       Added System-wide root output
+ *
 */
 #ifndef __DETECTORDRIVER_HPP_
 #define __DETECTORDRIVER_HPP_
@@ -44,6 +48,20 @@
 #include "Messenger.hpp"
 #include "Plots.hpp"
 #include "WalkCorrector.hpp"
+
+#include "TROOT.h"
+#include "TSystem.h"
+#include <TFile.h>
+#include <TTree.h>
+#include <TBranch.h>
+#include <TH1.h>
+#include <TH2.h>
+#include "CloverProcessor.hpp"
+#include "GammaScintProcessor.hpp"
+#include "PaassRootStruct.hpp"
+#include "PspmtProcessor.hpp"
+#include "SingleBetaProcessor.hpp"
+#include "VandleProcessor.hpp"
 
 class Calibration;
 
@@ -137,9 +155,28 @@ public:
         return vecProcess;
     }
 
+    /** \return the current pixie event number */
+    unsigned long GetEventNumber(){return eventNumber_;};
+
+    /** \return Detector Driver's First Event Time (units= ticks)*/
+    double GetFirstEventTime(){return firstEventTime_;}
+
+    /** \return Detector Driver's First Event Time (units= ns)*/
+    double GetFirstEventTimeinNs(){return firstEventTimeinNs_;}
+
+    /** \return the first detector event in the current pixie event (units= ticks)*/
+    double GetEventFirstTime(){return eventFirstTime_;}
+
     /** \return The requested event processor
      * \param [in] name : the name of the processor to return */
     EventProcessor *GetProcessor(const std::string &name) const;
+
+    /**\return The list of processors used the the analysis, from vecProcess
+     * */
+    std::set<std::string> GetProcessorList();
+
+    /**\return System ROOT Output Status. True if ROOT output is requested */
+    bool GetSysRootOutput(){ return sysrootbool_; }
 
     /** \return the set of detectors used in the analysis */
     const std::set<std::string> &GetUsedDetectors(void) const;
@@ -159,6 +196,7 @@ public:
     /** Default Destructor */
     virtual ~DetectorDriver();
 
+
 private:
     /** Constructor that initializes the various processors and analyzers. */
     DetectorDriver();
@@ -175,6 +213,31 @@ private:
                    be used as detector types */
     std::string cfg_; //!< The configuration file to read
     std::pair<double, time_t> pixieToWallClock; /**< rough estimate of pixie to wall clock */
+    unsigned long eventNumber_; //!< "Global" Event Number.
+    double firstEventTime_; //!< The time of the first event that passes through the DetectorDriver
+    double firstEventTimeinNs_; //!< The time of the first event that passes through the DetectorDriver in ns
+    double eventFirstTime_; //!<The Time of the first detector event in the current pixie event
+
+    /*! \brief Fills the Logic structure for ROOT output.
+     * Because the logic spans pixie events if we fill in the processor it does not get filled into each ROOT entry.
+     * So we will fill here in the DetectorDriver utilizing the work that was put into the TreeCorrelator  */
+    void FillLogicStruc();
+
+    std::set<std::string> setProcess; /**< list of processors used in the analysis.
+    * This should be identical to vecProcess, but in string form */
+
+    TFile *PixieFile;
+    TTree *PTree;
+    TBranch *PBr;
+
+    PixTreeEvent pixie_tree_event_; /** tree event container class **/
+
+    bool sysrootbool_; ///Bool for ROOT ouput
+    bool fillLogic_; /// Should we fill the logic struct
+    processor_struct::LOGIC LogStruc; //Logic root struc
+    int tapeCycleNum_; //counts the number of tape cycles
+    double lastCycleTime_; // last cycle start time (for cycle num incrementing)
+    double rFileSizeGB_;/// Max size in GB for the ROOT file before starting a new one
 };
 
 #endif // __DETECTORDRIVER_HPP_

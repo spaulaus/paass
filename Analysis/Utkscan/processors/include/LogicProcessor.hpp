@@ -16,13 +16,10 @@ public:
     /** Default Constructor */
     LogicProcessor();
 
-    /** Constructor taking histogram offset and range as arguments
-    * \param [in] offset : the offset of the histograms
-    * \param [in] range : the maximum number of histograms 
+    /** Constructor taking double_start and double_stop
     * \param [in] doubleStop : if we have doubled the stops in the map
     * \param [in] doubleStart : if we have doubled the starts in the map */
-    LogicProcessor(int offset, int range, bool doubleStop = false,
-                   bool doubleStart = false);
+    LogicProcessor(bool doubleStop = false, bool doubleStart = false);
 
     /** Declare plots used in the analysis */
     virtual void DeclarePlots(void);
@@ -99,6 +96,7 @@ private:
     /** Prototype for a nifty graph, currently unimplemented 
      * \param [in] event : the raw event for plotting the nifty graph */
     bool NiftyGraph(RawEvent &event);
+
 };
 
 #endif // __LOGICPROCESSOR_HPP_

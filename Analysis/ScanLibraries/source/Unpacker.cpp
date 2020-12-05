@@ -6,7 +6,7 @@
  * preserved as much as possible while allowing for more standardized unpacking
  * of pixie16 data.
  *
- * \author C. R. Thornsberry and S. V. Paulauskas
+ * \author C. R. Thornsberry, S. V. Paulauskas, and K. Smith
  * \date February 12, 2016
  */
 #include <algorithm>
@@ -16,6 +16,7 @@
 
 #include <cstring>
 
+#include "PaassExceptions.hpp"
 #include "Unpacker.hpp"
 #include "XiaData.hpp"
 #include "XiaListModeDataDecoder.hpp"
@@ -230,20 +231,26 @@ void Unpacker::InitializeDataMask(const std::string &firmware, const unsigned in
     if (frequency == 0) {
         unsigned int modCounter = 0;
         pugi::xml_node node = XmlInterface::get(firmware)->GetDocument()->child("Configuration").child("Map");
+        unsigned int globalFreq_ = node.attribute("frequency").as_uint(0);
+        string globalFirm_ = node.attribute("firmware").as_string();
+
         for (pugi::xml_node_iterator it = node.begin(); it != node.end(); ++it, modCounter++) {
             if (it->attribute("number").empty())
-                throw invalid_argument("Unpacker::InitializeDataMask - Unable to read the \"number\" attribute from "
+                throw IOException("Unpacker::InitializeDataMask - Unable to read the \"number\" attribute "
+                                                               "from "
                                                "the module in position #" + to_string(modCounter) + "(0 counting)");
-            if (it->attribute("firmware").empty())
-                throw invalid_argument("Unpacker::InitializeDataMask - Unable to read the \"firmware\" attribute from"
-                                               " the /Configuration/Map/Module/" + to_string(modCounter));
-            if (it->attribute("frequency").empty())
-                throw invalid_argument("Unpacker::InitializeDataMask - Unable to read the \"frequency\" attribute from"
-                                               " the /Configuration/Map/Module/" + to_string(modCounter));
+            if (it->attribute("firmware").empty()&& globalFirm_.empty())
+                throw IOException("Unpacker::InitializeDataMask - Unable to read the \"firmware\" attribute from"
+                                               " the /Configuration/Map/Module/" + to_string(modCounter) +
+                                       " and the Global default is not set");
+            if (it->attribute("frequency").empty()&& globalFreq_==0)
+                throw IOException("Unpacker::InitializeDataMask - Unable to read the \"frequency\" attribute from"
+                                               " the /Configuration/Map/Module/" + to_string(modCounter)+
+                                       " and the Global default is not set");
 
             maskMap_.insert(make_pair(it->attribute("number").as_uint(),
-                                      make_pair(it->attribute("firmware").as_string(),
-                                                it->attribute("frequency").as_uint())));
+                                      make_pair(it->attribute("firmware").as_string(globalFirm_.c_str()),
+                                                it->attribute("frequency").as_uint(globalFreq_))));
         }
     } else {
         mask_.SetFrequency(frequency);

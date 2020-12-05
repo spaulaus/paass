@@ -507,7 +507,7 @@ void Poll::help(){
     std::cout << "   pmwrite <mod> <param> <val>           - Write parameters to PIXIE modules\n";
     std::cout << "   adjust_offsets <module>               - Adjusts the baselines of a pixie module\n";
     std::cout << "   find_tau <module> <channel>           - Finds the decay constant for an active pixie channel\n";
-    std::cout << "   toggle <module> <channel> <bit>       - Toggle any of the 19 CHANNEL_CSRA bits for a pixie channel\n";
+    std::cout << "   toggle <module> <channel> <bit>       - Toggle any of the 22 CHANNEL_CSRA bits for a pixie channel\n";
     std::cout << "   toggle_bit <mod> <chan> <param> <bit> - Toggle any bit of any parameter of 32 bits or less\n";
     std::cout << "   csr_test <number>                     - Output the CSRA parameters for a given integer\n";
     std::cout << "   bit_test <num_bits> <number>          - Display active bits in a given integer up to 32 bits long\n";
@@ -713,6 +713,16 @@ bool Poll::SplitParameterArgs(const std::string &arg, int &start, int &stop) {
     }
     return true;
 }
+
+/// This method checks that the entered module is actually installed in the crate.
+bool Poll::IsValidModule(const int &modNum){
+    if (modNum > (int)n_cards - 1 ) {
+        std::cout << "ERROR: Invalid module: '" << modNum << "'\n";
+        return false;
+    } else {
+        return true;
+    }
+}
 ///////////////////////////////////////////////////////////////////////////////
 // Poll::CommandControl
 ///////////////////////////////////////////////////////////////////////////////
@@ -744,7 +754,8 @@ void Poll::CommandControl(){
                 cmd = "stop";
             }
             else {
-                std::cout << " Ignoring signal.\n";
+                std::cout << " Clearing Cmd Line\n";
+                poll_term_->ClearCmd();
                 continue;
             }
         }
@@ -826,9 +837,9 @@ void Poll::CommandControl(){
                 }
             }
             else{
-                ofile.open("./Fallback.set");
+                ofile.open("./Param_Dump.txt");
                 if(!ofile.good()){
-                    std::cout << sys_message_head << "Failed to open output file './Fallback.set'\n";
+                    std::cout << sys_message_head << "Failed to open output file './Param_Dump.txt'\n";
                     continue;
                 }
             }
@@ -862,6 +873,9 @@ void Poll::CommandControl(){
                     int modStart, modStop;
                     if (!SplitParameterArgs(arguments.at(0), modStart, modStop)) {
                         std::cout << "ERROR: Invalid module argument: '" << arguments.at(0) << "'\n";
+                        continue;
+                    }
+                    if (!IsValidModule(modStart) || !IsValidModule(modStop) ){
                         continue;
                     }
                     int chStart, chStop;
@@ -908,6 +922,10 @@ void Poll::CommandControl(){
                     int modStart, modStop;
                     if (!SplitParameterArgs(arguments.at(0), modStart, modStop)) {
                         std::cout << "ERROR: Invalid module argument: '" << arguments.at(0) << "'\n";
+                        continue;
+                    }
+
+                    if (!IsValidModule(modStart) || !IsValidModule(modStop) ){
                         continue;
                     }
 
@@ -961,7 +979,7 @@ void Poll::CommandControl(){
             }
             else {
                 std::cout << sys_message_head << "Invalid number of parameters to save\n";
-                std::cout << sys_message_head << " -SYNTAX- save [setFilename]\n";
+                std::cout << sys_message_head << " -SYNTAX- save [setFilename].set\n";
                 continue;
             }
         }
@@ -982,6 +1000,10 @@ void Poll::CommandControl(){
                     int chStart, chStop;
                     if (!SplitParameterArgs(arguments.at(1), chStart, chStop)) {
                         std::cout << "ERROR: Invalid channel argument: '" << arguments.at(1) << "'\n";
+                        continue;
+                    }
+
+                    if (!IsValidModule(modStart) || !IsValidModule(modStop)) {
                         continue;
                     }
 
@@ -1006,6 +1028,10 @@ void Poll::CommandControl(){
                         continue;
                     }
 
+                    if (!IsValidModule(modStart) || !IsValidModule(modStop)) {
+                        continue;
+                    }
+
                     ParameterModuleReader reader;
                     for (int mod = modStart; mod <= modStop; mod++) {
                         forModule(pif, mod, reader, arguments.at(1));
@@ -1027,6 +1053,10 @@ void Poll::CommandControl(){
                 int modStart, modStop;
                 if (!SplitParameterArgs(arguments.at(0), modStart, modStop)) {
                     std::cout << "ERROR: Invalid module argument: '" << arguments.at(0) << "'\n";
+                    continue;
+                }
+
+                if (!IsValidModule(modStart) || !IsValidModule(modStop) ) {
                     continue;
                 }
 
@@ -1081,23 +1111,41 @@ void Poll::CommandControl(){
                     std::cout << "ERROR: Invalid module argument: '" << arguments.at(0) << "'\n";
                     continue;
                 }
+
+                if (!IsValidModule(modStart) || !IsValidModule(modStop)  ) {
+                    continue;
+                }
+
                 int chStart, chStop;
                 if (!SplitParameterArgs(arguments.at(1), chStart, chStop)) {
                     std::cout << "ERROR: Invalid channel argument: '" << arguments.at(1) << "'\n";
                     continue;
                 }
-                flipper.SetCSRAbit(arguments.at(2));
 
-                std::string dum_str = "CHANNEL_CSRA";
-                bool error = false;
-                for (int mod = modStart; mod <= modStop; mod++) {
-                    for (int ch = chStart; ch <= chStop; ch++) {
-                        if(!forChannel(pif, mod, ch, flipper, dum_str)){
-                            error = true;
-                        }
+                bool IsValidNumber = StringManipulation::IsNumeric(arguments.at(2));
+
+                if (IsValidNumber && atoi(arguments.at(2).c_str()) >= 24) {
+                    std::cout << "ERROR: Invalid CCSRA bit number: '" << arguments.at(2) << "'\n";
+                    continue;
+                } else if (!IsValidNumber) {
+                    if (std::find(BitFlipper::toggle_names.begin(), BitFlipper::toggle_names.end(), arguments.at(2)) == BitFlipper::toggle_names.end()) {
+                        std::cout << "ERROR: Invalid toggle name: '" << arguments.at(2) << "'\n";
+                        continue;
                     }
                 }
-                if (!error) pif->SaveDSPParameters();
+
+                    flipper.SetCSRAbit(arguments.at(2));
+
+                    std::string dum_str = "CHANNEL_CSRA";
+                    bool error = false;
+                    for (int mod = modStart; mod <= modStop; mod++) {
+                        for (int ch = chStart; ch <= chStop; ch++) {
+                            if (!forChannel(pif, mod, ch, flipper, dum_str)) {
+                                error = true;
+                            }
+                        }
+                    }
+                    if (!error) pif->SaveDSPParameters();
             }
             else{
                 std::cout << sys_message_head << "Invalid number of parameters to toggle\n";
@@ -1114,7 +1162,8 @@ void Poll::CommandControl(){
             BitFlipper flipper;
 
             if(p_args >= 4){
-                if(!StringManipulation::IsNumeric(arguments.at(0))) {
+                if(!StringManipulation::IsNumeric(arguments.at(0))  ||
+                    !IsValidModule(atoi(arguments.at(0).c_str()))) {
                     std::cout << sys_message_head << "Invalid module specification" << std::endl;
                     continue;
                 } else if(!StringManipulation::IsNumeric(arguments.at(1))) {
@@ -1532,6 +1581,9 @@ void Poll::RunControl(){
 
             //Handle a stop signal
             if(do_stop_acq){
+                // If we are calling stop from an ERROR state and we request send_alarm then CallAlarm
+                if(had_error && GetSendAlarm()){ CallAlarm();}
+
                 // Read data from the modules.
                 if (!had_error) ReadFIFO();
 
@@ -1879,4 +1931,15 @@ bool Poll::ReadFIFO() {
     } //If we had exceeded the threshold or forced a flush
 
     return true;
+}
+
+void Poll::CallAlarm() {
+    std::string emailList_ = GetAlarmEmailList();
+    std::cout << "Sending Alarm Email to " << emailList_ << std::endl;
+    if (emailList_.empty()) {
+        system("send_alarm");
+    } else {
+        std::string alarmCMD = "send_alarm " + emailList_;
+        system(alarmCMD.c_str());
+    }
 }

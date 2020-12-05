@@ -17,6 +17,7 @@
 #include "pugixml.hpp"
 
 #include "DammPlotIds.hpp"
+#include "DetectorDriver.hpp"
 #include "DetectorLibrary.hpp"
 #include "Display.h"
 #include "PaassExceptions.hpp"
@@ -72,7 +73,7 @@ CloverProcessor::CloverProcessor(double gammaThreshold, double lowRatio,
                          double cycle_gate2_min, double cycle_gate2_max) :
         EventProcessor(OFFSET, RANGE, "CloverProcessor"),
         leafToClover() {
-    associatedTypes.insert("ge"); // associate with germanium detectors
+    associatedTypes.insert("clover"); // associate with germanium detectors
 
     gammaThreshold_ = gammaThreshold;
     lowRatio_ = lowRatio;
@@ -159,7 +160,7 @@ void CloverProcessor::DeclarePlots(void) {
     DetectorLibrary *modChan = DetectorLibrary::get();
 
     const set<int> &cloverLocations =
-            modChan->GetLocations("ge", "clover_high");
+            modChan->GetLocations("clover", "clover_high");
     // could set it now but we'll iterate through the locations to set this
     unsigned int cloverChans = 0;
 
@@ -251,6 +252,11 @@ void CloverProcessor::DeclarePlots(void) {
                        "Beta gated gamma total");
     histo.DeclareHistogram1D(multi::betaGated::D_ADD_ENERGY_TOTAL, energyBins1,
                        "Beta gated gamma total multi-gated");
+
+    histo.DeclareHistogram1D(D_NONCYCGATEDENERGY,energyBins1,"Non Cycle Gated Gamma"
+            " Singles");
+    histo.DeclareHistogram1D(betaGated::D_NONCYCGATEDENERGY,energyBins1,"Beta Gated"
+            " Non Cycle Gated Gamma Singles");
 
     // for each clover
     for (unsigned int i = 0; i < numClovers; i++) {
@@ -353,29 +359,30 @@ void CloverProcessor::DeclarePlots(void) {
                        "g_g_beta gated angle vs gate");
 #endif
 
-    DeclareHistogramGranY(DD_ENERGY__TIMEX,
-                          energyBins2, granTimeBins,
-                          "E - Time", 2, timeResolution, "s");
-    DeclareHistogramGranY(DD_ADD_ENERGY__TIMEX,
-                          energyBins2, granTimeBins,
-                          "Addback E - Time", 2, timeResolution, "s");
-    DeclareHistogramGranY(betaGated::DD_ENERGY__TIMEX_GROW,
-                          energyBins2, granTimeBins,
-                          "Beta-gated E - Time, beam on only prompt",
-                          2, timeResolution, "s");
-    DeclareHistogramGranY(betaGated::DD_ENERGY__TIMEX_DECAY,
-                          energyBins2, granTimeBins,
-                          "Beta-gated E - Time, beam off only prompt",
-                          2, timeResolution, "s");
-    DeclareHistogramGranY(betaGated::DD_ENERGY__TIMEX,
-                          energyBins2, granTimeBins,
-                          "Beta-gated E - Time prompt", 2, timeResolution, "s");
-    DeclareHistogramGranY(betaGated::DD_ADD_ENERGY__TIMEX,
-                          energyBins2, granTimeBins,
-                          "Beta-gated addback E - Time",
-                          2, timeResolution, "s");
+    if (Globals::get()->GetDammPlots()) {
+        DeclareHistogramGranY(DD_ENERGY__TIMEX,
+                              energyBins2, granTimeBins,
+                              "E - Time", 2, timeResolution, "s");
+        DeclareHistogramGranY(DD_ADD_ENERGY__TIMEX,
+                              energyBins2, granTimeBins,
+                              "Addback E - Time", 2, timeResolution, "s");
+        DeclareHistogramGranY(betaGated::DD_ENERGY__TIMEX_GROW,
+                              energyBins2, granTimeBins,
+                              "Beta-gated E - Time, beam on only prompt",
+                              2, timeResolution, "s");
+        DeclareHistogramGranY(betaGated::DD_ENERGY__TIMEX_DECAY,
+                              energyBins2, granTimeBins,
+                              "Beta-gated E - Time, beam off only prompt",
+                              2, timeResolution, "s");
+        DeclareHistogramGranY(betaGated::DD_ENERGY__TIMEX,
+                              energyBins2, granTimeBins,
+                              "Beta-gated E - Time prompt", 2, timeResolution, "s");
+        DeclareHistogramGranY(betaGated::DD_ADD_ENERGY__TIMEX,
+                              energyBins2, granTimeBins,
+                              "Beta-gated addback E - Time",
+                              2, timeResolution, "s");
+    }
 }
-
 
 bool CloverProcessor::PreProcess(RawEvent &event) {
     if (!EventProcessor::PreProcess(event))
@@ -386,10 +393,8 @@ bool CloverProcessor::PreProcess(RawEvent &event) {
         addbackEvents_[i].clear();
     tas_.clear();
 
-    static const vector<ChanEvent *> &highEvents =
-            event.GetSummary("ge:clover_high", true)->GetList();
-    static const vector<ChanEvent *> &lowEvents =
-            event.GetSummary("ge:clover_low", true)->GetList();
+    static const vector<ChanEvent *> &highEvents = event.GetSummary("clover:clover_high", true)->GetList();
+    static const vector<ChanEvent *> &lowEvents = event.GetSummary("clover:clover_low", true)->GetList();
 
     /** Only the high gain events are going to be used. The events where
      * low/high gain mismatches, saturation or pileup is marked are rejected
@@ -425,8 +430,10 @@ bool CloverProcessor::PreProcess(RawEvent &event) {
 
     /** guarantee the first event will be greater than
      * the subevent window delayed from reference
+     * We need the ref time to be in TICKS and subEvent to be in seconds
+     * (look at the dtime calculation)
      */
-    double refTime = -2.0 * subEventWindow_;
+    double refTime = -2.0 * (subEventWindow_/Globals::get()->GetClockInSeconds());
 
     for (vector<ChanEvent *>::iterator it = geEvents_.begin();
          it != geEvents_.end(); it++) {
@@ -445,18 +452,18 @@ bool CloverProcessor::PreProcess(RawEvent &event) {
         // entries in map are sorted by time
         // if event time is outside of subEventWindow, we start new
         //   events for all clovers and "tas"
-        double dtime =
-                abs(time - refTime) * Globals::get()->GetClockInSeconds();
+        double dtime =  abs(time - refTime) * Globals::get()->GetClockInSeconds();
         if (dtime > subEventWindow_) {
             for (unsigned i = 0; i < numClovers; ++i) {
                 addbackEvents_[i].push_back(AddBackEvent());
+                addbackEvents_[i].back().time = time* Globals::get()->GetClockInSeconds()*1.e9;
             }
             tas_.push_back(AddBackEvent());
         }
         // Total addback energy
         addbackEvents_[clover].back().energy += energy;
         // We store latest time only
-        addbackEvents_[clover].back().time = time;
+        addbackEvents_[clover].back().time = time * Globals::get()->GetClockInSeconds()*1.e9;
         addbackEvents_[clover].back().multiplicity += 1;
         tas_.back().energy += energy;
         tas_.back().time = time;
@@ -468,7 +475,7 @@ bool CloverProcessor::PreProcess(RawEvent &event) {
 }
 
 bool CloverProcessor::Process(RawEvent &event) {
-    using namespace dammIds::ge;
+    using namespace dammIds::clover;
 
     if (!EventProcessor::Process(event))
         return false;
@@ -502,6 +509,32 @@ bool CloverProcessor::Process(RawEvent &event) {
                                           "while trying to get Beta status.\n");
         throw;
     }
+    for (vector<ChanEvent*>::iterator it1 = geEvents_.begin();
+         it1 != geEvents_.end(); ++it1) {
+        ChanEvent *itC = *it1;
+
+        double gEnergy = itC->GetCalibratedEnergy();
+        if (gEnergy < gammaThreshold_)
+            continue;
+        if (hasBeta) {
+            histo.Plot(betaGated::D_NONCYCGATEDENERGY, gEnergy);
+            double gTime = itC->GetFilterTime();
+            EventData bestBeta = BestBetaForGamma(gTime);
+        }
+
+        histo.Plot(D_NONCYCGATEDENERGY, gEnergy);
+
+        if (DetectorDriver::get()->GetSysRootOutput()){
+            Cstruct.rawEnergy = itC->GetEnergy();
+            Cstruct.energy = itC->GetCalibratedEnergy();
+            Cstruct.time = itC->GetFilterTime() * Globals::get()->GetClockInSeconds() * 1e9; //store ns
+            Cstruct.detNum = itC->GetChanID().GetLocation();
+            Cstruct.cloverNum = leafToClover[itC->GetChanID().GetLocation()];
+            pixie_tree_event_->clover_vec_.emplace_back(Cstruct);
+            Cstruct = processor_struct::CLOVERS_DEFAULT_STRUCT; //reset to initalized values (see PaassRootStruct.hpp
+        }
+    }
+
 
     /** Place Cycle is activated by BeamOn event and deactivated by TapeMove
      *  This condition will therefore skip events registered during
@@ -526,7 +559,7 @@ bool CloverProcessor::Process(RawEvent &event) {
 
     // Note that geEvents_ vector holds only good events (matched
     // low & high gain). See PreProcess
-    for (vector<ChanEvent *>::iterator it1 = geEvents_.begin();
+      for (vector<ChanEvent *>::iterator it1 = geEvents_.begin();
          it1 != geEvents_.end(); ++it1) {
         ChanEvent *chan = *it1;
 

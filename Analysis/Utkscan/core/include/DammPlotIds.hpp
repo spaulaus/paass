@@ -45,6 +45,10 @@ namespace dammIds {
         const int DD_RUNTIME_MSEC = 1810;//!< Run Time in ms
         const int D_NUMBER_OF_EVENTS = 1811;//!< Number of processed events
         const int D_HAS_TRACE = 1812;//!< Plot for Channels w/ Traces
+        const int D_INTERNAL_TS_CHECK = 1813;//!< Plot of time difference between the 2 external time stamps
+        const int DD_TRACE_MAX = 1814;//!< Plot for Max Value in Trace
+        const int D_HAS_TRACE_2 = 1815;//!< Plot for Channels w/ valid waveform analysis 
+        const int D_HAS_TRACE_3 = 1816;//!< Plot for Channels w/ valid fit analysis 
     }
 
     /// in PspmtProcessor.cpp
@@ -71,6 +75,12 @@ namespace dammIds {
         const int RANGE = 50;//!< Range for BetaScintProcessor
     }
 
+       ///in SingleBetaProcessor.hpp
+    namespace singlebeta {
+        const int OFFSET = 2050;//!< Offset for SingleBetaProcessor
+        const int RANGE = 50;//!< Range for SingleBetaProcessor
+    }
+
     ///in NeutronScintProcessor.cpp
     namespace neutron_scint {
         const int OFFSET = 2100;//!< Offset for NeutronScintProcessor
@@ -94,17 +104,27 @@ namespace dammIds {
         const int OFFSET = 2200;//!< Offset for Hen3Processor
         const int RANGE = 50;//!< Range for Hen3Processor
     }
-
+    ///in GammaScintProcessor.cpp
+    namespace gscint {
+        const int OFFSET = 2300;//!< Offset for GammaScintProcessor
+        const int RANGE = 200;//!< Range for GammaScintProcessor
+    }
     ///in CloverProcessor.cpp
     namespace clover {
         const int OFFSET = 2500;//!< Offset for CloverProcessor
         const int RANGE = 499;//!< Range for CloverProcessor
     }
 
+    ///in CloverFragProcessor.cpp
+    namespace cloverFrag {
+        const int OFFSET = 2500;//!< Offset for CloverFragProcessor
+        const int RANGE = 499;//!< Range for CloverFragProcessor
+    }
+
     ///in GeProcessor.hpp
     namespace ge {
-        const int OFFSET = 2999;//!< Offset for CloverProcessor
-        const int RANGE = 1;//!< Range for CloverProcessor
+        const int OFFSET = 2999;//!< Offset for GeProcessor
+        const int RANGE = 1;//!< Range for GeProcessor
     }
 
     ///in LogicProcessor.cpp

@@ -39,8 +39,14 @@ public:
     ///@return energyFilterParameters_
     TrapFilterParameters GetEnergyFilterParameters() const;
 
+    ///@return the value of the private variable group
+    std::string GetGroup() const { return group_; }
+
     ///@return location_
     unsigned int GetLocation() const;
+
+    ///@return the frequency for this channel
+    int GetModFreq() const { return modFreq_ ; }
 
     ///@return The channel place name : type_subtype_location
     std::string GetPlaceName() const;
@@ -91,6 +97,14 @@ public:
     /// detectors out of the map.
     ///@param [in] a : sets the location_ for the channel
     void SetLocation(const unsigned int &a);
+
+    /// Sets the Group string. Mainly used for the "addback" in the PostPaassProcessor ROOT code
+    ///@param[in] a : The Group string to set
+    void SetGroup(const std::string &a) { group_ = a; }
+
+    /// Sets the frequency of the module for this channel
+    ///@param[in] a : The frequency to set
+    void SetModFreq(const int &a) { modFreq_ = a; }
 
     ///Sets the subtype of the channel, which allows for finer gradients amongst detectors e.g. small, medium, big
     /// for VANDLE
@@ -151,6 +165,8 @@ private:
     TrapFilterParameters energyFilterParameters_; ///< Parameters to use for energy filter calculations
     unsigned int location_; ///< Specifies the real world location of the channel.
     std::string subtype_; ///< Specifies the detector sub type
+    std::string group_; ///<Specifies the detector group
+    int modFreq_; ///<Frequency of the module for this channel
     std::set<std::string> tags_; ///< A list of associated tags
     TimingConfiguration timingConfiguration_; //!< The timing configuration for the CFD and Fit
     unsigned int traceDelayInSamples_; ///< The trace delay to help find the location of waveforms in traces

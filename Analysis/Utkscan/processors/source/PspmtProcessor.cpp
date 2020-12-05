@@ -1,327 +1,427 @@
-///@authors S. Go
+///@file PspmtProcessor.cpp
+///@Processes information from a Position Sensitive PMT.  No Pixel work yet.
+///@author A. Keeler, S. Go, S. V. Paulauskas
+///@date July 8, 2018
+
+#include <limits.h>
+#include <signal.h>
 #include <algorithm>
-#include <iostream>
+#include <cmath>
 #include <iomanip>
+#include <iostream>
 #include <limits>
 #include <sstream>
 #include <stdexcept>
-#include <signal.h>
-#include <limits.h>
 
-#include "PspmtProcessor.hpp"
 #include "DammPlotIds.hpp"
+#include "DetectorDriver.hpp"
 #include "Globals.hpp"
+#include "HelperFunctions.hpp"
 #include "Messenger.hpp"
+#include "PspmtProcessor.hpp"
 
 using namespace std;
 using namespace dammIds::pspmt;
 
 namespace dammIds {
-    namespace pspmt {
+namespace pspmt {
+const int DD_DYNODE_QDC = 0;
+const int DD_POS_LOW = 1;
+const int DD_POS_HIGH = 2;
+const int DD_PLASTIC_EN = 3;
+const int DD_MULTI = 4;
+const int DD_DY_SUM_LG = 5;
+const int DD_DY_SUM_HG = 6;
 
-        // OFFSET = 700//    
-        const int D_RAW1 = 0; //!< Raw 1
-        const int D_RAW2 = 1; //!< raw 2
-        const int D_RAW3 = 2; //!< raw 3
-        const int D_RAW4 = 3; //!< raw4
-        const int D_RAWD = 4; //!<raw dynode
-        const int D_SUM = 5; //!< sum energy
-        const int DD_POS1_RAW = 6; //!< position 1 raw
-        const int DD_POS2_RAW = 7; //!< position 2 raw
-        const int DD_POS1 = 8; //!< position 1
-        const int DD_POS2 = 9; //!< position 2
+const int D_TRANS_EFF_YSO = 10;
+const int DD_SEPAR_GATED_LOW = 11;
+const int DD_DESI_GATED_LOW = 12;
+const int D_DESI_ENERGY = 15;
+const int D_DESI_YSO_GATED = 16;
+const int DD_SEPAR_ENERGY = 17;
+const int DD_SEPAR_YSO_GATED = 18;
 
-        const int D_ENERGY_TRACE1 = 10; //!< Trace energy 1
-        const int D_ENERGY_TRACE2 = 11; //!< Trace Energy 2
-        const int D_ENERGY_TRACE3 = 12; //!< Trace Energy 3
-        const int D_ENERGY_TRACE4 = 13; //!< Trace Energy 4
-        const int D_ENERGY_TRACED = 14; //!< Trace energy dynode
-        const int D_ENERGY_TRACESUM = 15; //!< Trace energy sum
-        const int DD_POS1_RAW_TRACE = 16; //!< Trace  position 1 raw
-        const int DD_POS2_RAW_TRACE = 17; //!<Trace position 2 raw
-        const int DD_POS1_TRACE = 18; //!<Trace  position 1
-        const int DD_POS2_TRACE = 19; //!<Trace  position 2
-
-        const int D_QDC_TRACE1 = 20; //!<Trace qdc 1
-        const int D_QDC_TRACE2 = 21; //!<Trace qdc  2
-        const int D_QDC_TRACE3 = 22; //!<Trace  qdc 3
-        const int D_QDC_TRACE4 = 23; //!<Trace  qdc 4
-        const int D_QDC_TRACED = 24; //!<Trace  qdc dynode
-
-        const int DD_ESLEW = 30; //!<ESLEW
-
-        const int D_TEMP0 = 80; //!< temp 0
-        const int D_TEMP1 = 81; //!<temp 1
-        const int D_TEMP2 = 82; //!<temp 2
-        const int D_TEMP3 = 83; //!<temp 3
-        const int D_TEMP4 = 84; //!<temp 4
-        const int D_TEMP5 = 85; //!<temp 5
-
-        const int DD_DOUBLE_TRACE = 77; //!< Double traces
-        const int DD_SINGLE_TRACE = 78; //!< Single traces
-    }
-}
-
-void PspmtProcessor::PspmtData::Clear(void) {
-}
-
-PspmtProcessor::PspmtProcessor(void) : EventProcessor(OFFSET, RANGE,
-                                                      "PspmtProcessor") {
-    associatedTypes.insert("pspmt");
-}
+const int DD_POS_ION = 20;
+const int DD_SEPAR_GATED_ION = 21;
+const int DD_DESI_GATED_ION = 22;
+}  // namespace pspmt
+}  // namespace dammIds
 
 void PspmtProcessor::DeclarePlots(void) {
-    const int posBins = 32;
-    const int energyBins = 8192;
-    const int traceBins = 128;
-    const int traceBins2 = 512;
-    const int Bins = 2500;
+    histo.DeclareHistogram2D(DD_DYNODE_QDC, SD, S2, "Dynode QDC- Low gain 0, High gain 1");
+    histo.DeclareHistogram2D(DD_POS_LOW, SB, SB, "Low-gain Positions");
+    histo.DeclareHistogram2D(DD_POS_HIGH, SB, SB, "High-gain Positions");
+    histo.DeclareHistogram2D(DD_PLASTIC_EN, SD, S4, "Plastic Energy, 0-3 = VETO, 5-8 = Ion Trigger");
+    histo.DeclareHistogram2D(DD_MULTI, S3, S3, "Dynode:Anode(+2) Multi Low gain 0, High gain 1");
+    histo.DeclareHistogram2D(DD_DY_SUM_LG, SA, SA, "Low Gain Dynode vs Anode Sum");
+    histo.DeclareHistogram2D(DD_DY_SUM_HG, SA, SA, "High Gain Dynode vs Anode Sum");
+    histo.DeclareHistogram1D(D_TRANS_EFF_YSO, S3, "Separator events (0) in ion scint (1), YSO (2), and veto (3)");
+    histo.DeclareHistogram2D(DD_SEPAR_GATED_LOW, SB, SB, "Separator-gated low-gain positions");
+    histo.DeclareHistogram2D(DD_DESI_GATED_LOW, SB, SB, "Silicon dE-gated low-gain positions");
+    histo.DeclareHistogram1D(D_DESI_ENERGY, SC, "Separator-gated dE-silicon events");
+    histo.DeclareHistogram1D(D_DESI_YSO_GATED, SC, "YSO-gated dE-silicon");
+    histo.DeclareHistogram2D(DD_SEPAR_ENERGY, S2, SC, "dE-silicon-gated separator events");
+    histo.DeclareHistogram2D(DD_SEPAR_YSO_GATED, S2, SC, "YSO-gated separator events");
 
-    // Raw 700-707
-    histo.DeclareHistogram1D(D_RAW1, energyBins, "Pspmt1 Raw");
-    histo.DeclareHistogram1D(D_RAW2, energyBins, "Pspmt2 Raw");
-    histo.DeclareHistogram1D(D_RAW3, energyBins, "Pspmt3 Raw");
-    histo.DeclareHistogram1D(D_RAW4, energyBins, "Pspmt4 Raw");
-    histo.DeclareHistogram1D(D_RAWD, energyBins, "Pspmt Dynode");
-    histo.DeclareHistogram1D(D_SUM, energyBins, "Pspmt Sum");
-    histo.DeclareHistogram2D(DD_POS1_RAW, Bins, Bins, "Pspmt Pos1 Raw");
-    histo.DeclareHistogram2D(DD_POS2_RAW, Bins, Bins, "Pspmt Pos2 Raw");
-    histo.DeclareHistogram2D(DD_POS1, posBins, posBins, "Pspmt Pos1");
-    histo.DeclareHistogram2D(DD_POS2, posBins, posBins, "Pspmt Pos2");
-
-    // From QDC and traces 
-    // 710-
-    histo.DeclareHistogram1D(D_ENERGY_TRACE1, energyBins, "Energy1 from trace");
-    histo.DeclareHistogram1D(D_ENERGY_TRACE2, energyBins, "Energy2 from trace");
-    histo.DeclareHistogram1D(D_ENERGY_TRACE3, energyBins, "Energy3 from trace");
-    histo.DeclareHistogram1D(D_ENERGY_TRACE4, energyBins, "Energy4 from trace");
-    histo.DeclareHistogram1D(D_ENERGY_TRACED, energyBins, "EnergyD from trace");
-    histo.DeclareHistogram1D(D_ENERGY_TRACESUM, energyBins, "Pspmt Sum");
-    histo.DeclareHistogram2D(DD_POS1_RAW_TRACE, posBins, posBins,
-                       "Pspmt pos Raw by Trace1");
-    histo.DeclareHistogram2D(DD_POS2_RAW_TRACE, posBins, posBins,
-                       "Pspmt pos Raw by Trace2");
-    histo.DeclareHistogram2D(DD_POS1_TRACE, posBins, posBins, "Pspmt pos by Trace1");
-    histo.DeclareHistogram2D(DD_POS2_TRACE, posBins, posBins, "Pspmt pos by Trace2");
-
-
-    // 720- QDC
-    histo.DeclareHistogram1D(D_QDC_TRACE1, energyBins, "Energy1 from QDC");
-    histo.DeclareHistogram1D(D_QDC_TRACE2, energyBins, "Energy2 from QDC");
-    histo.DeclareHistogram1D(D_QDC_TRACE3, energyBins, "Energy3 from QDC");
-    histo.DeclareHistogram1D(D_QDC_TRACE4, energyBins, "Energy4 from QDC");
-    histo.DeclareHistogram1D(D_QDC_TRACED, energyBins, "EnergyD from QDC");
-
-    // Simple Correlations
-    // histo.DeclareHistogram2D(DD_ESLEW_X, energyBins, posBins,"X Map with slew");
-    //histo.DeclareHistogram2D(DD_ESLEW_Y, energyBins, posBins,"Y Map with slew");
-
-    // Trace
-    histo.DeclareHistogram2D(DD_DOUBLE_TRACE, traceBins, traceBins2, "Double traces");
-    histo.DeclareHistogram2D(DD_SINGLE_TRACE, traceBins, traceBins2, "Single trace");
-
-    // For R&D
-    // histo.DeclareHistogram2D(DD_TEMP0, Bins, Bins, "Sum gated position1");
-    histo.DeclareHistogram1D(D_TEMP1, energyBins, "Pspmt1 Pgate");
-    histo.DeclareHistogram1D(D_TEMP2, energyBins, "Pspmt2 Pgate");
-    histo.DeclareHistogram1D(D_TEMP3, energyBins, "Pspmt3 Pgate");
-    histo.DeclareHistogram1D(D_TEMP4, energyBins, "Pspmt4 Pgate");
-    histo.DeclareHistogram1D(D_TEMP5, energyBins, "Dynode Pgate");
+    histo.DeclareHistogram2D(DD_POS_ION, SB, SB, "Ion-scint positions - ungated");
+    histo.DeclareHistogram2D(DD_SEPAR_GATED_ION, SB, SB, "Ion-scint positions - separator-gated");
+    histo.DeclareHistogram2D(DD_DESI_GATED_ION, SB, SB, "Ion-scint positions - silicon dE-gated");
 }
 
+PspmtProcessor::PspmtProcessor(const std::string &vd, const double &yso_scale, const unsigned int &yso_offset,
+                               const double &yso_threshold, const double &front_scale,
+                               const unsigned int &front_offset, const double &front_threshold, const double &rotation)
+    : EventProcessor(OFFSET, RANGE, "PspmtProcessor") {
+    if (vd == "SIB064_1018" || vd == "SIB064_1730")
+        vdtype_ = corners;
+    else if (vd == "SIB064_0926")
+        vdtype_ = sides;
+    else
+        vdtype_ = UNKNOWN;
+
+    VDtypeStr = vd;
+    positionScale_ = yso_scale;
+    positionOffset_ = yso_offset;
+    threshold_ = yso_threshold;
+    front_positionScale_ = front_scale;
+    front_positionOffset_ = front_offset;
+    front_threshold_ = front_threshold;
+    ThreshStr = yso_threshold;
+    rotation_ = rotation * 3.1415926 / 180.;  // convert from degrees to radians
+    associatedTypes.insert("pspmt");
+}
 
 bool PspmtProcessor::PreProcess(RawEvent &event) {
     if (!EventProcessor::PreProcess(event))
         return false;
 
-    static const vector<ChanEvent *> &pspmtEvents = sumMap["pspmt"]->GetList();
+    if (DetectorDriver::get()->GetSysRootOutput()) {
+        PSstruct = processor_struct::PSPMT_DEFAULT_STRUCT;
+    }
 
-    data_.Clear();
+    //read in anode & dynode signals
+    static const vector<ChanEvent *> &hiDynode = event.GetSummary("pspmt:dynode_high")->GetList();
+    static const vector<ChanEvent *> &lowDynode = event.GetSummary("pspmt:dynode_low")->GetList();
+    static const vector<ChanEvent *> &hiAnode = event.GetSummary("pspmt:anode_high")->GetList();
+    static const vector<ChanEvent *> &lowAnode = event.GetSummary("pspmt:anode_low")->GetList();
 
-    double q1 = 0, q2 = 0, q3 = 0, q4 = 0, qd = 0;
-    double qdc1 = 0, qdc2 = 0, qdc3 = 0, qdc4 = 0, qdcd = 0;
-    double tre1 = 0, tre2 = 0, tre3 = 0, tre4 = 0, tred = 0;
+    static const vector<ChanEvent *> &veto = event.GetSummary("pspmt:veto")->GetList();
+    static const vector<ChanEvent *> &ionTrig = event.GetSummary("pspmt:ion")->GetList();
+    static const vector<ChanEvent *> &desi = event.GetSummary("pspmt:desi")->GetList();
+    static const vector<ChanEvent *> &separatorScint = event.GetSummary("pspmt:f11")->GetList();
 
-    double qright = 0, qleft = 0, qtop = 0, qbottom = 0, qsum = 0;
-    double xright = 0, xleft = 0, ytop = 0, ybottom = 0;
+    //Plot Dynode QDCs
+    for (auto it = lowDynode.begin(); it != lowDynode.end(); it++) {
+        if (DetectorDriver::get()->GetSysRootOutput()) {
+            FillPSPMTStruc(*(*it));
+        }
+        histo.Plot(DD_DYNODE_QDC, (*it)->GetTrace().GetQdc(), 0);
+    }
+    for (auto it = hiDynode.begin(); it != hiDynode.end(); it++) {
+        if (DetectorDriver::get()->GetSysRootOutput()) {
+            FillPSPMTStruc(*(*it));
+        }
+        histo.Plot(DD_DYNODE_QDC, (*it)->GetTrace().GetQdc(), 1);
+    }
 
-    double qtre_r = 0, qtre_l = 0, qtre_t = 0, qtre_b = 0, qtre_s = 0;
-    double xtre_r = 0, xtre_l = 0, ytre_t = 0, ytre_b = 0;
+    //set up position calculation for low / high gain yso signals and ion scint
+    position_low.first = 0, position_low.second = 0;
+    position_high.first = 0, position_high.second = 0;
+    //initalized all the things
+    double energy = 0;
+    double xa_l = 0, ya_l = 0, xb_l = 0, yb_l = 0;
+    double xa_h = 0, ya_h = 0, xb_h = 0, yb_h = 0;
+    double top_l = 0, top_r = 0, bottom_l = 0, bottom_r = 0;
+    bool hasPosition_low = false, hasPosition_high = false, hasPosition_ion = false, hasUpstream = false,
+         hasDeSi = false, hasVeto = false;
 
-    double qqdc_r = 0, qqdc_l = 0, qqdc_t = 0, qqdc_b = 0, qqdc_s = 0;
-    //double xqdc_r=0,xqdc_l=0,yqdc_t=0,yqdc_b=0;
+    histo.Plot(DD_MULTI, lowDynode.size(), 0);
+    histo.Plot(DD_MULTI, hiDynode.size(), 1);
 
-    double pxright = 0, pxleft = 0, pytop = 0, pybottom = 0;
-    double pxtre_r = 0, pxtre_l = 0, pytre_t = 0, pytre_b = 0;
+    histo.Plot(DD_MULTI, lowAnode.size(), 2);
+    histo.Plot(DD_MULTI, hiAnode.size(), 3);
 
-    // tentatively local params //
-    double threshold = 260;
-    double slope = 0.0606;
-    double intercept = 10.13;
-    //////////////////////////////
-    static int traceNum;
+    double lowAnodeSum = 0;
+    for (auto it = lowAnode.begin(); it != lowAnode.end(); it++) {
+        //check signals energy vs threshold
+        energy = (*it)->GetCalibratedEnergy();
 
-    double f = 0.1;
+        if (DetectorDriver::get()->GetSysRootOutput()) {
+            FillPSPMTStruc(*(*it));
+        }
 
-    for (vector<ChanEvent *>::const_iterator it = pspmtEvents.begin();
-         it != pspmtEvents.end(); it++) {
+        if (energy < threshold_)
+            continue;
+        //parcel out position signals by tag
+        if ((*it)->GetChanID().GetGroup() == "xa" && xa_l == 0) {
+            xa_l = energy;
+            lowAnodeSum += energy;
+        }
+        if ((*it)->GetChanID().GetGroup() == "xb" && xb_l == 0) {
+            xb_l = energy;
+            lowAnodeSum += energy;
+        }
+        if ((*it)->GetChanID().GetGroup() == "ya" && ya_l == 0) {
+            ya_l = energy;
+            lowAnodeSum += energy;
+        }
+        if ((*it)->GetChanID().GetGroup() == "yb" && yb_l == 0) {
+            yb_l = energy;
+            lowAnodeSum += energy;
+        }
+    }
 
-        ChanEvent *chan = *it;
-        string subtype = chan->GetChanID().GetSubtype();
-        int ch = chan->GetChanID().GetLocation();
-        double calEnergy = chan->GetCalibratedEnergy();
-        //double pspmtTime  = chan->GetTime();
-        Trace trace = chan->GetTrace();
+    double highAnodeSum = 0;
+    for (auto it = hiAnode.begin(); it != hiAnode.end(); it++) {
+        if (DetectorDriver::get()->GetSysRootOutput()) {
+            FillPSPMTStruc(*(*it));
+        }
 
-        double trace_energy;
-        //double trace_time;
-        //double baseline;
-        double qdc;
-        //int    num        = trace.GetValue("numPulses");
+        //check signals energy vs threshold
+        energy = (*it)->GetCalibratedEnergy();
+        if (energy < threshold_ || energy > 63000)
+            continue;
+        //parcel out position signals by tag
+        if ((*it)->GetChanID().GetGroup() == "xa" && xa_h == 0) {
+            xa_h = energy;
+            highAnodeSum += energy;
+        }
+        if ((*it)->GetChanID().GetGroup() == "xb" && xb_h == 0) {
+            xb_h = energy;
+            highAnodeSum += energy;
+        }
+        if ((*it)->GetChanID().GetGroup() == "ya" && ya_h == 0) {
+            ya_h = energy;
+            highAnodeSum += energy;
+        }
+        if ((*it)->GetChanID().GetGroup() == "yb" && yb_h == 0) {
+            yb_h = energy;
+            highAnodeSum += energy;
+        }
+    }
+    //compute position only if all 4 signals are present
+    if (xa_l > 0 && xb_l > 0 && ya_l > 0 && yb_l > 0) {
+        hasPosition_low = true;
+        position_low.first = CalculatePosition(xa_l, xb_l, ya_l, yb_l, vdtype_, rotation_).first;
+        position_low.second = CalculatePosition(xa_l, xb_l, ya_l, yb_l, vdtype_, rotation_).second;
+        histo.Plot(DD_POS_LOW, position_low.first * positionScale_ + positionOffset_,
+             position_low.second * positionScale_ + positionOffset_);
+    }
 
-        if (!trace.GetFilteredEnergies().empty()) {
-            traceNum++;
-            //trace_time      = trace.GetValue("filterTime");
-            trace_energy = trace.GetFilteredEnergies().front();
-            //baseline         = trace.GetValue("baseline");
-            qdc = trace.GetQdc();
+    if (xa_h > 0 && xb_h > 0 && ya_h > 0 && yb_h > 0){
+        hasPosition_high = true;
+        position_high.first = CalculatePosition(xa_h, xb_h, ya_h, yb_h, vdtype_, rotation_).first;
+        position_high.second = CalculatePosition(xa_h, xb_h, ya_h, yb_h, vdtype_, rotation_).second;
+        histo.Plot(DD_POS_HIGH, position_high.first * positionScale_ + positionOffset_,
+             position_high.second * positionScale_ + positionOffset_);
+    }
 
-            if (ch == 0) {
-                qdc1 = qdc;
-                tre1 = trace_energy;
-                histo.Plot(D_QDC_TRACE1, qdc1);
-                histo.Plot(D_ENERGY_TRACE1, tre1);
-            } else if (ch == 1) {
-                qdc2 = qdc;
-                tre2 = trace_energy;
-                histo.Plot(D_QDC_TRACE2, qdc2);
-                histo.Plot(D_ENERGY_TRACE2, tre2);
-            } else if (ch == 2) {
-                qdc3 = qdc;
-                tre3 = trace_energy;
-                histo.Plot(D_QDC_TRACE3, qdc3);
-                histo.Plot(D_ENERGY_TRACE3, tre3);
-            } else if (ch == 3) {
-                qdc4 = qdc;
-                tre4 = trace_energy;
-                histo.Plot(D_QDC_TRACE4, qdc4);
-                histo.Plot(D_ENERGY_TRACE4, tre4);
-            } else if (ch == 4) {
-                qdcd = qdc;
-                tred = trace_energy;
-                histo.Plot(D_QDC_TRACED, qdcd);
-                histo.Plot(D_ENERGY_TRACED, tred);
+    //---------------VETO LOOP------------------------------------------------
+    int numOfVetoChans = (int)(DetectorLibrary::get()->GetLocations("pspmt", "veto")).size();
+
+    for (auto it = veto.begin(); it != veto.end(); it++) {
+        int loc = (*it)->GetChanID().GetLocation();
+        histo.Plot(DD_PLASTIC_EN, (*it)->GetCalibratedEnergy(), loc);
+        if ((*it)->GetCalibratedEnergy() > 1 && (*it)->GetCalibratedEnergy() < 10000) {
+            hasVeto = true;
+        }
+
+        if (DetectorDriver::get()->GetSysRootOutput()) {
+            FillPSPMTStruc(*(*it));
+        }
+    }
+
+    //------------Positions from ion scintillator---------------------------------
+    //using top - bottom and left - right computation scheme
+
+    for (auto it = ionTrig.begin(); it != ionTrig.end(); it++) {
+        //check signals energy vs threshold
+
+        if (DetectorDriver::get()->GetSysRootOutput()) {
+            FillPSPMTStruc(*(*it));
+        }
+        energy = (*it)->GetCalibratedEnergy();
+        if (energy < 10)
+            continue;
+
+        // damm plotting of energies
+        int loc = (*it)->GetChanID().GetLocation();
+        histo.Plot(DD_PLASTIC_EN, (*it)->GetCalibratedEnergy(), loc + numOfVetoChans + 1);  //max veto chan +1 for readablility
+
+        //parcel out position signals by tag
+        if ((*it)->GetChanID().GetGroup() == "black" && top_l == 0)
+            top_l = energy;
+        if ((*it)->GetChanID().GetGroup() == "blue" && top_r == 0)
+            top_r = energy;
+        if ((*it)->GetChanID().GetGroup() == "white" && bottom_l == 0)
+            bottom_l = energy;
+        if ((*it)->GetChanID().GetGroup() == "green" && bottom_r == 0)
+            bottom_r = energy;
+    }
+
+    if (top_l > 0 && top_r > 0 && bottom_l > 0 && bottom_r > 0) {
+        hasPosition_ion = true;
+        position_ion.first = (top_l + bottom_l - top_r - bottom_r) / (top_l + top_r + bottom_l + bottom_r);
+        position_ion.second = (top_l + top_r - bottom_l - bottom_r) / (top_l + top_r + bottom_l + bottom_r);
+        histo.Plot(DD_POS_ION, position_ion.first * front_positionScale_ + front_positionOffset_,
+             position_ion.second * front_positionScale_ + front_positionOffset_);
+    }
+
+    //----------------------------------------------------------------------------
+    //------------Check Transmission efficiencies---------------------------------
+
+    //check for valid upstream events, dE silicon events, and vetos for gating
+
+    for (auto it = separatorScint.begin(); it != separatorScint.end(); it++) {
+        if (DetectorDriver::get()->GetSysRootOutput()) {
+            FillPSPMTStruc(*(*it));
+        }
+        if ((*it)->GetCalibratedEnergy() > 1 && (*it)->GetCalibratedEnergy() < 10000) {
+            hasUpstream = true;
+        }
+    }
+
+    for (auto it = desi.begin(); it != desi.end(); it++) {
+        if (DetectorDriver::get()->GetSysRootOutput()) {
+            FillPSPMTStruc(*(*it));
+        }
+        if ((*it)->GetCalibratedEnergy() > 1 && (*it)->GetCalibratedEnergy() < 10000) {
+            hasDeSi = true;
+        }
+    }
+
+    //plot valid YSO positions and dE silicon events gated on upstream events
+    //plot upstream events gated on dE silicon
+    //plot transmission efficiency from upstream to YSO and veto
+
+    if (hasUpstream) {
+        for (auto de_it = desi.begin(); de_it != desi.end(); de_it++) {
+            histo.Plot(D_DESI_ENERGY, (*de_it)->GetCalibratedEnergy());
+        }
+        if (hasPosition_low) {
+            histo.Plot(DD_SEPAR_GATED_LOW, position_low.first * positionScale_ + positionOffset_,
+                 position_low.second * positionScale_ + positionOffset_);
+        }
+        if (hasPosition_ion) {
+            histo.Plot(DD_SEPAR_GATED_ION, position_ion.first * positionScale_ + positionOffset_,
+                 position_ion.second * positionScale_ + positionOffset_);
+        }
+    }
+
+    if (hasDeSi) {
+        for (auto it_sep = separatorScint.begin(); it_sep != separatorScint.end(); it_sep++) {
+            if ((*it_sep)->GetChanID().GetGroup() == "left") {
+                histo.Plot(DD_SEPAR_ENERGY, (*it_sep)->GetCalibratedEnergy(), 0);
+            } else if ((*it_sep)->GetChanID().GetGroup() == "right") {
+                histo.Plot(DD_SEPAR_ENERGY, (*it_sep)->GetCalibratedEnergy(), 1);
             }
         }
 
-        if (ch == 0) {
-            q1 = calEnergy;
-            histo.Plot(D_RAW1, q1);
-        } else if (ch == 1) {
-            q2 = calEnergy;
-            histo.Plot(D_RAW2, q2);
-        } else if (ch == 2) {
-            q3 = calEnergy;
-            histo.Plot(D_RAW3, q3);
-        } else if (ch == 3) {
-            q4 = calEnergy;
-            histo.Plot(D_RAW4, q4);
-        } else if (ch == 4) {
-            qd = calEnergy;
-            histo.Plot(D_RAWD, qd);
+        if (hasPosition_low) {
+            histo.Plot(DD_DESI_GATED_LOW, position_low.first * positionScale_ + positionOffset_,
+                 position_low.second * positionScale_ + positionOffset_);
         }
-
-        if (q1 > 0 && q2 > 0 && q3 > 0 && q4 > 0) {
-            qtop = (q1 + q2) / 2;
-            qleft = (q2 + q3) / 2;
-            qbottom = (q3 + q4) / 2;
-            qright = (q4 + q1) / 2;
-
-            qsum = (q1 + q2 + q3 + q4) / 2;
-            xright = (qright / qsum) * 512 + 100;
-            xleft = (qleft / qsum) * 512 + 100;
-            ytop = (qtop / qsum) * 512 + 100;
-            ybottom = (qbottom / qsum) * 512 + 100;
-            histo.Plot(D_SUM, qsum);
+        if (hasPosition_ion) {
+            histo.Plot(DD_DESI_GATED_ION, position_ion.first * positionScale_ + positionOffset_,
+                 position_ion.second * positionScale_ + positionOffset_);
         }
+    }
 
-        if (tre1 > 0 && tre2 > 0 && tre3 > 0 && tre4 > 0) {
-            qtre_t = (tre1 + tre2) / 2;
-            qtre_l = (tre2 + tre3) / 2;
-            qtre_b = (tre3 + tre4) / 2;
-            qtre_r = (tre4 + tre1) / 2;
-            qtre_s = (tre1 + tre2 + tre3 + tre4) / 2;
-
-            xtre_r = (qtre_r / qtre_s) * 512 + 100;
-            xtre_l = (qtre_l / qtre_s) * 512 + 100;
-            ytre_t = (qtre_t / qtre_s) * 512 + 100;
-            ytre_b = (qtre_b / qtre_s) * 512 + 100;
-
-            pxtre_r = trunc(slope * xtre_l - intercept);
-            pxtre_l = trunc(slope * xtre_r - intercept);
-            pytre_t = trunc(slope * ytre_t - intercept);
-            pytre_b = trunc(slope * ytre_b - intercept);
-
-            histo.Plot(D_ENERGY_TRACESUM, qtre_s);
-
-            if (tre1 > threshold && tre2 > threshold && tre3 > threshold &&
-                tre4 > threshold) {
-                histo.Plot(DD_POS1_RAW_TRACE, xtre_r, ytre_t);
-                histo.Plot(DD_POS2_RAW_TRACE, xtre_l, ytre_b);
-                histo.Plot(DD_POS1_TRACE, pxtre_r, pytre_t);
-                histo.Plot(DD_POS2_TRACE, pxtre_l, pytre_b);
+    if (hasPosition_low) {
+        for (auto de_it = desi.begin(); de_it != desi.end(); de_it++) {
+            histo.Plot(D_DESI_YSO_GATED, (*de_it)->GetCalibratedEnergy());
+        }
+        for (auto it_sep = separatorScint.begin(); it_sep != separatorScint.end(); it_sep++) {
+            if ((*it_sep)->GetChanID().GetGroup() == "left") {
+                histo.Plot(DD_SEPAR_YSO_GATED, (*it_sep)->GetCalibratedEnergy(), 0);
+            } else if ((*it_sep)->GetChanID().GetGroup() == "right") {
+                histo.Plot(DD_SEPAR_YSO_GATED, (*it_sep)->GetCalibratedEnergy(), 1);
             }
         }
+    }
 
-        if (qdc1 > 0 && qdc2 > 0 && qdc3 > 0 && qdc4 > 0) {
-            qqdc_t = (qdc1 + qdc2) / 2;
-            qqdc_l = (qdc2 + qdc3) / 2;
-            qqdc_b = (qdc3 + qdc4) / 2;
-            qqdc_r = (qdc4 + qdc1) / 2;
-            qqdc_s = (qqdc_t + qqdc_l + qqdc_b + qqdc_r) / 2;
+    if (hasUpstream)
+        histo.Plot(D_TRANS_EFF_YSO, 0);
+    if (hasUpstream && hasPosition_ion)
+        histo.Plot(D_TRANS_EFF_YSO, 1);
+    if (hasUpstream && hasPosition_low)
+        histo.Plot(D_TRANS_EFF_YSO, 2);
+    if (hasUpstream && hasVeto)
+        histo.Plot(D_TRANS_EFF_YSO, 3);
 
-//            xqdc_r=(qqdc_r/qqdc_s)*512+100;
-//            xqdc_l=(qqdc_l/qqdc_s)*512+100;
-//            yqdc_t=(qqdc_t/qqdc_s)*512+100;
-//            yqdc_b=(qqdc_b/qqdc_s)*512+100;
+    if (!lowDynode.empty())
+        histo.Plot(DD_DY_SUM_LG, lowDynode.front()->GetCalibratedEnergy(), lowAnodeSum);
 
-            histo.Plot(D_ENERGY_TRACESUM, qqdc_s);
-        }
-
-        if (q1 > threshold && q2 > threshold && q3 > threshold &&
-            q4 > threshold) {
-            pxleft = trunc(slope * xleft - intercept);
-            pxright = trunc(slope * xright - intercept);
-            pytop = trunc(slope * ytop - intercept);
-            pybottom = trunc(slope * ybottom - intercept);
-
-            histo.Plot(DD_POS1_RAW, xright, ytop);
-            histo.Plot(DD_POS2_RAW, xleft, ybottom);
-            histo.Plot(DD_POS1, pxright, pytop);
-            histo.Plot(DD_POS2, pxleft, pybottom);
-
-            if (xright > 341 && xright < 356 && ytop > 200 && ytop < 211) {
-                histo.Plot(D_TEMP0, f * q1);
-                histo.Plot(D_TEMP1, f * q2);
-                histo.Plot(D_TEMP2, f * q3);
-                histo.Plot(D_TEMP3, f * q4);
-                histo.Plot(D_TEMP4, f * qd);
-            }
-
-            for (vector<unsigned int>::iterator ittr = trace.begin();
-                 ittr != trace.end(); ittr++)
-                histo.Plot(DD_SINGLE_TRACE, ittr - trace.begin(), traceNum, *ittr);
-        }
-    } // end of channel event
+    if (!hiDynode.empty())
+        histo.Plot(DD_DY_SUM_HG, hiDynode.front()->GetCalibratedEnergy(), highAnodeSum);
 
     EndProcess();
     return (true);
 }
 
-bool PspmtProcessor::Process(RawEvent &event) {
-    if (!EventProcessor::Process(event))
-        return false;
+pair<double, double> PspmtProcessor::CalculatePosition(double &xa, double &xb, double &ya, double &yb, const VDTYPES &vdtype, double &rot) {
+    double x = 0, y = 0, x_tmp = 0, y_tmp = 0, center = 0;
 
-    EndProcess();
-    return (true);
+    switch (vdtype) {
+        case corners:
+            x_tmp = (0.5 * (yb + xa)) / (xa + xb + ya + yb);
+            y_tmp = (0.5 * (xa + xb)) / (xa + xb + ya + yb);
+            center = 0.2;
+            break;
+        case sides:
+            x_tmp = (xa - xb) / (xa + xb);
+            y_tmp = (ya - yb) / (ya + yb);
+            center = 0;
+            break;
+        case UNKNOWN:
+        default:
+            cerr << "We recieved a VD_TYPE we didn't recognize " << vdtype << endl;
+    }
+    x = (x_tmp - center) * cos(rot) - (y_tmp - center) * sin(rot) + center;  //rotate positions about center of image by angle rot
+    y = (x_tmp - center) * sin(rot) + (y_tmp - center) * cos(rot) + center;
+    return make_pair(x, y);
+}
+
+void PspmtProcessor::FillPSPMTStruc(const ChanEvent &chan_event) {
+    /** implementation of trace analysis **/
+    bool InvalidTrace = false;
+    if (!chan_event.GetTrace().empty() && chan_event.GetTrace().HasValidWaveformAnalysis()) {
+        vector<unsigned> trace = chan_event.GetTrace();
+        unsigned postAvgLen = 20; // number of bins to average at the end of the trace
+        double extremeVariation = 80; // max difference between the min and max values in the baselines
+        vector<unsigned> EndTrace(trace.end() - postAvgLen, trace.end());  //trim out the last postAvgLen bins of the trace
+
+        // get an iterator from the begining of the trace to the low end of the fit range
+        auto preAvgEnd = trace.begin() + chan_event.GetTrace().GetMaxInfo().first - chan_event.GetChanID().GetWaveformBoundsInSamples().first;
+        // get the min and max values of the 2 subsections of the trace
+        double preBaseMax = (*max_element(trace.begin(), preAvgEnd));
+        double preBaseMin = (*min_element(trace.begin(), preAvgEnd));
+
+        double postBaseMax = (*max_element(trace.end() - postAvgLen, trace.end()));
+        double postBaseMin = (*min_element(trace.end() - postAvgLen, trace.end()));
+
+        //If the difference between the early baseline min and max values is more than the extreme limit set energy to 0
+        if (abs(preBaseMax - preBaseMin) >= extremeVariation) {
+            InvalidTrace = true;
+        }
+
+        //The WaveformAnalyzer does what we want for the average baseline before the waveform
+        PSstruct.preBaseAvg = chan_event.GetTrace().GetBaselineInfo().first;
+        // We have to do the avg for the end of the trace explicitly
+        PSstruct.postBaseAvg = Statistics::CalculateAverage(EndTrace);
+        //Get the Trace Max position (index of the trace vector) and the value
+        PSstruct.traceMaxPos = chan_event.GetTrace().GetMaxInfo().first;
+        PSstruct.traceMaxVal = chan_event.GetTrace().GetMaxInfo().second;
+    }
+
+    /* fills PSstruct members */
+    PSstruct.invalidTrace = InvalidTrace;
+    PSstruct.energy = chan_event.GetCalibratedEnergy();
+    PSstruct.time = chan_event.GetFilterTime() * Globals::get()->GetClockInSeconds(chan_event.GetChanID().GetModFreq()) * 1e9;  //store ns
+    PSstruct.subtype = chan_event.GetChanID().GetSubtype();
+    PSstruct.tag = chan_event.GetChanID().GetGroup();
+    pixie_tree_event_->pspmt_vec_.emplace_back(PSstruct);
+    PSstruct = processor_struct::PSPMT_DEFAULT_STRUCT;
+
+    return;
 }

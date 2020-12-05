@@ -11,7 +11,7 @@ mark_as_advanced(PAASS_UTKSCAN_GAMMA_GATES PAASS_UTKSCAN_ONLINE PAASS_UTKSCAN_TR
 # @TODO : Need to determine if this is still required by the scan code.
 add_definitions(-D newreadout)
 
-#utkscan will have Gamma-Gamma gating in the GeProcessor
+#utkscan will have Gamma-Gamma gating in the CloverProcessor and GammaScintProcessor
 if (PAASS_UTKSCAN_GAMMA_GATES)
     add_definitions(-DGGATES)
 endif (PAASS_UTKSCAN_GAMMA_GATES)
@@ -33,6 +33,27 @@ endif (PAASS_UTKSCAN_VERBOSE)
 
 #------------------------------------------------------------------------------
 
+#added by T.T. King for Vector Root Libs
+SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
+SET(CMAKE_SKIP_INSTALL_RPATH FALSE)
+SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+
+SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+
+ROOT_GENERATE_DICTIONARY(PaassRootStruct core/include/PaassRootStruct.hpp LINKDEF core/include/PaassRootLinkDef.hpp )
+add_library(PaassRootStruct SHARED PaassRootStruct.cxx PaassRootStruct)
+install(TARGETS PaassRootStruct DESTINATION lib)
+
+install(FILES ${CMAKE_SOURCE_DIR}/Analysis/Utkscan/core/include/PaassRootStruct.hpp DESTINATION include/)
+#Install the ROOT 6 PCM.
+if (${ROOT_VERSION} VERSION_GREATER "6.0")
+    install( FILES ${CMAKE_CURRENT_BINARY_DIR}/PaassRootStruct_rdict.pcm DESTINATION lib/)
+endif (${ROOT_VERSION} VERSION_GREATER "6.0")
+#End T.T. King Additions
+
+#------------------------------------------------------------------------------
+
 include_directories(analyzers/include core/include experiment/include processors/include)
 add_subdirectory(analyzers)
 add_subdirectory(core)
@@ -48,7 +69,8 @@ if (NOT PAASS_USE_HRIBF)
             $<TARGET_OBJECTS:UtkscanCoreObjects>
             $<TARGET_OBJECTS:UtkscanAnalyzerObjects>
             $<TARGET_OBJECTS:UtkscanProcessorObjects>
-            $<TARGET_OBJECTS:UtkscanExperimentObjects>)
+            $<TARGET_OBJECTS:UtkscanExperimentObjects>
+            PaassRootStruct.cxx)
 else (PAASS_USE_HRIBF)
     set(SCAN_NAME utkscanor)
     add_executable(${SCAN_NAME}
@@ -57,7 +79,8 @@ else (PAASS_USE_HRIBF)
             $<TARGET_OBJECTS:UtkscanAnalyzerObjects>
             $<TARGET_OBJECTS:UtkscanProcessorObjects>
             $<TARGET_OBJECTS:UtkscanExperimentObjects>
-            $<TARGET_OBJECTS:ScanorObjects>)
+            $<TARGET_OBJECTS:ScanorObjects>
+            PaassRootStruct.cxx)
     target_link_libraries(utkscanor ${HRIBF_LIBRARIES})
 endif (NOT PAASS_USE_HRIBF)
 
@@ -68,3 +91,11 @@ target_link_libraries(${SCAN_NAME} ${LIBS} PaassScanStatic ResourceStatic PaassC
 
 install(TARGETS ${SCAN_NAME} DESTINATION bin)
 install(DIRECTORY share/utkscan DESTINATION share)
+install(TARGETS PaassRootStruct DESTINATION lib)
+
+install(FILES ${CMAKE_SOURCE_DIR}/Analysis/Utkscan/core/include/PaassRootStruct.hpp DESTINATION include/)
+install(FILES ${CMAKE_SOURCE_DIR}/Analysis/Utkscan/processors/include/GSaddback.hpp DESTINATION include/)
+#Install the ROOT 6 PCM.
+if (${ROOT_VERSION} VERSION_GREATER "6.0")
+    install( FILES ${CMAKE_CURRENT_BINARY_DIR}/PaassRootStruct_rdict.pcm DESTINATION lib/)
+endif (${ROOT_VERSION} VERSION_GREATER "6.0")

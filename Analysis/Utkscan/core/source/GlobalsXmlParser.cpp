@@ -46,6 +46,11 @@ void GlobalsXmlParser::ParseNode(Globals *globals) {
             m.start("Loading Vandle Node");
             ParseVandleNode(root.child("Vandle"), globals);
             m.done();
+        }else{
+            //always set the normal constants. The current setup will always set the values while allowing single type overrides 
+            globals->SetVandleBigSpeedOfLight(15.22998);
+            globals->SetVandleMediumSpeedOfLight(15.5);
+            globals->SetVandleSmallSpeedOfLight(12.65822);
         }
     } catch (exception &e) {
         m.detail("Globals::Globals : Exception caught while parsing configuration file.");
@@ -74,9 +79,21 @@ void GlobalsXmlParser::ParseGlobalNode(const pugi::xml_node &node, Globals *glob
             globals->SetClockInSeconds(10e-9);
             globals->SetFilterClockInSeconds(10e-9);
         } else if (revision == "F") {
+            // Users of mixed crates are expected to pass the correct freq to the Get...Clock() functions
+            // For legacy/ compatibility reasons we will default Rev F to 250 MHz
             globals->SetAdcClockInSeconds(4e-9);
             globals->SetClockInSeconds(8e-9);
             globals->SetFilterClockInSeconds(8e-9);
+
+            for (int it=0;it<(int)revFfreq.size();it++){
+                int curFreq = revFfreq.at(it).first;
+                double adcFactor = revFfreq.at(it).second.first * pow(10,-9);
+                double filterFactor = revFfreq.at(it).second.second * pow(10,-9);
+                globals->SetAdcClockInSeconds(curFreq,adcFactor);
+                globals->SetClockInSeconds(curFreq,filterFactor);
+                globals->SetFilterClockInSeconds(curFreq,filterFactor);
+            }
+
         } else {
             throw invalid_argument("GlobalsXmlParser::ParseGlobal - The revision \"" + revision +
                                            "\", is not known to us. Known revisions are A, D, F");
@@ -103,7 +120,16 @@ void GlobalsXmlParser::ParseGlobalNode(const pugi::xml_node &node, Globals *glob
     else
         globals->SetHasRawHistogramsDefined(true);
 
-    set <string> knownNodes = {"Revision", "EventWidth", "HasRaw"};
+    if (!node.child("DammPlots").empty()) {
+        globals->SetDammPlots(node.child("DammPlots").attribute("value").as_bool(true));
+    } else {
+        globals->SetDammPlots(true);
+    }
+    sstream_ << "DammPlots: " << globals->GetDammPlots() ;
+    messenger_.detail(sstream_.str());
+    sstream_.str("");
+
+    set <string> knownNodes = {"Revision", "EventWidth", "HasRaw", "DammPlots"};
     WarnOfUnknownChildren(node, knownNodes);
 }
 

@@ -13,6 +13,7 @@
 
 #include "Plots.hpp"
 #include "TreeCorrelator.hpp"
+#include "PaassRootStruct.hpp"
 
 // forward declarations
 class DetectorSummary;
@@ -98,6 +99,12 @@ public:
     * analysis to put in ROOT tree only.
     */
     virtual void FillBranch(void) {};
+
+    /** returns PixTreeEvent for ROOT tree output **/
+    PixTreeEvent* GetPixTreeEvent() const { return pixie_tree_event_; }
+
+    void SetPixTreeEventPtr(PixTreeEvent* pix_tree_event) { pixie_tree_event_ = pix_tree_event; }
+
 protected:
     std::string name; //!< Name of the Processor
     std::set<std::string> associatedTypes; //!< Set of associated types for Processor
@@ -108,6 +115,9 @@ protected:
     /** Plots class for given Processor, takes care of declaration
     * and plotting within boundaries allowed by PlotsRegistry */
     Plots histo;
+
+    /** tree event data container for ROOT output **/
+    PixTreeEvent *pixie_tree_event_;
 private:
     tms tmsBegin; //!< The beginning processor time
     double userTime;//!< The user time spent in the processor

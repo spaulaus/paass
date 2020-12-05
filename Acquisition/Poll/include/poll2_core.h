@@ -171,6 +171,8 @@ private:
     const static std::vector<std::string> pollStatusCommands_;
     std::vector<std::string> commands_;
 
+    std::string alarmList_; ///<Comma seperated list from CLI of alarm alert emails (Note: no spaces)
+
     data_pack AcqBuf; /// Data packet for class shared-memory broadcast
 
     /// Print help dialogue for POLL options.
@@ -240,6 +242,13 @@ private:
     /// @return Whether the attempt was succesful.
     bool SplitParameterArgs(const std::string &arg, int &start, int &stop);
 
+    /// @breif Checks is the entered module is actually installed in the system. 
+    /// The Pixie API handles the reads and the channels but does not have a check that a given module is actually installed in the crate. If not then poll2 will hang and need to be hard killed. 
+    /// Because we always run sequentially; this is a less than check against the num of booted cards
+    /// @param[in] Module number from command line
+    /// @return true is module is installed.
+    bool IsValidModule(const int &modNum);
+
 public:
     /// Default constructor.
     Poll();
@@ -258,6 +267,8 @@ public:
     void SetQuietMode(bool input_=true){ is_quiet = input_; }
 
     void SetSendAlarm(bool input_=true){ send_alarm = input_; }
+
+    void SetAlarmEmailList(std::string input_ = ""){ alarmList_ = input_; }
 
     void SetShowRates(bool input_=true){ show_module_rates = input_; }
 
@@ -283,6 +294,8 @@ public:
 
     bool GetSendAlarm(){ return send_alarm; }
 
+    std::string GetAlarmEmailList(){ return alarmList_; }
+
     bool GetShowRates(){ return show_module_rates; }
 
     bool GetZeroClocks(){ return zero_clocks; }
@@ -306,6 +319,9 @@ public:
 
     /// Close the sockets, any open files, and clean up.
     bool Close();
+
+    /// Calls the Alarm script to alert the bosses incase of errors
+    void CallAlarm();
 };
 
 #endif

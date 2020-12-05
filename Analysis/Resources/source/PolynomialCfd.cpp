@@ -34,8 +34,7 @@ double PolynomialCfd::CalculatePhase(const std::vector<double> &data, const Timi
             if (fitCoefficients[2] > 1)
                 multiplier = -1.;
 
-            phase = (-fitCoefficients[1] + multiplier * sqrt(fitCoefficients[1] * fitCoefficients[1]
-                    - 4 * fitCoefficients[2] * (fitCoefficients[0] - cfg.GetFraction())))
+            phase = (-fitCoefficients[1] + multiplier * sqrt(fitCoefficients[1] * fitCoefficients[1] - 4 * fitCoefficients[2] * (fitCoefficients[0] - cfg.GetFraction())))
                     / (2 * fitCoefficients[2]);
 
             break;
