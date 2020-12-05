@@ -47,7 +47,6 @@ jobs:
         - MATRIX_EVAL=""
         - BUILD_OPTIONS="-DPAASS_BUILD_TESTS=ON -DPAASS_BUILD_UTKSCAN=ON -DPAASS_BUILD_ROOT_SCANNER=OFF -DPAASS_BUILD_SETUP=ON"
 
-
 before_install:
   - sudo apt-get -qq update --install-suggests
   - eval "${MATRIX_EVAL}"
@@ -63,5 +62,8 @@ before_install:
   - source root/bin/thisroot.sh
 
 script:
-  - mkdir paass-build && cd paass-build
-  - cmake ../ ${BUILD_OPTIONS} && make -j8 && ./Tests/tests
+  - mkdir build
+  - cd paass-build
+  - cmake ../ ${BUILD_OPTIONS}
+  - make -j12
+  - ./Tests/tests
