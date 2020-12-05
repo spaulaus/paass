@@ -2,7 +2,7 @@ add_definitions(-D INSTALL_PREFIX="\\"${CMAKE_INSTALL_PREFIX}\\"")
 if (PAASS_BUILD_ACQ)
     add_subdirectory(Interface)
     add_subdirectory(MCA)
-    #    add_subdirectory(Poll)
+    add_subdirectory(Poll)
 endif (PAASS_BUILD_ACQ)
 
 #add_subdirectory(Utilities/set2root)
