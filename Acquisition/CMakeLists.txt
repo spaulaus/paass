@@ -8,6 +8,7 @@ if (PAASS_BUILD_ACQ)
     add_subdirectory(Utilities/send_alarm)
 endif (PAASS_BUILD_ACQ)
 
-#add_subdirectory(Utilities/set2root)
+add_subdirectory(set2root)
+
 #add_subdirectory(Utilities/DataGenerator)
 #add_subdirectory(Setup)
