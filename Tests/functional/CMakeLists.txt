@@ -1,0 +1,3 @@
+add_executable(CTerminalTest tests/CTerminalTest.cpp)
+target_link_libraries(CTerminalTest PaassCoreStatic)
+install(TARGETS CTerminalTest DESTINATION bin)
