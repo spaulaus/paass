@@ -4,6 +4,7 @@ if (PAASS_BUILD_ACQ)
     add_subdirectory(MCA)
     add_subdirectory(Poll)
     add_subdirectory(Utilities/listener)
+    add_subdirectory(Utilities/monitor)
 endif (PAASS_BUILD_ACQ)
 
 #add_subdirectory(Utilities/set2root)
