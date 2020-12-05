@@ -6,6 +6,10 @@ add_subdirectory(Setup)
 #add_subdirectory(Utilities/DataGenerator)
 
 if (PAASS_BUILD_ACQ)
+    find_package(PLX REQUIRED)
+    find_package(XIA REQUIRED)
+    XIA_CONFIG()
+
     add_subdirectory(Interface)
     add_subdirectory(MCA)
     add_subdirectory(Poll)
