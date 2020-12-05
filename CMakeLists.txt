@@ -1,6 +1,4 @@
-# @authors S.V. Paulauskas, K. Smith, and C. Thronsberry
-
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.13)
 
 project(PAASS)
 
@@ -48,17 +46,7 @@ include(CMakeDependentOption)
 #Install options
 option(PAASS_BUILD_ACQ "Build and install Acquisition software" ON)
 option(PAASS_BUILD_ANALYSIS "Build analysis related programs" ON)
-option(PAASS_BUILD_SETUP "Include the older setup programs in installation" OFF)
-option(PAASS_BUILD_SHARED_LIBS "Install only scan libraries" ON)
 option(PAASS_BUILD_TESTS "Builds programs designed to test the package." OFF)
-option(PAASS_BUILD_UTKSCAN "Build utkscan" OFF)
-option(PAASS_USE_DAMM "Use DAMM for MCA" ON)
-option(PAASS_USE_NCURSES "Use ncurses for terminal" ON)
-option(PAASS_USE_ROOT "Use ROOT (Currently REQUIRED!!)" ON)
-
-mark_as_advanced(PAASS_USE_NCURSES)
-mark_as_advanced(PAASS_USE_DAMM)
-mark_as_advanced(PAASS_USE_ROOT)
 
 option(PAASS_EXPORT_COMPILE_COMMANDS "CMAKE_EXPORT_COMPILE_COMMANDS WRAPPER" ON)
 mark_as_advanced(PAASS_EXPORT_COMPILE_COMMANDS)
@@ -73,24 +61,9 @@ else ()
 endif (PAASS_EXPORT_COMPILE_COMMANDS)
 
 #------------------------------------------------------------------------------
-
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/Cmake/modules/")
 
 find_package(Threads REQUIRED)
-
-if (PAASS_BUILD_ACQ)
-    #Find the PLX Library
-    find_package(PLX REQUIRED)
-    link_directories(${PLX_LIBRARY_DIR})
-
-    #Find the Pixie Firmware
-    find_package(XIA REQUIRED)
-    include_directories(${XIA_INCLUDE_DIR})
-    link_directories(${XIA_LIBRARY_DIR})
-
-    # Create pixie.cfg and copy slot_def.set as well as copy default.set to current.set
-    XIA_CONFIG()
-endif ()
 
 find_package(Curses REQUIRED)
 add_definitions("-D USE_NCURSES")
@@ -98,37 +71,26 @@ mark_as_advanced(FORCE CURSES_HAVE_CURSES_H CURSES_CURSES_H_PATH CURSES_FORM_LIB
 
 find_package(ROOT REQUIRED COMPONENTS TreePlayer)
 mark_as_advanced(FORCE GENREFLEX_EXECUTABLE ROOTCINT_EXECUTABLE ROOT_CONFIG_EXECUTABLE)
-include_directories(${ROOT_INCLUDE_DIR})
-link_directories(${ROOT_LIBRARY_DIR})
 add_definitions("-D USE_ROOT")
 
-if (PAASS_BUILD_TESTS)
-    add_subdirectory(Tests)
-    enable_testing()
-endif (PAASS_BUILD_TESTS)
+find_package(GSL REQUIRED)
+if (${GSL_VERSION} LESS 2.0)
+    add_definitions("-D GSL_VERSION_ONE")
+endif (${GSL_VERSION} LESS 2.0)
+
+#if (PAASS_BUILD_TESTS)
+#    add_subdirectory(Tests)
+#    enable_testing()
+#endif (PAASS_BUILD_TESTS)
 
 #------------------------------------------------------------------------------
-#Put all the include directories that we might need at this point. Third party includes must come before the Resources.
-# TODO : We will need to update all these to be target_include calls paired with the right executable.
-include_directories(ThirdParty/pugixml/include Resources/include Core/include)
-
 add_subdirectory(ThirdParty)
 add_subdirectory(Resources)
 add_subdirectory(Core)
-
-#Build Acquisition software, we don't have this broken into as fine of a
-#granularity as the Analysis software, so we just wrap the whole thing in an if.
-if (PAASS_BUILD_ACQ)
-    add_subdirectory(Acquisition)
-else ()
-    #Ensure that we can still build set2* even when BUILD_ACQ is off
-    add_subdirectory(Acquisition/set2root)
-endif (PAASS_BUILD_ACQ)
-
-#Build any of the analysis related things that we need to build.
-if (PAASS_BUILD_ANALYSIS)
-    add_subdirectory(Analysis)
-endif (PAASS_BUILD_ANALYSIS)
+add_subdirectory(Acquisition)
+#if (PAASS_BUILD_ANALYSIS)
+add_subdirectory(Analysis)
+#endif (PAASS_BUILD_ANALYSIS)
 
 #Build/install the miscellaneous stuff
-add_subdirectory(Share)
+#add_subdirectory(Share)
