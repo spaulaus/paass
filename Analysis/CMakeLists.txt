@@ -1,6 +1,6 @@
+add_subdirectory(Resources)
 add_subdirectory(ScanLibraries)
-#add_subdirectory(Resources)
-#add_subdirectory(Utilities)
+add_subdirectory(Utilities)
 
 #option(PAASS_USE_HRIBF "Use HRIBF library for scan base." OFF)
 #if (PAASS_USE_HRIBF)
