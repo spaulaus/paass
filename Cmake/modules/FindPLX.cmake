@@ -8,17 +8,17 @@
 #
 
 find_path(PLX_LIBRARY_DIR
-        NAMES libPlxApi.a
-        HINTS ENV PLX_SDK_DIR
-        PATHS /opt/plx/current/PlxSdk
+        NAMES PlxApi.a PlxApi.so
+        HINTS $ENV{PLX_SDK_DIR}
+        PATHS /usr/local/broadcom/current
         PATH_SUFFIXES PlxApi/Library Linux/PlxApi/Library)
 
-# Support the REQUIRED and QUIET arguments, and set PLX_FOUND if found.
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(PLX DEFAULT_MSG PLX_LIBRARY_DIR)
 
 if (PLX_FOUND)
-    set(PLX_LIBRARIES -lPlxApi -ldl) # CACHE STRING "List of PLX libraries")
-endif ()
+    set(PLX_SHARED_LIB -l:PlxApi.so -ldl)
+    set(PLX_STATIC_LIB -l:PlxApi.a -ldl)
+endif (PLX_FOUND)
 
-mark_as_advanced(PLX_LIBRARIES PLX_LIBRARY_DIR)
+mark_as_advanced(PLX_SHARED_LIB PLX_STATIC_LIB PLX_LIBRARY_DIR)
