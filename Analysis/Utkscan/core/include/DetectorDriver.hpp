@@ -217,23 +217,7 @@ private:
     double firstEventTime_; //!< The time of the first event that passes through the DetectorDriver
     double firstEventTimeinNs_; //!< The time of the first event that passes through the DetectorDriver in ns
     double eventFirstTime_; //!<The Time of the first detector event in the current pixie event
-    /*! Declares a 1D histogram calls the C++ wrapper for DAMM
-    * \param [in] dammId : The histogram number to define
-    * \param [in] xSize : The range of the x-axis
-    * \param [in] title : The title for the histogram */
-    virtual void DeclareHistogram1D(int dammId, int xSize, const char *title) {
-        histo.DeclareHistogram1D(dammId, xSize, title);
-    }
 
-    /*! \brief Declares a 2D histogram calls the C++ wrapper for DAMM
-    * \param [in] dammId : The histogram number to define
-    * \param [in] xSize : The range of the x-axis
-    * \param [in] ySize : The range of the y-axis
-    * \param [in] title : The title of the histogram */
-    virtual void DeclareHistogram2D(int dammId, int xSize, int ySize,
-                                    const char *title) {
-        histo.DeclareHistogram2D(dammId, xSize, ySize, title);
-    }
     /*! \brief Fills the Logic structure for ROOT output.
      * Because the logic spans pixie events if we fill in the processor it does not get filled into each ROOT entry.
      * So we will fill here in the DetectorDriver utilizing the work that was put into the TreeCorrelator  */

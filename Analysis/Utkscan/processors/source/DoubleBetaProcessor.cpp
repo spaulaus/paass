@@ -5,11 +5,11 @@
  *\date October 26, 2014
  */
 #include "BarBuilder.hpp"
+#include "DetectorDriver.hpp"
 #include "DammPlotIds.hpp"
 #include "DoubleBetaProcessor.hpp"
 #include "Globals.hpp"
 #include "RawEvent.hpp"
-#include "TimingMapBuilder.hpp"
 #include "TreeCorrelator.hpp"
 
 namespace dammIds {
@@ -90,8 +90,8 @@ bool DoubleBetaProcessor::PreProcess(RawEvent &event) {
             DBstruc.detNum = barNum;
             DBstruc.timeAvg = (*it).second.GetTimeAverage();
             DBstruc.timeDiff = (*it).second.GetTimeDifference();
-            DBstruc.timeL = (*it).second.GetLeftSide().GetTimeSansCfd() * Globals::get()->GetClockInSeconds(modulefreq) * 1e9; //store ns;
-            DBstruc.timeR = (*it).second.GetRightSide().GetTimeSansCfd() * Globals::get()->GetClockInSeconds(modulefreq) * 1e9; //store ns;
+            DBstruc.timeL = (*it).second.GetLeftSide().GetFilterTime() * Globals::get()->GetClockInSeconds(modulefreq) * 1e9; //store ns;
+            DBstruc.timeR = (*it).second.GetRightSide().GetFilterTime() * Globals::get()->GetClockInSeconds(modulefreq) * 1e9; //store ns;
             DBstruc.barQdc = (*it).second.GetQdc();
             DBstruc.tMaxValR = (*it).second.GetRightSide().GetMaximumValue();
             DBstruc.tMaxValL = (*it).second.GetLeftSide().GetMaximumValue();
@@ -100,8 +100,8 @@ bool DoubleBetaProcessor::PreProcess(RawEvent &event) {
         }
 
         if(barNum == 0) {
-            histo.plot(DD_PP, (*it).second.GetLeftSide().GetPhaseInNs()*resolution,(*it).second.GetRightSide().GetPhaseInNs()*resolution);
-            histo.plot(DD_QDCTDIFF, (*it).second.GetTimeDifference()*resolution+offset,(*it).second.GetQdc());
+            histo.Plot(DD_PP, (*it).second.GetLeftSide().GetPhaseInNs()*resolution,(*it).second.GetRightSide().GetPhaseInNs()*resolution);
+            histo.Plot(DD_QDCTDIFF, (*it).second.GetTimeDifference()*resolution+offset,(*it).second.GetQdc());
         }
     }
     return (true);

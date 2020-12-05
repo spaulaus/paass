@@ -1122,7 +1122,7 @@ void Poll::CommandControl(){
                     continue;
                 }
 
-                bool IsValidNumber = IsNumeric(arguments.at(2));
+                bool IsValidNumber = StringManipulation::IsNumeric(arguments.at(2));
 
                 if (IsValidNumber && atoi(arguments.at(2).c_str()) >= 24) {
                     std::cout << "ERROR: Invalid CCSRA bit number: '" << arguments.at(2) << "'\n";

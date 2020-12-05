@@ -57,7 +57,7 @@ bool GeProcessor::PreProcess(RawEvent &event) {
             //We are reusing the Clover Stuct definition. This means these well go into the clover_vec_
             GEstruct.rawEnergy = (*ge)->GetEnergy();
             GEstruct.energy = (*ge)->GetCalibratedEnergy();
-            GEstruct.time = (*ge)->GetTimeSansCfd() * Globals::get()->GetClockInSeconds(module_freq) * 1e9;  //store ns
+            GEstruct.time = (*ge)->GetFilterTime() * Globals::get()->GetClockInSeconds(module_freq) * 1e9;  //store ns
             GEstruct.detNum = (*ge)->GetChanID().GetLocation();
             GEstruct.cloverNum = -1; //We Define the Single Channel Ge detectors to be cloverNum -1 so that we can use both clovers and single channels at the same time.
             pixie_tree_event_->clover_vec_.emplace_back(GEstruct);

@@ -42,10 +42,10 @@ bool RootDevProcessor::Process(RawEvent &event) {
         RDstruct.energy = (*it)->GetCalibratedEnergy();
         RDstruct.rawEnergy = (*it)->GetEnergy();
         if (Rev == "F") {
-            RDstruct.timeSansCfd = (*it)->GetTimeSansCfd() * Globals::get()->GetClockInSeconds((*it)->GetChanID().GetModFreq()) * 1e9;
+            RDstruct.timeSansCfd = (*it)->GetFilterTime() * Globals::get()->GetClockInSeconds((*it)->GetChanID().GetModFreq()) * 1e9;
             RDstruct.time = (*it)->GetTime() * Globals::get()->GetAdcClockInSeconds((*it)->GetChanID().GetModFreq()) * 1e9;
         } else {
-            RDstruct.timeSansCfd = (*it)->GetTimeSansCfd() * Globals::get()->GetClockInSeconds() * 1e9;
+            RDstruct.timeSansCfd = (*it)->GetFilterTime() * Globals::get()->GetClockInSeconds() * 1e9;
             RDstruct.time = (*it)->GetTime() * Globals::get()->GetAdcClockInSeconds() * 1e9;
         }
         RDstruct.detNum = (*it)->GetChanID().GetLocation();

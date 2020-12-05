@@ -12,11 +12,10 @@
 
 #include <iostream>
 #include <vector>
-#include <utility>
 
 using namespace std;
 
-CfdAnalyzer::CfdAnalyzer(const std::string &s) : TraceAnalyzer() {
+CfdAnalyzer::CfdAnalyzer(const std::string &s, const int &ptype, const std::set<std::string> &ignoredTypes) : TraceAnalyzer() {
     name = "CfdAnalyzer";
     if (s == "polynomial" || s == "poly")
         driver_ = new PolynomialCfd();
@@ -26,6 +25,7 @@ CfdAnalyzer::CfdAnalyzer(const std::string &s) : TraceAnalyzer() {
         driver_ = new XiaCfd();
     else
         driver_ = NULL;
+    ignoredTypes_ = ignoredTypes;
 }
 
 void CfdAnalyzer::Analyze(Trace &trace, const ChannelConfiguration &cfg) {
@@ -48,5 +48,6 @@ void CfdAnalyzer::Analyze(Trace &trace, const ChannelConfiguration &cfg) {
 
     trace.SetPhase(driver_->CalculatePhase(trace.GetWaveform(), cfg.GetTimingConfiguration(),
                                            trace.GetExtrapolatedMaxInfo(), trace.GetBaselineInfo()) + trace.GetMaxInfo().first);
+    trace.SetHasValidTimingAnalysis(true);
     EndAnalyze();
 }

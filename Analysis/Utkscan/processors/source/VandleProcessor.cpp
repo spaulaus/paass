@@ -121,7 +121,7 @@ bool VandleProcessor::PreProcess(RawEvent &event) {
     bars_ = billy.GetBarMap();
 
     if (bars_.empty()) {
-        plot(D_DEBUGGING, 25);
+        histo.Plot(D_DEBUGGING, 25);
         return false;
     }
 
@@ -295,9 +295,9 @@ void VandleProcessor::PlotTofHistograms(const double &tof, const double &cortof,
 
     //Plotting Rough Decay Histograms
     if( RDecay_){
-        plot(DD_TOFBARS_DECAY + offset.first, tof * plotMult_ + plotOffset_, barPlusStartLoc);
+        histo.Plot(DD_TOFBARS_DECAY + offset.first, tof * plotMult_ + plotOffset_, barPlusStartLoc);
         if (calibrated) //same as before, causes strange behavior when non TCal'd
-            plot(DD_QDCTOF_DECAY + offset.first, tof * plotMult_ + plotOffset_, qdc / qdcComp_);
+            histo.Plot(DD_QDCTOF_DECAY + offset.first, tof * plotMult_ + plotOffset_, qdc / qdcComp_);
     }
 
 

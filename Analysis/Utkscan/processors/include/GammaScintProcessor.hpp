@@ -17,9 +17,6 @@
 #include "pugixml.hpp"
 #include "StringManipulationFunctions.hpp"
 
-
-#ifdef useroot
-
 #include "TROOT.h"
 #include "TSystem.h"
 #include <TFile.h>
@@ -29,8 +26,6 @@
 #include <TH2.h>
 #include "PaassRootStruct.hpp"
 #include "GSaddback.hpp"
-
-#endif
 
 class GammaScintProcessor : public EventProcessor {
 public:

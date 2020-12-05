@@ -253,9 +253,9 @@ void CloverProcessor::DeclarePlots(void) {
     histo.DeclareHistogram1D(multi::betaGated::D_ADD_ENERGY_TOTAL, energyBins1,
                        "Beta gated gamma total multi-gated");
 
-    DeclareHistogram1D(D_NONCYCGATEDENERGY,energyBins1,"Non Cycle Gated Gamma"
+    histo.DeclareHistogram1D(D_NONCYCGATEDENERGY,energyBins1,"Non Cycle Gated Gamma"
             " Singles");
-    DeclareHistogram1D(betaGated::D_NONCYCGATEDENERGY,energyBins1,"Beta Gated"
+    histo.DeclareHistogram1D(betaGated::D_NONCYCGATEDENERGY,energyBins1,"Beta Gated"
             " Non Cycle Gated Gamma Singles");
 
     // for each clover
@@ -517,17 +517,17 @@ bool CloverProcessor::Process(RawEvent &event) {
         if (gEnergy < gammaThreshold_)
             continue;
         if (hasBeta) {
-            plot(betaGated::D_NONCYCGATEDENERGY, gEnergy);
-            double gTime = itC->GetTimeSansCfd();
+            histo.Plot(betaGated::D_NONCYCGATEDENERGY, gEnergy);
+            double gTime = itC->GetFilterTime();
             EventData bestBeta = BestBetaForGamma(gTime);
         }
 
-        plot(D_NONCYCGATEDENERGY, gEnergy);
+        histo.Plot(D_NONCYCGATEDENERGY, gEnergy);
 
         if (DetectorDriver::get()->GetSysRootOutput()){
             Cstruct.rawEnergy = itC->GetEnergy();
             Cstruct.energy = itC->GetCalibratedEnergy();
-            Cstruct.time = itC->GetTimeSansCfd() * Globals::get()->GetClockInSeconds() * 1e9; //store ns
+            Cstruct.time = itC->GetFilterTime() * Globals::get()->GetClockInSeconds() * 1e9; //store ns
             Cstruct.detNum = itC->GetChanID().GetLocation();
             Cstruct.cloverNum = leafToClover[itC->GetChanID().GetLocation()];
             pixie_tree_event_->clover_vec_.emplace_back(Cstruct);

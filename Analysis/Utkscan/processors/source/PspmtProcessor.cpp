@@ -204,7 +204,7 @@ bool PspmtProcessor::PreProcess(RawEvent &event) {
         hasPosition_low = true;
         position_low.first = CalculatePosition(xa_l, xb_l, ya_l, yb_l, vdtype_, rotation_).first;
         position_low.second = CalculatePosition(xa_l, xb_l, ya_l, yb_l, vdtype_, rotation_).second;
-        histo.Pplot(DD_POS_LOW, position_low.first * positionScale_ + positionOffset_,
+        histo.Plot(DD_POS_LOW, position_low.first * positionScale_ + positionOffset_,
              position_low.second * positionScale_ + positionOffset_);
     }
 
@@ -221,7 +221,7 @@ bool PspmtProcessor::PreProcess(RawEvent &event) {
 
     for (auto it = veto.begin(); it != veto.end(); it++) {
         int loc = (*it)->GetChanID().GetLocation();
-        plot(DD_PLASTIC_EN, (*it)->GetCalibratedEnergy(), loc);
+        histo.Plot(DD_PLASTIC_EN, (*it)->GetCalibratedEnergy(), loc);
         if ((*it)->GetCalibratedEnergy() > 1 && (*it)->GetCalibratedEnergy() < 10000) {
             hasVeto = true;
         }
@@ -246,7 +246,7 @@ bool PspmtProcessor::PreProcess(RawEvent &event) {
 
         // damm plotting of energies
         int loc = (*it)->GetChanID().GetLocation();
-        plot(DD_PLASTIC_EN, (*it)->GetCalibratedEnergy(), loc + numOfVetoChans + 1);  //max veto chan +1 for readablility
+        histo.Plot(DD_PLASTIC_EN, (*it)->GetCalibratedEnergy(), loc + numOfVetoChans + 1);  //max veto chan +1 for readablility
 
         //parcel out position signals by tag
         if ((*it)->GetChanID().GetGroup() == "black" && top_l == 0)
@@ -417,7 +417,7 @@ void PspmtProcessor::FillPSPMTStruc(const ChanEvent &chan_event) {
     /* fills PSstruct members */
     PSstruct.invalidTrace = InvalidTrace;
     PSstruct.energy = chan_event.GetCalibratedEnergy();
-    PSstruct.time = chan_event.GetTimeSansCfd() * Globals::get()->GetClockInSeconds(chan_event.GetChanID().GetModFreq()) * 1e9;  //store ns
+    PSstruct.time = chan_event.GetFilterTime() * Globals::get()->GetClockInSeconds(chan_event.GetChanID().GetModFreq()) * 1e9;  //store ns
     PSstruct.subtype = chan_event.GetChanID().GetSubtype();
     PSstruct.tag = chan_event.GetChanID().GetGroup();
     pixie_tree_event_->pspmt_vec_.emplace_back(PSstruct);

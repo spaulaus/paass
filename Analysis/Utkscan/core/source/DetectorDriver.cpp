@@ -76,7 +76,7 @@ DetectorDriver::DetectorDriver() : histo_(OFFSET, RANGE, "DetectorDriver") {
             setProcess.emplace((*it)->GetName());
         }
         if (setProcess.empty()){
-            throw GeneralException("Exception:DetectorDriver:: setProcess is empty and root requested. This will cause segfaults on root Fill()");
+            throw PaassException("Exception:DetectorDriver:: setProcess is empty and root requested. This will cause segfaults on root Fill()");
 
         }
 
@@ -179,7 +179,7 @@ void DetectorDriver::ProcessEvent(RawEvent &rawev) {
     if (sysrootbool_) {
 	pixie_tree_event_.Reset();
     }
-    plot(dammIds::raw::D_NUMBER_OF_EVENTS, dammIds::GENERIC_CHANNEL);
+    histo_.Plot(dammIds::raw::D_NUMBER_OF_EVENTS, dammIds::GENERIC_CHANNEL);
     try {
         int innerEvtCounter=0;
         for (vector<ChanEvent *>::const_iterator it = rawev.GetEventList().begin(); it != rawev.GetEventList().end(); ++it) {
@@ -201,7 +201,7 @@ void DetectorDriver::ProcessEvent(RawEvent &rawev) {
             EventData data(time, energy, location);
             TreeCorrelator::get()->place(place)->activate(data);
             if (innerEvtCounter == 0) {
-                eventFirstTime_ = (*it)->GetTimeSansCfd(); //sets the time of the first det event in the pixie event
+                eventFirstTime_ = (*it)->GetFilterTime(); //sets the time of the first det event in the pixie event
             }
             if ((*it)->GetChanID().HasTag("ets1")) {
                 pixie_tree_event_.externalTS1 = (*it)->GetExternalTimeStamp();
@@ -210,31 +210,30 @@ void DetectorDriver::ProcessEvent(RawEvent &rawev) {
                 pixie_tree_event_.externalTS2 = (*it)->GetExternalTimeStamp();
             }
             if(pixie_tree_event_.externalTS2 != 0 && pixie_tree_event_.externalTS1 !=0 ) {
-                plot(D_INTERNAL_TS_CHECK, ((pixie_tree_event_.externalTS1 - pixie_tree_event_.externalTS2) + 1000));
+                histo_.Plot(D_INTERNAL_TS_CHECK, ((pixie_tree_event_.externalTS1 - pixie_tree_event_.externalTS2) + 1000));
             }else {
-                plot(D_INTERNAL_TS_CHECK,100);
+                histo_.Plot(D_INTERNAL_TS_CHECK,100);
             }
             innerEvtCounter++;
         }
 
         if ( eventNumber_ == 0)
-            firstEventTime_ = rawev.GetEventList().front()->GetTimeSansCfd();
+            firstEventTime_ = rawev.GetEventList().front()->GetFilterTime();
 
         //!First round is preprocessing, where process result must be guaranteed
         //!to not to be dependent on results of other Processors.
-        for (vector<EventProcessor *>::iterator iProc = vecProcess.begin(); iProc != vecProcess.end(); iProc++)
-            if ((*iProc)->HasEvent())
-                (*iProc)->PreProcess(rawev);
+        for (auto proc : vecProcess)
+            if (proc->HasEvent())
+                proc->PreProcess(rawev);
         ///In the second round the Process is called, which may depend on other
         ///Processors.
-        for (vector<EventProcessor *>::iterator iProc = vecProcess.begin(); iProc != vecProcess.end(); iProc++)
-            if ((*iProc)->HasEvent())
-                (*iProc)->Process(rawev);
+        for (auto proc : vecProcess)
+            if (proc->HasEvent())
+                proc->Process(rawev);
         // Clear all places in correlator (if of resetable type)
-        for (map<string, Place *>::iterator it = TreeCorrelator::get()->places_.begin();
-             it != TreeCorrelator::get()->places_.end(); ++it)
-            if ((*it).second->resetable())
-                (*it).second->reset();
+        for (auto place : TreeCorrelator::get()->places_)
+            if (place.second->resetable())
+                place.second->reset();
     } catch (PaassWarning &w) {
         cout << Display::WarningStr("Warning caught at DetectorDriver::ProcessEvent") << endl;
         cout << "\t" << Display::WarningStr(w.what()) << endl;
@@ -275,6 +274,7 @@ void DetectorDriver::DeclarePlots() {
             histo_.DeclareHistogram1D(D_BUFFER_END_TIME,SE, "Buffer Length in ns");
             histo_.DeclareHistogram2D(DD_TRACE_MAX,SD, S8, "Max Value in Trace vs Chan Num");
 
+            DetectorLibrary *modChan = DetectorLibrary::get();
             DetectorLibrary::size_type maxChan = modChan->size();
             for (DetectorLibrary::size_type i = 0; i < maxChan; i++) {
                 if (!modChan->HasValue(i))
@@ -340,7 +340,7 @@ int DetectorDriver::ThreshAndCal(ChanEvent *chan, RawEvent &rawev) {
         histo_.Plot(D_HAS_TRACE_2,id);
         }
         if(chan->GetTrace().HasValidTimingAnalysis()){
-            plot(D_HAS_TRACE_3,id);
+            histo_.Plot(D_HAS_TRACE_3,id);
         } else {
             trace.SetPhase(0.0); // if the timing analysis fails for any reason then set the phase to 0
         }

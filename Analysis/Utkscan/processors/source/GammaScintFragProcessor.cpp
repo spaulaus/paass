@@ -1,7 +1,7 @@
 /** \file GammaScintFragProcessor.cpp
  *\brief Processes information for Scintillation Type Gamma Detectors
  *
- *Processes information from scintillation type gamma-ray detectors. This code is intended to be a simpler version of the GammaScintFragProcessor, geared as a faster way to add these det types to the analysis root output. As such there is very little damm plotting; just the minimum needed to check that things are working right (total, BG total, DY total, DY BG total, multi, Long time scale drift tracking)
+ *Processes information from scintillation type gamma-ray detectors. This code is intended to be a simpler version of the GammaScintFragProcessor, geared as a faster way to add these det types to the analysis root output. As such there is very little damm histo.Plotting; just the minimum needed to check that things are working right (total, BG total, DY total, DY BG total, multi, Long time scale drift tracking)
  *
  *
  *\author T. T. King
@@ -16,6 +16,7 @@
 #include "DetectorDriver.hpp"
 #include "DoubleBetaProcessor.hpp"
 #include "GammaScintFragProcessor.hpp"
+#include "PaassExceptions.hpp"
 #include "RawEvent.hpp"
 
 namespace dammIds {
@@ -24,7 +25,7 @@ const int LITTLEHAG_OFFSET = 0;  //!< offset for 2" hagrid
 const int BIGHAG_OFFSET = 20;    //!< offset for 3" hagrid
 const int NaIOFFSET = 40;        //!< offset for the large volume Nai
 
-const int D_ENERGY = 0;            //!< Energy "Totals" (all det of a single kind in 1 plot)
+const int D_ENERGY = 0;            //!< Energy "Totals" (all det of a single kind in 1 histo.Plot)
 const int D_BG_ENERGY = 1;         //!< Event Beta-Gated "Totals"
 const int D_DY_ENERGY = 2;         //!< Energy from the "dynode" output. This will be used at RIKEN2018 to enable dual gain on HAGRID
 const int D_DY_BG_ENERGY = 3;      //!< BG Energy from the "dynode" output. This will be used at RIKEN2018 to enable dual gain on HAGRID
@@ -43,34 +44,34 @@ void GammaScintFragProcessor::DeclarePlots() {
     for (auto it = typeList_.begin(); it != typeList_.end(); it++) {
         unsigned int offset = ReturnOffset((*it));
         if (offset == numeric_limits<unsigned int>::max()) {
-            throw GeneralException("UNKNOWN Gamma Detector Type. Known Types are nai, smallhag, bighag");
+            throw PaassException("UNKNOWN Gamma Detector Type. Known Types are nai, smallhag, bighag");
         }
 
         const string typeName = (*it);
         stringstream ss;
 
         ss << typeName << "Energy (totals)";
-        DeclareHistogram1D(D_ENERGY + offset, SD, ss.str().c_str());
+        histo.DeclareHistogram1D(D_ENERGY + offset, SD, ss.str().c_str());
 
         ss.str("");
         ss << typeName << " Beta-Gated:: Energy (totals)";
-        DeclareHistogram1D(D_BG_ENERGY + offset, SE, ss.str().c_str());
+        histo.DeclareHistogram1D(D_BG_ENERGY + offset, SE, ss.str().c_str());
 
         ss.str("");
         ss << typeName << "Dynode Energy (totals)";
-        DeclareHistogram1D(D_DY_ENERGY + offset, SD, ss.str().c_str());
+        histo.DeclareHistogram1D(D_DY_ENERGY + offset, SD, ss.str().c_str());
 
         ss.str("");
         ss << typeName << "Beta-Gated::Dynode Energy (totals)";
-        DeclareHistogram1D(D_DY_BG_ENERGY + offset, SD, ss.str().c_str());
+        histo.DeclareHistogram1D(D_DY_BG_ENERGY + offset, SD, ss.str().c_str());
 
         ss.str("");
         ss << typeName << " Multiplicity (Normal,BetaGated)";
-        DeclareHistogram2D(DD_MULTI + offset, S6, S3, ss.str().c_str());
+        histo.DeclareHistogram2D(DD_MULTI + offset, S6, S3, ss.str().c_str());
 
         ss.str("");
         ss << typeName << " <E> vs T (Drift Tracker)";
-        DeclareHistogram2D(DD_LONGTIME_ENERGY + offset, SE, SB, ss.str().c_str());
+        histo.DeclareHistogram2D(DD_LONGTIME_ENERGY + offset, SE, SB, ss.str().c_str());
         // SB: this gives 2048 cycles for ISOL and a bit more than 16 hours (with 30 sec bunches) for fragmentation
     }
 }
@@ -156,7 +157,7 @@ bool GammaScintFragProcessor::Process(RawEvent &event) {
             }
         }
     } else {
-        double currentTime_ = GSEvents_.front()->GetTimeSansCfd() * Globals::get()->GetClockInSeconds(GSEvents_.front()->GetChanID().GetModFreq()) * 1.e9;
+        double currentTime_ = GSEvents_.front()->GetFilterTime() * Globals::get()->GetClockInSeconds(GSEvents_.front()->GetChanID().GetModFreq()) * 1.e9;
         double tdiff = (currentTime_ - bunchLast_);
         if (firstGSEvent_)
             cout << "First Bunch. Current Bunch Size is " << bunchingTime_ << " seconds." << endl;
@@ -176,9 +177,9 @@ bool GammaScintFragProcessor::Process(RawEvent &event) {
         string TYPE = "gscint:";
         const vector<ChanEvent *> &subEvent = event.GetSummary(TYPE + (*subTypeList_))->GetList();
         unsigned int offset = ReturnOffset((*subTypeList_));
-        plot(DD_MULTI + offset, subEvent.size(), 0);
+        histo.Plot(DD_MULTI + offset, subEvent.size(), 0);
         if (hasLowResBeta_)
-            plot(DD_MULTI + offset, subEvent.size(), 1);
+            histo.Plot(DD_MULTI + offset, subEvent.size(), 1);
     }  // end SubtypeList for loop
 
     //start actual event loop
@@ -187,19 +188,19 @@ bool GammaScintFragProcessor::Process(RawEvent &event) {
         string subType = (*it)->GetChanID().GetSubtype();
         unsigned int subTypeOffset = ReturnOffset(subType);
         double Genergy = (*it)->GetCalibratedEnergy();
-        double Gtime = (*it)->GetTimeSansCfd() * Globals::get()->GetClockInSeconds(currentModFreq) * 1.e9;
+        double Gtime = (*it)->GetFilterTime() * Globals::get()->GetClockInSeconds(currentModFreq) * 1.e9;
 
         if (!((*it)->GetChanID().HasTag("dy"))) {
-            plot(D_ENERGY + subTypeOffset, Genergy);
-            plot(DD_LONGTIME_ENERGY + subTypeOffset, Genergy, bunchNum_);
+            histo.Plot(D_ENERGY + subTypeOffset, Genergy);
+            histo.Plot(DD_LONGTIME_ENERGY + subTypeOffset, Genergy, bunchNum_);
 
             if (hasLowResBeta_) {
-                plot(D_BG_ENERGY + subTypeOffset, Genergy);
+                histo.Plot(D_BG_ENERGY + subTypeOffset, Genergy);
             }
         } else {
-            plot(D_DY_ENERGY + subTypeOffset, Genergy);
+            histo.Plot(D_DY_ENERGY + subTypeOffset, Genergy);
             if (hasLowResBeta_) {
-                plot(D_DY_BG_ENERGY + subTypeOffset, Genergy);
+                histo.Plot(D_DY_BG_ENERGY + subTypeOffset, Genergy);
             }
         }
 

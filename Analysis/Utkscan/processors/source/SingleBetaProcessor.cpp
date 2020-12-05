@@ -23,10 +23,10 @@ SingleBetaProcessor::SingleBetaProcessor() : EventProcessor(OFFSET, RANGE, "Sing
 }
 
 void SingleBetaProcessor::DeclarePlots(void) {
-    DeclareHistogram2D(DD_LOWEN, SD, S3, "Pixie Energy vs. LRT Location");
-    DeclareHistogram2D(DD_HIGHEN, SD, S3, "Pixie Energy vs. HRT Locations without Traces");
-    DeclareHistogram2D(DD_QDC, SB, S3, "QDC vs. HRT Location");
-    DeclareHistogram2D(DD_BETAMAXXVAL, SD, S3, "Max Value in the Trace for HRT Beta");
+    histo.DeclareHistogram2D(DD_LOWEN, SD, S3, "Pixie Energy vs. LRT Location");
+    histo.DeclareHistogram2D(DD_HIGHEN, SD, S3, "Pixie Energy vs. HRT Locations without Traces");
+    histo.DeclareHistogram2D(DD_QDC, SB, S3, "QDC vs. HRT Location");
+    histo.DeclareHistogram2D(DD_BETAMAXXVAL, SD, S3, "Max Value in the Trace for HRT Beta");
 }
 
 bool SingleBetaProcessor::PreProcess(RawEvent &event) {
@@ -35,7 +35,7 @@ bool SingleBetaProcessor::PreProcess(RawEvent &event) {
 
     static const vector<ChanEvent *> &events = event.GetSummary("beta:single")->GetList();
 
-    //! standard timing reslution and offset for damm plotting; commented out to prevent compiler warings, but left for future use.
+    //! standard timing reslution and offset for damm histo.Plotting; commented out to prevent compiler warings, but left for future use.
     // double resolution = 2;
     // double offset = 1500;
 
@@ -50,8 +50,8 @@ bool SingleBetaProcessor::PreProcess(RawEvent &event) {
         double evtTick2Ns = Globals::get()->GetClockInSeconds((*itE)->GetChanID().GetModFreq()) * 1e9;
 
         if ((*itE)->GetChanID().HasTag("start") && (*itE)->GetTrace().HasValidTimingAnalysis()) {
-            plot(DD_QDC, (*itE)->GetTrace().GetQdc(), (*itE)->GetChanID().GetLocation());
-            plot(DD_BETAMAXXVAL, (*itE)->GetTrace().GetMaxInfo().second, (*itE)->GetChanID().GetLocation());
+            histo.Plot(DD_QDC, (*itE)->GetTrace().GetQdc(), (*itE)->GetChanID().GetLocation());
+            histo.Plot(DD_BETAMAXXVAL, (*itE)->GetTrace().GetMaxInfo().second, (*itE)->GetChanID().GetLocation());
 
             if (DetectorDriver::get()->GetSysRootOutput()) {
                 SBstruc.isHighResBeta = true;
@@ -61,7 +61,7 @@ bool SingleBetaProcessor::PreProcess(RawEvent &event) {
                 SBstruc.hasTraceFit = true;
             }
         } else if ((*itE)->GetChanID().HasTag("start") && !(*itE)->GetTrace().HasValidTimingAnalysis()) {  //! Start Beta, without a valid fit for the trace (I.e no trace, ignored or Onboard CFD)
-            plot(DD_HIGHEN, (*itE)->GetCalibratedEnergy(), (*itE)->GetChanID().GetLocation());
+            histo.Plot(DD_HIGHEN, (*itE)->GetCalibratedEnergy(), (*itE)->GetChanID().GetLocation());
 
             if (DetectorDriver::get()->GetSysRootOutput()) {
                 SBstruc.isHighResBeta = true;
@@ -72,10 +72,10 @@ bool SingleBetaProcessor::PreProcess(RawEvent &event) {
             }
         } else {  //! Low Res Betas. I.E. beta in singles
 
-            plot(DD_LOWEN, (*itE)->GetCalibratedEnergy(), (*itE)->GetChanID().GetLocation());
+            histo.Plot(DD_LOWEN, (*itE)->GetCalibratedEnergy(), (*itE)->GetChanID().GetLocation());
             if (DetectorDriver::get()->GetSysRootOutput()) {
                 SBstruc.isLowResBeta = true;
-                SBstruc.time = (*itE)->GetTimeSansCfd() * evtTick2Ns;
+                SBstruc.time = (*itE)->GetFilterTime() * evtTick2Ns;
             }
         }
         if(DetectorDriver::get()->GetSysRootOutput()){

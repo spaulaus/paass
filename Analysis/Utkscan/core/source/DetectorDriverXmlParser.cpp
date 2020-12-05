@@ -8,6 +8,7 @@
 
 #include "DetectorDriverXmlParser.hpp"
 #include "HelperFunctions.hpp"
+#include "PaassExceptions.hpp"
 #include "StringManipulationFunctions.hpp"
 #include "TreeCorrelator.hpp"
 #include "XmlInterface.hpp"
@@ -284,7 +285,7 @@ vector<TraceAnalyzer *> DetectorDriverXmlParser::ParseAnalyzers(const pugi::xml_
         } else {
             stringstream ss;
             ss << "DetectorDriverXmlParser: Unknown analyzer : " << name;
-            throw GeneralException(ss.str());
+            throw PaassException(ss.str());
         }
         PrintAttributeMessage(analyzer);
     }

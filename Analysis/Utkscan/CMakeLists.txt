@@ -33,12 +33,6 @@ endif (PAASS_UTKSCAN_VERBOSE)
 
 #------------------------------------------------------------------------------
 
-include_directories(analyzers/include core/include experiment/include processors/include)
-add_subdirectory(analyzers)
-add_subdirectory(core)
-add_subdirectory(experiment)
-add_subdirectory(processors)
-
 #added by T.T. King for Vector Root Libs
 SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
 SET(CMAKE_SKIP_INSTALL_RPATH FALSE)
@@ -47,10 +41,25 @@ SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
-ROOT_GENERATE_DICTIONARY(PaassRootStruct PaassRootStruct.hpp LINKDEF core/include/PaassRootLinkDef.hpp )
+ROOT_GENERATE_DICTIONARY(PaassRootStruct core/include/PaassRootStruct.hpp LINKDEF core/include/PaassRootLinkDef.hpp )
 add_library(PaassRootStruct SHARED PaassRootStruct.cxx PaassRootStruct)
+install(TARGETS PaassRootStruct DESTINATION lib)
 
+install(FILES ${CMAKE_SOURCE_DIR}/Analysis/Utkscan/core/include/PaassRootStruct.hpp DESTINATION include/)
+#Install the ROOT 6 PCM.
+if (${ROOT_VERSION} VERSION_GREATER "6.0")
+    install( FILES ${CMAKE_CURRENT_BINARY_DIR}/PaassRootStruct_rdict.pcm DESTINATION lib/)
+endif (${ROOT_VERSION} VERSION_GREATER "6.0")
 #End T.T. King Additions
+
+#------------------------------------------------------------------------------
+
+include_directories(analyzers/include core/include experiment/include processors/include)
+add_subdirectory(analyzers)
+add_subdirectory(core)
+add_subdirectory(experiment)
+add_subdirectory(processors)
+
 #------------------------------------------------------------------------------
 
 if (NOT PAASS_USE_HRIBF)

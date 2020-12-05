@@ -5,22 +5,17 @@
 */
 
 #include <algorithm>
-#include <cstdlib>
-#include <cmath>
-#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <limits>
 #include <set>
-#include <sstream>
 
 #include "pugixml.hpp"
 
 #include "DammPlotIds.hpp"
 #include "DetectorDriver.hpp"
 #include "DetectorLibrary.hpp"
-#include "Display.h"
-#include "Exceptions.hpp"
+#include "PaassExceptions.hpp"
 #include "Messenger.hpp"
 #include "RawEvent.hpp"
 #include "CloverFragProcessor.hpp"
@@ -65,18 +60,18 @@ void CloverFragProcessor::DeclarePlots(void) {
     auto cloverLocs_ = DetectorLibrary::get()->GetLocations("clover", "clover_high");
     CloverBuilder(cloverLocs_);
 
-    DeclareHistogram1D(D_CLOVERFRAG_ENERGY, energyBins1, "Ungated Clover Singles");
-    DeclareHistogram1D(D_CLOVERFRAG_MULTI, S5, "Clover Multiplicity");
-    DeclareHistogram1D(D_CLOVERFRAG_ENERGY_DECAY,energyBins1, "Rough Decay Gated Clover Singles");
-    DeclareHistogram1D(D_CLOVERFRAG_ENERGY_IMPLANT,energyBins1, "Rough Implant Gated Clover Singles");
-    DeclareHistogram1D(D_CLOVERFRAG_ENERGY_ANTIVETO,energyBins1, "Anti-Gated on Veto Clover Singles");
+    histo.DeclareHistogram1D(D_CLOVERFRAG_ENERGY, energyBins1, "Ungated Clover Singles");
+    histo.DeclareHistogram1D(D_CLOVERFRAG_MULTI, S5, "Clover Multiplicity");
+    histo.DeclareHistogram1D(D_CLOVERFRAG_ENERGY_DECAY,energyBins1, "Rough Decay Gated Clover Singles");
+    histo.DeclareHistogram1D(D_CLOVERFRAG_ENERGY_IMPLANT,energyBins1, "Rough Implant Gated Clover Singles");
+    histo.DeclareHistogram1D(D_CLOVERFRAG_ENERGY_ANTIVETO,energyBins1, "Anti-Gated on Veto Clover Singles");
 
 
     // for each clover
     for (unsigned int i = 0; i < numClovers; i++) {
         stringstream ss;
         ss << "Clover " << i << " gamma";
-        DeclareHistogram1D(D_CLOVERFRAG_ENERGY_CLOVERX + i, energyBins1, ss.str().c_str());
+        histo.DeclareHistogram1D(D_CLOVERFRAG_ENERGY_CLOVERX + i, energyBins1, ss.str().c_str());
     }
 
 }
@@ -127,7 +122,7 @@ bool CloverFragProcessor::Process(RawEvent &event) {
     // end gater loops
 
     // start loop over clover events (start with multiplicity plot)
-    plot(D_CLOVERFRAG_MULTI,cloverEvents.size());
+    histo.Plot(D_CLOVERFRAG_MULTI,cloverEvents.size());
 
     for (auto itClover = cloverEvents.begin(); itClover != cloverEvents.end(); itClover++){
         double gEnergy = (*itClover)->GetCalibratedEnergy();
@@ -142,24 +137,24 @@ bool CloverFragProcessor::Process(RawEvent &event) {
             isDecay = true;
         }
 
-        plot(D_CLOVERFRAG_ENERGY,gEnergy);
-        plot(D_CLOVERFRAG_ENERGY_CLOVERX + cloverNum,gEnergy);
+        histo.Plot(D_CLOVERFRAG_ENERGY,gEnergy);
+        histo.Plot(D_CLOVERFRAG_ENERGY_CLOVERX + cloverNum,gEnergy);
 
         if (isDecay){
-            plot(D_CLOVERFRAG_ENERGY_DECAY,gEnergy);
+            histo.Plot(D_CLOVERFRAG_ENERGY_DECAY,gEnergy);
         }
         if (hasIonTrig){
-            plot(D_CLOVERFRAG_ENERGY_IMPLANT,gEnergy);
+            histo.Plot(D_CLOVERFRAG_ENERGY_IMPLANT,gEnergy);
         }
         if (!hasVeto){
-            plot(D_CLOVERFRAG_ENERGY_ANTIVETO,gEnergy);
+            histo.Plot(D_CLOVERFRAG_ENERGY_ANTIVETO,gEnergy);
         }
 
         if (DetectorDriver::get()->GetSysRootOutput()) {
             //Fill root struct and push back on to vector
             Cstruct.rawEnergy = (*itClover)->GetEnergy();
             Cstruct.energy = gEnergy;
-            Cstruct.time = (*itClover)->GetTimeSansCfd() * Globals::get()->GetClockInSeconds() * 1e9; //store ns
+            Cstruct.time = (*itClover)->GetFilterTime() * Globals::get()->GetClockInSeconds() * 1e9; //store ns
             Cstruct.detNum = (*itClover)->GetChanID().GetLocation();
             Cstruct.cloverNum = cloverNum;
             pixie_tree_event_->clover_vec_.emplace_back(Cstruct);
@@ -190,7 +185,7 @@ void CloverFragProcessor::CloverBuilder(const std::set<int> &cloverLocs) {
         stringstream ss;
         ss << " There does not appear to be the proper number of"
            << " channels per clover.";
-        throw GeneralException(ss.str());
+        throw PaassException(ss.str());
     }
     if (cloverChans != 0) {
         numClovers = cloverChans / chansPerClover;
@@ -221,7 +216,7 @@ void CloverFragProcessor::CloverBuilder(const std::set<int> &cloverLocs) {
             ss << "Number of detected clovers is greater than defined"
                << " MAX_CLOVERS = " << dammIds::cloverFrag::MAX_FRAGCLOVERS << "."
                << " See CloverProcessor.hpp for details.";
-            throw GeneralException(ss.str());
+            throw PaassException(ss.str());
         }
         m.done();
     }

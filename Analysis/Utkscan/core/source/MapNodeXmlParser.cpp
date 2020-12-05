@@ -5,6 +5,7 @@
 #include "MapNodeXmlParser.hpp"
 
 #include "DefaultConfigurationValues.hpp"
+#include "PaassExceptions.hpp"
 #include "HelperFunctions.hpp"
 #include "StringManipulationFunctions.hpp"
 #include "TreeCorrelator.hpp"
@@ -33,7 +34,7 @@ void MapNodeXmlParser::ParseNode(DetectorLibrary *lib) {
 
     int globalModFreq = map.attribute("frequency").as_int(-1);
     if (globalModFreq <0)
-        throw GeneralException("MapNodeXmlParser::ParseNode : Global Frequency must be set");
+        throw PaassException("MapNodeXmlParser::ParseNode : Global Frequency must be set");
 
     TreeCorrelator *tree = TreeCorrelator::get();
 

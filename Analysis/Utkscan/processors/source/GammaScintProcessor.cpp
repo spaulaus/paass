@@ -16,6 +16,7 @@
 #include "DetectorDriver.hpp"
 #include "DoubleBetaProcessor.hpp"
 #include "GammaScintProcessor.hpp"
+#include "PaassExceptions.hpp"
 #include "RawEvent.hpp"
 
 
@@ -50,49 +51,49 @@ void GammaScintProcessor::DeclarePlots() {
     for(auto it= typeList_.begin(); it != typeList_.end(); it++) {
         unsigned int offset = ReturnOffset((*it));
         if (offset == numeric_limits<unsigned int>::max()) {
-            throw GeneralException("UNKNOWN Gamma Detector Type. Known Types are nai, smallhag, bighag");
+            throw PaassException("UNKNOWN Gamma Detector Type. Known Types are nai, smallhag, bighag");
         }
 
         const string typeName = (*it);
         stringstream ss;
 
         ss << typeName << "Energy (totals)";
-        DeclareHistogram1D(D_ENERGY + offset, SD, ss.str().c_str());
+        histo.DeclareHistogram1D(D_ENERGY + offset, SD, ss.str().c_str());
 
         ss.str("");
         ss << typeName << " Beta-Gated Energy";
-        DeclareHistogram1D(D_BGENERGY + offset, SE, ss.str().c_str());
+        histo.DeclareHistogram1D(D_BGENERGY + offset, SE, ss.str().c_str());
 
         ss.str("");
         ss << typeName << "Energy from Dynode (totals)";
-        DeclareHistogram1D(D_DYENERGY + offset, SD, ss.str().c_str());
+        histo.DeclareHistogram1D(D_DYENERGY + offset, SD, ss.str().c_str());
 
         ss.str("");
         ss<< typeName << "Addback Energy";
-        DeclareHistogram1D(D_ENERGY + offset + ADDBACKOFFSET, SD, ss.str().c_str());
+        histo.DeclareHistogram1D(D_ENERGY + offset + ADDBACKOFFSET, SD, ss.str().c_str());
 
         ss.str("");
         ss<< typeName << "BG Addback Energy";
-        DeclareHistogram1D(D_BGENERGY + offset + ADDBACKOFFSET, SD, ss.str().c_str());
+        histo.DeclareHistogram1D(D_BGENERGY + offset + ADDBACKOFFSET, SD, ss.str().c_str());
 
         ss.str("");
         ss << typeName << " Med Res Beta-Gated Energy (" << MRBetaWindow_.second << "ns)";
-        DeclareHistogram1D(D_MBGENERGY + offset, SE, ss.str().c_str());
+        histo.DeclareHistogram1D(D_MBGENERGY + offset, SE, ss.str().c_str());
 
         if (ISOL_){
             ss.str("");
             ss << typeName << " Energy (Anti-Tape Move)";
-            DeclareHistogram1D(D_CYCLEENERGY + offset, SE, ss.str().c_str());
+            histo.DeclareHistogram1D(D_CYCLEENERGY + offset, SE, ss.str().c_str());
         }
 
         ss.str("");
         ss<<typeName << " Multiplicity (Normal,BetaGated)";
-        DeclareHistogram2D(DD_MULTI + offset,S6,S3,ss.str().c_str());
+        histo.DeclareHistogram2D(DD_MULTI + offset,S6,S3,ss.str().c_str());
 
 
         ss.str("");
         ss<<typeName << " <E> vs T (Drift Tracker) " << FacilType_;
-        DeclareHistogram2D(DD_LONGTIME_ENERGY + offset,SE,SB,ss.str().c_str());
+        histo.DeclareHistogram2D(DD_LONGTIME_ENERGY + offset,SE,SB,ss.str().c_str());
         // SB: this gives 2048 cycles for ISOL and a bit more than 16 hours (with 30 sec bunches) for fragmentation
 
         if (EvsT_ && Globals::get()->GetDammPlots()) {
@@ -146,7 +147,7 @@ GammaScintProcessor::GammaScintProcessor(const std::map<std::string,std::string>
 
     if (!TimeScales.empty()) {
         if (TimeScales.size() > MAXTIMEPLOTS)
-            throw GeneralException("Requested more Time Scale plots than allowed. "
+            throw PaassException("Requested more Time Scale plots than allowed. "
                                            "Check GammaScintProcessor.hpp for details");
         timeScales_.emplace_back(10e-3);
         //Robert and Miguel agreed that 10ms should A) be default, and B) should always be present if we ask for these.
@@ -273,7 +274,7 @@ bool GammaScintProcessor::Process(RawEvent &event) {
             }
         }
     } else {
-        double currentTime_ = GSEvents_.back()->GetTimeSansCfd() * Globals::get()->GetClockInSeconds() * 1.e9;
+        double currentTime_ = GSEvents_.back()->GetFilterTime() * Globals::get()->GetClockInSeconds() * 1.e9;
         double tdiff = (currentTime_ - bunchLast_);
         //cout <<"bunchLast_ = "<<bunchLast_<<endl<<"Tdiff from First to current = " << currentTime_ - firstEventTime_<<endl;
         if (firstGSEvent_)
@@ -293,9 +294,9 @@ bool GammaScintProcessor::Process(RawEvent &event) {
         string TYPE = "gscint:";
         const vector<ChanEvent *> &subEvent = event.GetSummary(TYPE + (*subTypeList_))->GetList();
         unsigned int offset = ReturnOffset((*subTypeList_));
-        plot(DD_MULTI + offset, subEvent.size(), 0);
+        histo.Plot(DD_MULTI + offset, subEvent.size(), 0);
         if (hasLowResBeta_)
-            plot(DD_MULTI + offset, subEvent.size(), 1);
+            histo.Plot(DD_MULTI + offset, subEvent.size(), 1);
     } // end SubtypeList for loop
 
     //start actual event loop
@@ -304,7 +305,7 @@ bool GammaScintProcessor::Process(RawEvent &event) {
         string subType = (*it)->GetChanID().GetSubtype();
         unsigned int subTypeOffset = ReturnOffset(subType);
         double Genergy = (*it)->GetCalibratedEnergy();
-        double Gtime = (*it)->GetTimeSansCfd() * Globals::get()->GetClockInSeconds() * 1.e9;
+        double Gtime = (*it)->GetFilterTime() * Globals::get()->GetClockInSeconds() * 1.e9;
         double decayTime = (Gtime - bunchLast_) / 1.0e9;
 
         if (hasLowResBeta_) {
@@ -326,17 +327,17 @@ bool GammaScintProcessor::Process(RawEvent &event) {
 
         //DAMM PLOTS: Only plot things like drift BG etc if not a dynode signal.
         if (!((*it)->GetChanID().HasTag("dy"))) {
-            plot(D_ENERGY + subTypeOffset, Genergy);
-            plot(DD_LONGTIME_ENERGY + subTypeOffset, Genergy, bunchNum_);
-            plot(DD_TIME_ENERGY + subTypeOffset, Genergy, decayTime / timeScales_.front());
+            histo.Plot(D_ENERGY + subTypeOffset, Genergy);
+            histo.Plot(DD_LONGTIME_ENERGY + subTypeOffset, Genergy, bunchNum_);
+            histo.Plot(DD_TIME_ENERGY + subTypeOffset, Genergy, decayTime / timeScales_.front());
             if (hasLowResBeta_) {
-                plot(D_BGENERGY + subTypeOffset, Genergy);
+                histo.Plot(D_BGENERGY + subTypeOffset, Genergy);
                 timePloty(DD_BGTIME_ENERGY + subTypeOffset, Genergy, decayTime, timeScales_);
                 if (hasMedResBeta_)
-                    plot(D_MBGENERGY + subTypeOffset, Genergy);
+                    histo.Plot(D_MBGENERGY + subTypeOffset, Genergy);
             }
         } else {
-            plot(D_DYENERGY + subTypeOffset, Genergy);
+            histo.Plot(D_DYENERGY + subTypeOffset, Genergy);
         }
 
         if (SysRoot_) {
@@ -366,15 +367,15 @@ bool GammaScintProcessor::Process(RawEvent &event) {
         continue;
     }
     //double abTdiff = abs(Gtime - (GetAddbackPara(subType, "refTime")));
-    double abTdiff = abs((*it)->GetTimeSansCfd()-GetAddbackPara(subType,"refTime"));
+    double abTdiff = abs((*it)->GetFilterTime()-GetAddbackPara(subType,"refTime"));
 
     if (abTdiff > (GetAddbackPara(subType, "subEvtWin"))) {
         //if we are outside of the sub event window for a given subtype
         // then fill the tree then zero the correct struc.
 
-        plot(D_ENERGY + subTypeOffset + ADDBACKOFFSET, GetAddbackStruct(subType)->energy);
+        histo.Plot(D_ENERGY + subTypeOffset + ADDBACKOFFSET, GetAddbackStruct(subType)->energy);
         if (hasLowResBeta_) {
-            plot(D_BGENERGY + subTypeOffset + ADDBACKOFFSET, GetAddbackStruct(subType)->energy);
+            histo.Plot(D_BGENERGY + subTypeOffset + ADDBACKOFFSET, GetAddbackStruct(subType)->energy);
         }
         //reset the correct addback struct to 0s
         (*GetAddbackStruct(subType)) = GSAddback(0.,0.,0.,0);
@@ -384,14 +385,14 @@ bool GammaScintProcessor::Process(RawEvent &event) {
     if (GetAddbackStruct(subType)->multiplicity == 0) {
         //only count as "beta gated" if the first addback event has a beta. (a catch incase the addback event
             //crosses pixie events, which it shouldn't because process is closed at an event boundary )
-        GetAddbackStruct(subType)->ftime = (*it)->GetTimeSansCfd();
+        GetAddbackStruct(subType)->ftime = (*it)->GetFilterTime();
     }
         //Gets last entry in the addback vector for the correct subtype, and increments it with the current values
         GetAddbackStruct(subType)->energy += (*it)->GetCalibratedEnergy();
-        GetAddbackStruct(subType)->time = (*it)->GetTimeSansCfd();
+        GetAddbackStruct(subType)->time = (*it)->GetFilterTime();
         GetAddbackStruct(subType)->multiplicity += 1;
 
-        SetAddbackRefTime(subType, (*it)->GetTimeSansCfd());
+        SetAddbackRefTime(subType, (*it)->GetFilterTime());
     } //End GSEvents for loop
 
     //now that we have processed every det event in the Pixie Event list. We wait for the DD to ask for the vector
@@ -418,13 +419,13 @@ void GammaScintProcessor::SetAddbackRefTime(const std::string &subtype, const do
     if (ito == ParameterMap.end()) {
         stringstream ss;
         ss<<"Error in looking up Addback Parameters for "<<subtype <<" (Unknown Type)";
-        throw GeneralException(ss.str());
+        throw PaassException(ss.str());
     }else{
         auto iti = ito->second.find("refTime");
         if (iti == ParameterMap.find(subtype)->second.end()) {
             stringstream ss;
             ss << "Error in looking up Addback Reference Time for " << subtype << " (Unknown Parameter)";
-            throw GeneralException(ss.str());
+            throw PaassException(ss.str());
         }
         iti->second = newRefTime;
     }
@@ -435,13 +436,13 @@ double GammaScintProcessor::GetAddbackPara(const std::string &subtype, const std
     if (ito == ParameterMap.end()) {
         stringstream ss;
         ss<<"Error in looking up Addback Parameters for "<<subtype <<" (Unknown Type)";
-        throw GeneralException(ss.str());
+        throw PaassException(ss.str());
     }else {
         auto iti = ito->second.find(option);
         if (iti == ito->second.end()) {
             stringstream ss;
             ss << "Error in looking up Addback Parameter for " << subtype << " (Unknown Parameter)";
-            throw GeneralException(ss.str());
+            throw PaassException(ss.str());
         }
         return iti->second;
     }
@@ -465,7 +466,7 @@ GSAddback* GammaScintProcessor::GetAddbackStruct(const std::string &subtype) {
 void GammaScintProcessor::timePloty(int dammId, double x, double y,
                                     const vector<float> &timeScale) {
     for (unsigned int i = 0; i < timeScale.size(); i++) {
-        plot(dammId + i, x, y / timeScale[i]);
+        histo.Plot(dammId + i, x, y / timeScale[i]);
     }
 }
 
