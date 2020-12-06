@@ -4,6 +4,7 @@ set(SETUP_UTILS adjust_offsets find_tau copy_params pread pwrite pmread pmwrite
 
 foreach (UTIL ${SETUP_UTILS})
     add_executable(${UTIL} source/${UTIL}.cpp)
+    target_compile_definitions(${UTIL} PUBLIC "-DPLX_LINUX")
     target_link_libraries(${UTIL} PixieInterface)
     target_include_directories(${UTIL} PUBLIC include ${PROJECT_SOURCE_DIR}/Acquisition/Interface/include)
 endforeach (UTIL)
