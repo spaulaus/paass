@@ -18,13 +18,13 @@ if(PAASS_BUILD_HEX_READER)
     add_subdirectory(HexReader)
 endif(PAASS_BUILD_HEX_READER)
 
+if(PAASS_BUILD_ROOT_SCANNER)
+    add_subdirectory(RootScanner)
+endif(PAASS_BUILD_ROOT_SCANNER)
+
 #if(PAASS_BUILD_SKELETON)
 #    add_subdirectory(Skeleton)
 #endif(PAASS_BUILD_SKELETON)
-#
-#if(PAASS_BUILD_ROOT_SCANNER)
-#    add_subdirectory(RootScanner)
-#endif(PAASS_BUILD_ROOT_SCANNER)
 #
 #if(PAASS_BUILD_SCOPE)
 #    add_subdirectory(Scope)
