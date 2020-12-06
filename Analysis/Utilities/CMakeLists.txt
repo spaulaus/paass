@@ -10,10 +10,10 @@ if(PAASS_BUILD_EVENT_READER)
     add_subdirectory(EventReader)
 endif(PAASS_BUILD_EVENT_READER)
 
-#if(PAASS_BUILD_HEAD_READER)
-#    add_subdirectory(HeadReader)
-#endif(PAASS_BUILD_HEAD_READER)
-#
+if(PAASS_BUILD_HEAD_READER)
+    add_subdirectory(HeadReader)
+endif(PAASS_BUILD_HEAD_READER)
+
 #if(PAASS_BUILD_HEX_READER)
 #    add_subdirectory(HexReader)
 #endif(PAASS_BUILD_HEX_READER)
