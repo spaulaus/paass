@@ -20,7 +20,6 @@ jobs:
             - python3
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
-        - BUILD_OPTIONS="-DPAASS_BUILD_TESTS=ON -DPAASS_BUILD_UTKSCAN=ON -DPAASS_BUILD_ROOT_SCANNER=OFF -DPAASS_BUILD_SETUP=ON"
     - name: GCC 8 Test
       addons:
         apt:
@@ -33,7 +32,6 @@ jobs:
             - python3
       env:
         - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
-        - BUILD_OPTIONS="-DPAASS_BUILD_TESTS=ON -DPAASS_BUILD_UTKSCAN=ON -DPAASS_BUILD_ROOT_SCANNER=OFF -DPAASS_BUILD_SETUP=ON"
     - name: GCC 9 Test
       addons:
         apt:
@@ -45,7 +43,6 @@ jobs:
             - python3
       env:
         - MATRIX_EVAL=""
-        - BUILD_OPTIONS="-DPAASS_BUILD_TESTS=ON -DPAASS_BUILD_UTKSCAN=ON -DPAASS_BUILD_ROOT_SCANNER=OFF -DPAASS_BUILD_SETUP=ON"
 
 before_install:
   - eval "${MATRIX_EVAL}"
@@ -70,6 +67,6 @@ before_install:
 script:
   - mkdir build
   - cd build
-  - cmake ../ ${BUILD_OPTIONS}
+  - cmake ../
   - make -j12
   - ./Tests/tests
