@@ -1,2 +1,29 @@
-#@authors S. V. Paulauskas
-add_subdirectory(source)
+target_sources(${UTKSCAN_NAME} PUBLIC
+        source/BetaScintProcessor.cpp
+        source/DoubleBetaProcessor.cpp
+        source/CloverCalibProcessor.cpp
+        source/CloverFragProcessor.cpp
+        source/CloverProcessor.cpp
+        source/DssdProcessor.cpp
+        source/EventProcessor.cpp
+        source/ExtTSSenderProcessor.cpp
+        source/GammaScintProcessor.cpp
+        source/GammaScintFragProcessor.cpp
+        source/GeProcessor.cpp
+        source/Hen3Processor.cpp
+        source/ImplantSsdProcessor.cpp
+        source/IonChamberProcessor.cpp
+        source/LiquidScintProcessor.cpp
+        source/LitePositionProcessor.cpp
+        source/LogicProcessor.cpp
+        source/McpProcessor.cpp
+        source/NeutronScintProcessor.cpp
+        source/PositionProcessor.cpp
+        source/PspmtProcessor.cpp
+        source/RootDevProcessor.cpp
+        source/SingleBetaProcessor.cpp
+        source/TeenyVandleProcessor.cpp
+        source/TemplateProcessor.cpp
+        source/VandleProcessor.cpp
+        )
+target_include_directories(${UTKSCAN_NAME} PUBLIC include)

@@ -1,101 +1,82 @@
-# @author S. V. Paulauskas
-option(PAASS_UTKSCAN_GAMMA_GATES "Gamma-Gamma gates in GeProcessor" OFF)
-option(PAASS_UTKSCAN_ONLINE "Options for online scans" OFF)
-option(PAASS_UTKSCAN_TREE_DEBUG "Debugging info for TreeCorrelator" OFF)
-option(PAASS_UTKSCAN_VERBOSE "Make Scan More Verbose" OFF)
+option(PAASS_BUILD_UTKSCAN "Build utkscan" ON)
+if (PAASS_BUILD_UTKSCAN)
+    #------------------------------------------------------------------------------
+    if (NOT PAASS_USE_HRIBF)
+        set(UTKSCAN_NAME utkscan)
+        add_executable(${UTKSCAN_NAME} core/source/utkscan.cpp)
+    else (PAASS_USE_HRIBF)
+        set(UTKSCAN_NAME utkscanor)
+        add_executable(${UTKSCAN_NAME} core/source/utkscanor.cpp)
+    endif (NOT PAASS_USE_HRIBF)
 
-mark_as_advanced(PAASS_UTKSCAN_GAMMA_GATES PAASS_UTKSCAN_ONLINE PAASS_UTKSCAN_TREE_DEBUG PAASS_UTKSCAN_VERBOSE)
+    #------------------------------------------------------------------------------
 
-# newreadout is needed to account for a change to pixie16 readout
-# structure change on 03/20/08. Is is REQUIRED!!
-# @TODO : Need to determine if this is still required by the scan code.
-add_definitions(-D newreadout)
+    option(PAASS_UTKSCAN_GAMMA_GATES "Gamma-Gamma gates in GeProcessor" OFF)
+    option(PAASS_UTKSCAN_ONLINE "Options for online scans" OFF)
+    option(PAASS_UTKSCAN_TREE_DEBUG "Debugging info for TreeCorrelator" OFF)
+    option(PAASS_UTKSCAN_VERBOSE "Make Scan More Verbose" OFF)
 
-#utkscan will have Gamma-Gamma gating in the CloverProcessor and GammaScintProcessor
-if (PAASS_UTKSCAN_GAMMA_GATES)
-    add_definitions(-DGGATES)
-endif (PAASS_UTKSCAN_GAMMA_GATES)
+    mark_as_advanced(PAASS_UTKSCAN_GAMMA_GATES PAASS_UTKSCAN_ONLINE PAASS_UTKSCAN_TREE_DEBUG PAASS_UTKSCAN_VERBOSE)
 
-#utkscan will be streamlined for online processing
-if (PAASS_UTKSCAN_ONLINE)
-    add_definitions(-DONLINE)
-endif (PAASS_UTKSCAN_ONLINE)
+    # newreadout is needed to account for a change to pixie16 readout
+    # structure change on 03/20/08. Is is REQUIRED!!
+    # @TODO : Need to determine if this is still required by the scan code.
+    target_compile_definitions(${UTKSCAN_NAME} PUBLIC -Dnewreadout)
 
-#utkscan will have debugging for the TreeCorrelator
-if (PAASS_UTKSCAN_TREE_DEBUG)
-    add_definitions(-DTREE_DEBUG)
-endif (PAASS_UTKSCAN_TREE_DEBUG)
+    if (PAASS_UTKSCAN_GAMMA_GATES)
+        target_compile_definitions(${UTKSCAN_NAME} PUBLIC -DGGATES)
+    endif (PAASS_UTKSCAN_GAMMA_GATES)
 
-#utkscan will be more verbose in its output
-if (PAASS_UTKSCAN_VERBOSE)
-    add_definitions(-DVERBOSE)
-endif (PAASS_UTKSCAN_VERBOSE)
+    if (PAASS_UTKSCAN_ONLINE)
+        target_compile_definitions(${UTKSCAN_NAME} PUBLIC -DONLINE)
+    endif (PAASS_UTKSCAN_ONLINE)
 
-#------------------------------------------------------------------------------
+    if (PAASS_UTKSCAN_TREE_DEBUG)
+        target_compile_definitions(${UTKSCAN_NAME} PUBLIC -DTREE_DEBUG)
+    endif (PAASS_UTKSCAN_TREE_DEBUG)
 
-#added by T.T. King for Vector Root Libs
-SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
-SET(CMAKE_SKIP_INSTALL_RPATH FALSE)
-SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+    if (PAASS_UTKSCAN_VERBOSE)
+        target_compile_definitions(${UTKSCAN_NAME} PUBLIC -DVERBOSE)
+    endif (PAASS_UTKSCAN_VERBOSE)
 
-SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+    #------------------------------------------------------------------------------
 
-ROOT_GENERATE_DICTIONARY(PaassRootStruct core/include/PaassRootStruct.hpp LINKDEF core/include/PaassRootLinkDef.hpp )
-add_library(PaassRootStruct SHARED PaassRootStruct.cxx PaassRootStruct)
-install(TARGETS PaassRootStruct DESTINATION lib)
+    add_subdirectory(analyzers)
+    add_subdirectory(core)
+    add_subdirectory(experiment)
+    add_subdirectory(processors)
 
-install(FILES ${CMAKE_SOURCE_DIR}/Analysis/Utkscan/core/include/PaassRootStruct.hpp DESTINATION include/)
-#Install the ROOT 6 PCM.
-if (${ROOT_VERSION} VERSION_GREATER "6.0")
-    install( FILES ${CMAKE_CURRENT_BINARY_DIR}/PaassRootStruct_rdict.pcm DESTINATION lib/)
-endif (${ROOT_VERSION} VERSION_GREATER "6.0")
-#End T.T. King Additions
+    #------------------------------------------------------------------------------
 
-#------------------------------------------------------------------------------
+    ROOT_GENERATE_DICTIONARY(PaassRootStruct core/include/PaassRootStruct.hpp LINKDEF core/include/PaassRootLinkDef.hpp)
+    add_library(PaassRootStruct SHARED ${CMAKE_CURRENT_BINARY_DIR}/PaassRootStruct.cxx PaassRootStruct)
+    target_link_libraries(PaassRootStruct ${ROOT_LIBRARIES})
+    target_include_directories(PaassRootStruct PUBLIC ${ROOT_INCLUDE_DIR})
 
-include_directories(analyzers/include core/include experiment/include processors/include)
-add_subdirectory(analyzers)
-add_subdirectory(core)
-add_subdirectory(experiment)
-add_subdirectory(processors)
+    #------------------------------------------------------------------------------
 
-#------------------------------------------------------------------------------
+    target_link_libraries(${UTKSCAN_NAME} PaassScan AnalysisResources PaassCore Pugixml-1.11.1
+            PaassResources ${GSL_LIBRARIES} ${ROOT_LIBRARIES} PaassRootStruct)
 
-if (NOT PAASS_USE_HRIBF)
-    set(SCAN_NAME utkscan)
-    add_executable(${SCAN_NAME}
-            $<TARGET_OBJECTS:UtkscanMainObjects>
-            $<TARGET_OBJECTS:UtkscanCoreObjects>
-            $<TARGET_OBJECTS:UtkscanAnalyzerObjects>
-            $<TARGET_OBJECTS:UtkscanProcessorObjects>
-            $<TARGET_OBJECTS:UtkscanExperimentObjects>
-            PaassRootStruct.cxx)
-else (PAASS_USE_HRIBF)
-    set(SCAN_NAME utkscanor)
-    add_executable(${SCAN_NAME}
-            $<TARGET_OBJECTS:UtkscanMainObjects>
-            $<TARGET_OBJECTS:UtkscanCoreObjects>
-            $<TARGET_OBJECTS:UtkscanAnalyzerObjects>
-            $<TARGET_OBJECTS:UtkscanProcessorObjects>
-            $<TARGET_OBJECTS:UtkscanExperimentObjects>
-            $<TARGET_OBJECTS:ScanorObjects>
-            PaassRootStruct.cxx)
-    target_link_libraries(utkscanor ${HRIBF_LIBRARIES})
-endif (NOT PAASS_USE_HRIBF)
+    target_include_directories(${UTKSCAN_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/Analysis/Resources/include
+            ${PROJECT_SOURCE_DIR}/Analysis/ScanLibraries/include ${PROJECT_SOURCE_DIR}/ThirdParty/pugixml/include
+            ${PROJECT_SOURCE_DIR}/Resources/include ${PROJECT_SOURCE_DIR}/Core/include ${ROOT_INCLUDE_DIR}
+            ${GSL_INCLUDE_DIR})
 
-target_link_libraries(${SCAN_NAME} ${LIBS} PaassScanStatic ResourceStatic PaassCoreStatic PugixmlStatic
-        PaassResourceStatic ${GSL_LIBRARIES} ${ROOT_LIBRARIES})
+    if (PAASS_USE_HRIBF)
+        target_link_libraries(${UTKSCAN_NAME} ${HRIBF_LIBRARIES})
+        target_include_directories(${UTKSCAN_NAME} ${PROJECT_SOURCE_DIR}/Analysis/Scanor/include)
+    endif (PAASS_USE_HRIBF)
 
-#------------------------------------------------------------------------------
+    #------------------------------------------------------------------------------
 
-install(TARGETS ${SCAN_NAME} DESTINATION bin)
-install(DIRECTORY share/utkscan DESTINATION share)
-install(TARGETS PaassRootStruct DESTINATION lib)
+    install(TARGETS ${UTKSCAN_NAME} DESTINATION bin)
+    install(TARGETS PaassRootStruct DESTINATION lib)
+    install(DIRECTORY share/utkscan DESTINATION share)
 
-install(FILES ${CMAKE_SOURCE_DIR}/Analysis/Utkscan/core/include/PaassRootStruct.hpp DESTINATION include/)
-install(FILES ${CMAKE_SOURCE_DIR}/Analysis/Utkscan/processors/include/GSaddback.hpp DESTINATION include/)
-#Install the ROOT 6 PCM.
-if (${ROOT_VERSION} VERSION_GREATER "6.0")
-    install( FILES ${CMAKE_CURRENT_BINARY_DIR}/PaassRootStruct_rdict.pcm DESTINATION lib/)
-endif (${ROOT_VERSION} VERSION_GREATER "6.0")
+    install(FILES core/include/PaassRootStruct.hpp DESTINATION include/)
+    install(FILES processors/include/GSaddback.hpp DESTINATION include/)
+    if (${ROOT_VERSION} VERSION_GREATER "6.0")
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/PaassRootStruct_rdict.pcm DESTINATION lib/)
+    endif (${ROOT_VERSION} VERSION_GREATER "6.0")
+endif (PAASS_BUILD_UTKSCAN)

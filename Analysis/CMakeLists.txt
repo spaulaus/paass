@@ -1,6 +1,7 @@
 add_subdirectory(Resources)
 add_subdirectory(ScanLibraries)
 add_subdirectory(Utilities)
+add_subdirectory(Utkscan)
 
 #option(PAASS_USE_HRIBF "Use HRIBF library for scan base." OFF)
 #if (PAASS_USE_HRIBF)
@@ -14,9 +15,4 @@ add_subdirectory(Utilities)
 #    include_directories(Scanor/include)
 #    add_subdirectory(Scanor)
 #endif (PAASS_USE_HRIBF)
-#
-#
-#option(PAASS_BUILD_UTKSCAN "Build utkscan" OFF)
-#if (PAASS_BUILD_UTKSCAN)
-#    add_subdirectory(Utkscan)
-#endif (PAASS_BUILD_UTKSCAN)
+
