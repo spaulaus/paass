@@ -32,7 +32,7 @@ include(CMakeDependentOption)
 
 option(PAASS_BUILD_ACQ "Build and install Acquisition software" ON)
 option(PAASS_BUILD_ANALYSIS "Build analysis related programs" ON)
-option(PAASS_BUILD_TESTS "Builds programs designed to test the package." ON)
+option(PAASS_BUILD_TESTS "Builds programs designed to test the package." OFF)
 
 #------------------------------------------------------------------------------
 
