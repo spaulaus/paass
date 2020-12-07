@@ -1,5 +1,5 @@
 #Configure and install the module file
-configure_file("modulefiles/paass" pixieSuite @ONLY)
+configure_file("modulefiles/paass" paass @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/paass DESTINATION usr/share/modules/modulefiles/)
 
 #Configure and install the systemd service file 
