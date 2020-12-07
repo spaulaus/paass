@@ -1,8 +1,6 @@
-# @author S.V. Paulauskas
-
 #Configure and install the module file
-configure_file("modulefiles/pixieSuite" pixieSuite @ONLY)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/pixieSuite DESTINATION usr/share/modules/modulefiles/)
+configure_file("modulefiles/paass" pixieSuite @ONLY)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/paass DESTINATION usr/share/modules/modulefiles/)
 
 #Configure and install the systemd service file 
 configure_file("plx/systemd/plx.service" plx.service @ONLY)
