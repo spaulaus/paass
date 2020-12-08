@@ -1,27 +1,20 @@
-# @authors S. V. Paulauskas, K. Smith, and C. R. Thornsberry
-
-#Adds the install prefix for referencing in the source code
 add_definitions(-D INSTALL_PREFIX="\\"${CMAKE_INSTALL_PREFIX}\\"")
 
-#Build the pixie interface
-include_directories(Interface/include)
-add_subdirectory(Interface/source)
+add_subdirectory(Utilities/set2root)
+add_subdirectory(Setup)
+#TODO: We need to revist where this guy lives as he's dependent on the scan libraries. Maybe should live there??
+#add_subdirectory(Utilities/DataGenerator)
 
-#Build the MCA objects
-include_directories(MCA/include)
-add_subdirectory(MCA)
+if (PAASS_BUILD_ACQ)
+    find_package(PLX REQUIRED)
+    find_package(XIA REQUIRED)
+    XIA_CONFIG()
 
-#Build PxiDump
-add_subdirectory(set2root)
+    add_subdirectory(Interface)
+    add_subdirectory(MCA)
+    add_subdirectory(Poll)
+    add_subdirectory(Utilities/listener)
+    add_subdirectory(Utilities/monitor)
+    add_subdirectory(Utilities/send_alarm)
+endif (PAASS_BUILD_ACQ)
 
-#Build poll
-add_subdirectory(Poll)
-
-if(PAASS_BUILD_ANALYSIS)
-    add_subdirectory(Utilities/DataGenerator)
-endif(PAASS_BUILD_ANALYSIS)
-
-#Build the setup tools
-if (PAASS_BUILD_SETUP)
-    add_subdirectory(Setup)
-endif (PAASS_BUILD_SETUP)

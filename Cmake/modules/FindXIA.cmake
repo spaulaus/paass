@@ -9,27 +9,29 @@
 # XIA_FIRMWARE_DIR - Directory to be searched for firmwares for pixie.cfg.
 #
 # Expected Structure:
-#    - **/opt**
-#      - **xia**
-#        - **api**  - files provided by the XIA API
-#          - **lib** - API libraries
-#          - **include**  - API includes
-#        - **share**
-#          - **pxisys** - contains the pxisys*.ini files provided in the API
-#          - **slotdef** - probably just a single slot def, can be added to the API install
-#        - **firmware**
-#          - **2016-02-02-12b250m-vandle**  (and other specific firmware)
-#            - **config** - not something that XIA distributes on their website, **DO NOT** add to repos
-#            - **dsp**
-#            - **fpga**
+#    - **/usr**
+#      - **local/**
+#        - **xia**
+#          - **pixie**  - files provided by the XIA API
+#            - **sdk**
+#              - **lib** - API libraries
+#              - **include**  - API includes
+#            - **share**
+#              - **pxisys** - contains the pxisys*.ini files provided in the API
+#              - **slotdef** - probably just a single slot def, can be added to the API install
+#            - **firmware**
+#              - **2016-02-02-12b250m-vandle**  (and other specific firmware)
+#                - **config** - not something that XIA distributes on their website, **DO NOT** add to repos
+#                - **dsp**
+#                - **fpga**
 # @authors K. Smith, C. R. Thornsberry, S. V. Paulauskas
 
 #Find the library path by looking for the library.
 find_path(XIA_LIBRARY_DIR
-        NAMES libPixie16App.a libPixie16Sys.a
-        HINTS $ENV{XIA_ROOT_DIR}
-        PATHS /opt/xia
-        PATH_SUFFIXES api/lib current/software
+        NAMES libPixie16App.so libPixie16Sys.so
+        HINTS $ENV{XIA_PIXIE_SDK}
+        PATHS /usr/local/xia/pixie/sdk
+        PATH_SUFFIXES lib
         DOC "Path to pixie library.")
 
 get_filename_component(XIA_LIBRARY_DIR "${XIA_LIBRARY_DIR}" REALPATH)
@@ -39,7 +41,7 @@ get_filename_component(XIA_LIBRARY_DIR "${XIA_LIBRARY_DIR}" REALPATH)
 unset(XIA_FIRMWARE_DIR CACHE)
 
 if (NOT XIA_FIRMWARE_DIR)
-    get_filename_component(XIA_FIRMWARE_DIR "${XIA_LIBRARY_DIR}/../firmwares" REALPATH)
+    get_filename_component(XIA_FIRMWARE_DIR "${XIA_LIBRARY_DIR}/../firmware" REALPATH)
     if (NOT EXISTS ${XIA_FIRMWARE_DIR})
         get_filename_component(XIA_FIRMWARE_DIR "${XIA_LIBRARY_DIR}/../../" REALPATH)
     endif (NOT EXISTS ${XIA_FIRMWARE_DIR})

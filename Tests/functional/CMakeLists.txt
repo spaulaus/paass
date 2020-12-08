@@ -1,0 +1,2 @@
+add_executable(CTerminalTest source/CTerminalTest.cpp)
+target_link_libraries(CTerminalTest PaassCore)

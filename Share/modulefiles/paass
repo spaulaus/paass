@@ -1,15 +1,15 @@
 #%Module1.0
 ##
-## modulefiles/pixieSuite
+## modulefiles/paass
 ##
-## @author K. Smith
+## @author K. Smith / S. V. Paulauskas
 
 proc ModulesHelp {} {
 	global version modroot
 
-	puts stderr "pixieSuite - Pixie Suite provides utilities for XIA Pixie 16 Data Acquisition"
+	puts stderr "PAASS - Pixie Acquisition and Analysis Software Suite for use with XIAs Pixie hardware."
 }
-module-whatis "Pixie Suite provides utilities for XIA Pixie 16 Data Acquisition"
+module-whatis "PAASS - Pixie Acquisition and Analysis Software Suite for use with XIAs Pixie hardware."
 
 set topdir 	@CMAKE_INSTALL_PREFIX@
 
