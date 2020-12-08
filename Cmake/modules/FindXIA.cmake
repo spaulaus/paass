@@ -16,14 +16,14 @@
 #            - **sdk**
 #              - **lib** - API libraries
 #              - **include**  - API includes
-#          - **share**
-#            - **pxisys** - contains the pxisys*.ini files provided in the API
-#            - **slotdef** - probably just a single slot def, can be added to the API install
-#          - **firmware**
-#            - **2016-02-02-12b250m-vandle**  (and other specific firmware)
-#              - **config** - not something that XIA distributes on their website, **DO NOT** add to repos
-#              - **dsp**
-#              - **fpga**
+#            - **share**
+#              - **pxisys** - contains the pxisys*.ini files provided in the API
+#              - **slotdef** - probably just a single slot def, can be added to the API install
+#            - **firmware**
+#              - **2016-02-02-12b250m-vandle**  (and other specific firmware)
+#                - **config** - not something that XIA distributes on their website, **DO NOT** add to repos
+#                - **dsp**
+#                - **fpga**
 # @authors K. Smith, C. R. Thornsberry, S. V. Paulauskas
 
 #Find the library path by looking for the library.
