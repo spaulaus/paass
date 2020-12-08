@@ -25,6 +25,16 @@ class Client;
 class Server;
 class Terminal;
 
+struct data_pack{
+    int Sequence; /// Sequence number for reliable transport
+    int DataSize; /// Number of useable bytes in Data
+    int TotalEvents; /// Total number of events
+    unsigned short Events; /// Number of events in this packet
+    unsigned short Cont; /// Continuation flag for large events
+    unsigned char Data[4*(4050 + 4)]; /// The data to be transmitted
+    int BufLen; /// Length of original Pixie buffer
+};
+
 class Poll{
 public:
     /// Default constructor.
@@ -52,6 +62,10 @@ public:
 
     void SetThreshWords(const double &thresholdPercentage);
 
+    void SetAlarmEmailList(std::string input_ = ""){ alarmList_ = input_; }
+
+    std::string GetAlarmEmailList(){ return alarmList_; }
+
     void SetTerminal(Terminal *term){ poll_term_ = term; };
 
     bool GetSendAlarm(){ return send_alarm; }
@@ -69,6 +83,9 @@ public:
     /// Clean up things that are created during Poll::Initialize().
     /// @return Returns true if successful.
     bool Close();
+
+    /// Calls the Alarm script to alert the bosses incase of errors
+    void CallAlarm();
 private:
     Terminal *poll_term_;
 
@@ -225,80 +242,6 @@ private:
     /// @param[in] Module number from command line
     /// @return true is module is installed.
     bool IsValidModule(const int &modNum);
-
-public:
-    /// Default constructor.
-    Poll();
-
-    /// Destructor.
-    ~Poll();
-
-    /// Initialize the poll object.
-    bool Initialize();
-
-    // Set methods.
-    void SetBootFast(bool input_=true){ boot_fast = input_; }
-
-    void SetWallClock(bool input_=true){ insert_wall_clock = input_; }
-
-    void SetQuietMode(bool input_=true){ is_quiet = input_; }
-
-    void SetSendAlarm(bool input_=true){ send_alarm = input_; }
-
-    void SetAlarmEmailList(std::string input_ = ""){ alarmList_ = input_; }
-
-    void SetShowRates(bool input_=true){ show_module_rates = input_; }
-
-    void SetZeroClocks(bool input_=true){ zero_clocks = input_; }
-
-    void SetDebugMode(bool input_=true){ debug_mode = input_; }
-
-    void SetShmMode(bool input_=true){ shm_mode = input_; }
-
-    void SetNcards(const size_t &n_cards_){ n_cards = n_cards_; }
-
-    void SetThreshWords(const size_t &thresh_){ threshWords = thresh_; }
-
-    ///Set the terminal pointer.
-    void SetTerminal(Terminal *term){ poll_term_ = term; };
-
-    // Get methods.
-    bool GetBootFast(){ return boot_fast; }
-
-    bool GetWallClock(){ return insert_wall_clock; }
-
-    bool GetQuietMode(){ return is_quiet; }
-
-    bool GetSendAlarm(){ return send_alarm; }
-
-    std::string GetAlarmEmailList(){ return alarmList_; }
-
-    bool GetShowRates(){ return show_module_rates; }
-
-    bool GetZeroClocks(){ return zero_clocks; }
-
-    bool GetDebugMode(){ return debug_mode; }
-
-    bool GetShmMode(){ return shm_mode; }
-
-    size_t GetNcards(){ return n_cards; }
-
-    size_t GetThreshWords(){ return threshWords; }
-
-    ///\brief Prints the information about each module.
-    void PrintModuleInfo();
-
-    /// Main control loop for handling user input.
-    void CommandControl();
-
-    /// Main acquisition control loop for handling data acq.
-    void RunControl();
-
-    /// Close the sockets, any open files, and clean up.
-    bool Close();
-
-    /// Calls the Alarm script to alert the bosses incase of errors
-    void CallAlarm();
 };
 
 #endif

@@ -989,13 +989,13 @@ void Poll::CommandControl() {
                     bool error = false;
                     for (int mod = modStart; mod <= modStop; mod++) {
                         for (int ch = chStart; ch <= chStop; ch++) {
-                            if (!forChannel(pif, mod, ch, flipper, dum_str)) {
+                            if (!forChannel(pif_, mod, ch, flipper, dum_str)) {
                                 error = true;
                             }
                         }
                     }
                     if (!error)
-                        pif->SaveDSPParameters();
+                        pif_->SaveDSPParameters();
             }
             else{
                 std::cout << sys_message_head << "Invalid number of parameters to toggle\n";

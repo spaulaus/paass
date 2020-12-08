@@ -1,4 +1,4 @@
-add_library(PaassResources SHARED source/Messenger.cpp source/Notebook.cpp source/RandomInterface.cpp
+add_library(PaassResources SHARED source/CerrDirector.cpp source/Messenger.cpp source/Notebook.cpp source/RandomInterface.cpp
         source/XmlInterface.cpp source/XmlParser.cpp)
 
 if (ROOT_FOUND)

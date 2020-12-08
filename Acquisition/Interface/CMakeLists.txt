@@ -1,7 +1,11 @@
-add_library(PixieInterface SHARED source/PixieInterface.cpp source/Lock.cpp source/PixieSupport.cpp source/Utility.cpp)
-target_include_directories(PixieInterface PUBLIC include ${PROJECT_SOURCE_DIR}/Core/include ${XIA_INCLUDE_DIR})
+add_library(PixieInterface SHARED source/AcquisitionConfig.cpp source/AcquisitionInterface.cpp
+        source/EmulatedInterface.cpp source/Lock.cpp source/PixieInterface.cpp  source/PixieSupport.cpp
+        source/Utility.cpp)
+target_include_directories(PixieInterface PUBLIC include ${PROJECT_SOURCE_DIR}/Core/include ${XIA_INCLUDE_DIR}
+        ${PROJECT_SOURCE_DIR}/ThirdParty/pugixml/include ${PROJECT_SOURCE_DIR}/Resources/include ${ROOT_INCLUDE_DIR})
 target_link_directories(PixieInterface PUBLIC ${XIA_LIBRARY_DIR} ${PLX_LIBRARY_DIR})
-target_link_libraries(PixieInterface PaassCore ${XIA_LIBRARIES} ${PLX_LIBRARIES})
+target_link_libraries(PixieInterface PaassCore PaassResources Pugixml-1.11.1 ${XIA_LIBRARIES} ${PLX_LIBRARIES}
+        ${ROOT_LIBRARIES})
 target_compile_options(PixieInterface PRIVATE "-DPLX_LINUX")
 
 file(GLOB PIXIE_INTERFACE_PUBLIC_HEADERS include/*.h)
