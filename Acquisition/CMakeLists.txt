@@ -8,7 +8,9 @@ add_subdirectory(Setup)
 if (PAASS_BUILD_ACQ)
     find_package(PLX REQUIRED)
     find_package(XIA REQUIRED)
-    XIA_CONFIG()
+
+    include(GenerateDAQConfig)
+    GENERATE_DAQ_CONFIG()
 
     add_subdirectory(Interface)
     add_subdirectory(MCA)
