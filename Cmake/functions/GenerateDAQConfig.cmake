@@ -1,7 +1,7 @@
 function(GENERATE_DAQ_CONFIG)
     message(STATUS "Creating Pixie configuration.")
 
-    set(CONFIGURATION_FILE ${CMAKE_CURRENT_BINARY_DIR}/pixie-cfg.xml)
+    set(CONFIGURATION_FILE ${CMAKE_CURRENT_BINARY_DIR}/poll2.xml)
 
     get_filename_component(XIA_ROOT_DIR "${XIA_LIBRARY_DIR}/.." REALPATH)
 
