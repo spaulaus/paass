@@ -10,33 +10,28 @@
 #include <poll2_socket.h>
 #include <poll2_stats.h>
 
-#include <CTerminal.h>
-#include <Display.h>
-#include <EmulatedInterface.hpp>
-#include <McaRoot.hpp>
-#include <PaassExceptions.hpp>
-#include <PixieInterface.h>
-#include <PixieSupport.h>
-#include <StringManipulationFunctions.hpp>
-#include <Utility.h>
+#include "CTerminal.h"
+#include "Display.h"
+#include "EmulatedInterface.hpp"
+#include "McaRoot.hpp"
+#include "PaassExceptions.hpp"
+#include "PixieInterface.h"
+#include "PixieSupport.h"
+#include "StringManipulationFunctions.hpp"
+#include "Utility.h"
 
 #include <algorithm>
 #include <iostream>
 #include <iomanip>
-#include <fstream>
 #include <stdexcept>
 #include <string>
 
 #include <cstring>
 #include <cstdlib>
-#include <sstream>
+#include <cstdio>
 #include <ctime>
 
-#include <cmath>
-
-#include <stdio.h>
 #include <unistd.h>
-#include <fcntl.h>
 
 // Values associated with the minimum timing between pixie calls (in us)
 // Adjusted to help alleviate the issue with data corruption
@@ -1659,6 +1654,7 @@ bool Poll::ReadFIFO() {
             Pixie16::word_t slotExpected = pif_->GetConfiguration().GetSlotNumber(0, mod);
 
             while (parseWords < dataWords + nWords[mod]) {
+                ///@TODO : This may depend on the specific firmware loaded in the module!!!
                 //Check first word to see if data makes sense.
                 // We check the slot, channel and event size.
                 Pixie16::word_t slotRead = ((fifoData[parseWords] & 0xF0) >> 4);
