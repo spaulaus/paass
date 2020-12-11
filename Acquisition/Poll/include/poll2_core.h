@@ -14,10 +14,6 @@
 
 #include <vector>
 
-// Maximum length of UDP data packet (in bytes)
-#define MAX_ORPH_DATA 1464
-
-// Forward class declarations
 class Mca;
 class AcquisitionInterface;
 class StatsHandler;

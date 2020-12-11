@@ -37,11 +37,7 @@
 // Adjusted to help alleviate the issue with data corruption
 #define POLL_TRIES 100
 
-// 2 GB. Maximum allowable .ldf file size in bytes
 #define MAX_FILE_SIZE 2147483648ll
-
-// Maximum shm packet size (in bytes)
-#define MAX_PKT_DATA (MAX_ORPH_DATA - PKT_HEAD_LEN)
 
 std::vector<std::string> chan_params = {"TRIGGER_RISETIME", "TRIGGER_FLATTOP", "TRIGGER_THRESHOLD", "ENERGY_RISETIME",
                                         "ENERGY_FLATTOP", "TAU", "TRACE_LENGTH", "TRACE_DELAY", "VOFFSET", "XDT",
