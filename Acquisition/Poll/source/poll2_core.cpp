@@ -139,15 +139,15 @@ void Poll::SetThreshWords(const double &thresholdPercentage) {
               << EXTERNAL_FIFO_LENGTH << " words).\n";
 }
 
-void Poll::Initialize(const char *configurationFile, const bool &usePixieInterface/* = true*/) {
+void Poll::Initialize(const std::string& configurationFile, const bool &usePixieInterface/* = true*/) {
     if(init_)
         throw InitializationException("Poll::Initialize - Tried to initialize Poll twice! Why'd you do that??");
 
     try {
         if(usePixieInterface)
-            pif_ = new PixieInterface(configurationFile);
+            pif_ = new PixieInterface(configurationFile.c_str());
         else
-            pif_ = new EmulatedInterface(configurationFile);
+            pif_ = new EmulatedInterface(configurationFile.c_str());
     } catch (std::invalid_argument &invalidArgument) {
         throw invalidArgument;
     }

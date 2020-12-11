@@ -9,8 +9,8 @@
 #ifndef POLL2_CORE_H
 #define POLL2_CORE_H
 
-#include <hribf_buffers.h>
-#include <Constants.hpp>
+#include "hribf_buffers.h"
+#include "Constants.hpp"
 
 #include <vector>
 
@@ -44,7 +44,7 @@ public:
     ~Poll();
 
     /// Initialize the poll object.
-    void Initialize(const char* configurationFile, const bool &useAcquisitionInterface = true);
+    void Initialize(const std::string& configurationFile, const bool &useAcquisitionInterface = true);
 
     void SetBootFast(bool input_=true){ boot_fast = input_; }
 
