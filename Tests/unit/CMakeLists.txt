@@ -1,0 +1,5 @@
+add_subdirectory(analysis/resources)
+add_subdirectory(analysis/scan_libraries)
+add_subdirectory(analysis/utkscan/core)
+add_subdirectory(hardware/xia/pixie/pixie16)
+add_subdirectory(resources)

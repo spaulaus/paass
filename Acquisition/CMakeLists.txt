@@ -1,13 +1,7 @@
-
 add_subdirectory(Utilities/set2root)
 add_subdirectory(Setup)
-#TODO: We need to revist where this guy lives as he's dependent on the scan libraries. Maybe should live there??
-#add_subdirectory(Utilities/DataGenerator)
 
 if (PAASS_BUILD_ACQ)
-    include(GenerateDAQConfig)
-    GENERATE_DAQ_CONFIG()
-
     add_subdirectory(MCA)
     add_subdirectory(Poll)
     add_subdirectory(Utilities/listener)

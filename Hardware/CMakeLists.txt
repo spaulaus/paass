@@ -1,2 +1,5 @@
-add_subdirectory(Interface)
-#add_subdirectory(xia)
+if (PAASS_BUILD_ACQ)
+    add_subdirectory(Interface)
+endif (PAASS_BUILD_ACQ)
+
+add_subdirectory(xia/pixie/pixie16)
