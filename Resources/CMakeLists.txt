@@ -1,5 +1,5 @@
-add_library(PaassResources SHARED source/CerrDirector.cpp source/Messenger.cpp source/Notebook.cpp source/RandomInterface.cpp
-        source/XmlInterface.cpp source/XmlParser.cpp)
+add_library(PaassResources SHARED source/CerrDirector.cpp source/Lock.cpp source/Messenger.cpp source/Notebook.cpp
+        source/RandomInterface.cpp source/Utility.cpp source/XmlInterface.cpp source/XmlParser.cpp)
 
 if (ROOT_FOUND)
     if(ROOT_HAS_MINUIT2)
@@ -9,9 +9,9 @@ if (ROOT_FOUND)
 endif (ROOT_FOUND)
 
 target_include_directories(PaassResources PUBLIC ${PROJECT_SOURCE_DIR}/Resources/include
-        ${PROJECT_SOURCE_DIR}/ThirdParty/pugixml/include ${ROOT_INCLUDE_DIR})
+        ${PROJECT_SOURCE_DIR}/ThirdParty/pugixml/include ${ROOT_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/Core/include)
 
-target_link_libraries(PaassResources Pugixml-1.11.1)
+target_link_libraries(PaassResources PaassCore Pugixml-1.11.1)
 
 file(GLOB PAASS_RESOURCES_PUBLIC_HEADERS include/*.hpp)
 set_target_properties(PaassResources PROPERTIES PUBLIC_HEADER "${PAASS_RESOURCES_PUBLIC_HEADERS}")
