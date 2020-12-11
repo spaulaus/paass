@@ -12,7 +12,6 @@ if (PAASS_BUILD_ACQ)
     include(GenerateDAQConfig)
     GENERATE_DAQ_CONFIG()
 
-    add_subdirectory(Interface)
     add_subdirectory(MCA)
     add_subdirectory(Poll)
     add_subdirectory(Utilities/listener)
