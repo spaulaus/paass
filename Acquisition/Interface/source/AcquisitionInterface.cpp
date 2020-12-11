@@ -12,7 +12,7 @@ using namespace std;
 
 AcquisitionInterface::~AcquisitionInterface() = default;
 
-AcquisitionInterface::AcquisitionInterface(const char *cfgFile) : lock_("PixieInterface") {
+AcquisitionInterface::AcquisitionInterface(const std::string& cfgFile) : lock_("PixieInterface") {
     try {
         config_.ReadConfiguration(cfgFile);
     } catch (std::invalid_argument &invalidArgument) {

@@ -77,7 +77,7 @@ public:
     /// Constructor accepting the name of the configuration file we'll be using. It overwrites the PCISysIniFile with
     /// the value taken from the configuration file.
     /// @param[in] fn : The name of the configuration file that's passed along to the AcquisitionConfig base.
-    PixieInterface(const char *fn);
+    PixieInterface(const std::string& cfgFile);
 
     /// Destructor that checks the pixie run status, stops any runs, and then exits the pixie system.
     ~PixieInterface();

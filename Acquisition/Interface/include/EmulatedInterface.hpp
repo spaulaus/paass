@@ -16,7 +16,7 @@ public:
 
     /// Constructor taking the configuration file name as an put. Passes that along to the base class.
     /// @param[in] cfgFile : Name of the ocnfiguration file.
-    EmulatedInterface(const char *cfgFile = "");
+    EmulatedInterface(const std::string& cfg);
 
     /// Default Destructor. Relies on the parent for cleanup.
     ~EmulatedInterface();

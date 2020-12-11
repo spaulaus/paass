@@ -31,8 +31,8 @@ EmulatedInterface::EmulatedInterface() : PixieInterface("") {
     //Does nothing fun right now
 }
 
-EmulatedInterface::EmulatedInterface(const char *cfgFile/* = ""*/) : PixieInterface(cfgFile) {
-    //Does nothing fun right now.
+EmulatedInterface::EmulatedInterface(const std::string& cfg) : PixieInterface(cfg) {
+    cout << config_.GetNumberOfModules() << endl;
 }
 
 EmulatedInterface::~EmulatedInterface() = default;

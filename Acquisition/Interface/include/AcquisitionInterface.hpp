@@ -16,7 +16,7 @@ public:
     /// Constructor that takes a configuration file. This constructor instances the AcquisitionConfig and creates the
     /// lock file.
     /// @param[in] cfgFile : The configuration file that we're going to load with the AcquisitionConfig. 
-    AcquisitionInterface(const char *cfgFile);
+    AcquisitionInterface(const std::string &cfg);
 
     /// The virtualized default destructor. 
     virtual ~AcquisitionInterface();

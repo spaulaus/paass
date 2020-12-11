@@ -20,9 +20,9 @@
 using namespace std;
 using namespace Display;
 
-PixieInterface::PixieInterface(const char *fn) : AcquisitionInterface(fn) {
+PixieInterface::PixieInterface(const std::string &cfg) : AcquisitionInterface(cfg) {
     //Overwrite the default path 'pxisys.ini' with the one specified in the scan file.
-    PCISysIniFile = config_.Get("global", "CrateConfig").c_str();
+//    PCISysIniFile = config_.Get("global", "CrateConfig").c_str();
 }
 
 PixieInterface::~PixieInterface() {
