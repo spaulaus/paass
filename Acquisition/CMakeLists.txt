@@ -1,4 +1,3 @@
-add_definitions(-D INSTALL_PREFIX="\\"${CMAKE_INSTALL_PREFIX}\\"")
 
 add_subdirectory(Utilities/set2root)
 add_subdirectory(Setup)
@@ -6,9 +5,6 @@ add_subdirectory(Setup)
 #add_subdirectory(Utilities/DataGenerator)
 
 if (PAASS_BUILD_ACQ)
-    find_package(PLX REQUIRED)
-    find_package(XIA REQUIRED)
-
     include(GenerateDAQConfig)
     GENERATE_DAQ_CONFIG()
 
