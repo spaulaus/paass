@@ -29,7 +29,7 @@ extern std::string CPP_APP_VERSION;
 
 class CommandHolder {
 public:
-    CommandHolder(unsigned int max_size_ = 1000) {
+    explicit CommandHolder(unsigned int max_size_ = 1000) {
         max_size = max_size_;
         commands = new std::string[max_size];
         fragment = "";
@@ -41,13 +41,13 @@ public:
     ~CommandHolder() { delete[] commands; }
 
     /// Get the maximum size of the command array
-    unsigned int GetSize() { return max_size; }
+    unsigned int GetSize() const { return max_size; }
 
     /// Get the total number of commands
-    unsigned int GetTotal() { return total; }
+    unsigned int GetTotal() const { return total; }
 
     /// Get the current command index (relative to the most recent command)
-    unsigned int GetIndex() { return external_index; }
+    unsigned int GetIndex() const { return external_index; }
 
     /// Push a new command into the storage array
     void Push(std::string& input_);
@@ -85,7 +85,7 @@ private:
 
     /** Convert the external index (relative to the most recent command) to the internal index
       * which is used to actually access the stored commands in the command array. */
-    unsigned int wrap_();
+    unsigned int wrap_() const;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -162,7 +162,7 @@ public:
     void SetPrompt(const char* input_);
 
     /// Force a character to the output screen
-    void putch(const char input_);
+    void putch(char input_);
 
     /// Disrupt ncurses while boolean is true
     void pause(bool& flag);
@@ -240,7 +240,7 @@ private:
     void clear_();
 
     /// Force a character to the input screen
-    void in_char_(const char input_);
+    void in_char_(char input_);
 
     /// Force a character string to the input screen
     void in_print_(const char* input_);
@@ -271,28 +271,17 @@ private:
     bool SaveCommandHistory();
 
     /// Force a character string to the output screen
-    void print(WINDOW* window, std::string input_);
+    void print(WINDOW* window, const std::string &input_);
 
     /**Split strings into multiple commands separated by ';'.
      *
      * \param[in] input_ The string to be parsed.
      * \param[out] cmds The vector to populate with sub-commands.
      */
-    void split_commands(const std::string& input_, std::deque<std::string>& cmds);
+    void split_commands(const std::string& input_, std::deque<std::string>& cmds) const;
 
     /// Print the command prompt to the screen.
     void PrintPrompt();
 };
-
-/**Split a string on the delimiter character populating the vector args with
- * any substrings formed. Returns the number of substrings found.
- *
- * \param[in] str The string to be parsed.
- * \param[out] args The vector to populate with substrings.
- * \param[in] delimiter The character to split the string on.
- * \return The number of substrings found.
- */
-unsigned int split_str(std::string str, std::vector<std::string>& args,
-                       char delimiter = ' ');
 
 #endif

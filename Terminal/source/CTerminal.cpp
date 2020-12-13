@@ -31,7 +31,7 @@ unsigned int cstrlen(const char* str_) {
 }
 
 std::string csubstr(char* str_, unsigned int start_index_/*=0*/) {
-    std::string output = "";
+    std::string output;
     unsigned int index = start_index_;
     while (str_[index] != '\0' && str_[index] != ' ') {
         output += str_[index];
@@ -61,7 +61,7 @@ void CommandHolder::Clear() {
 }
 
 
-unsigned int CommandHolder::wrap_() {
+unsigned int CommandHolder::wrap_() const {
     if (index < external_index) {
         unsigned int temp = (external_index - index) % max_size;
         return max_size - temp;
@@ -210,7 +210,7 @@ void Terminal::resize_() {
 void Terminal::pause(bool& flag) {
     endwin();
     std::cout.rdbuf(original); // Restore cout's original streambuf
-    setvbuf(stdout, NULL, _IOLBF, 0); //Change to line buffering
+    setvbuf(stdout, nullptr, _IOLBF, 0); //Change to line buffering
     while (flag) sleep(1);
     std::cout.rdbuf(pbuf); // Restore cout's original streambuf
     refresh_();
@@ -255,7 +255,7 @@ void Terminal::update_cursor_() {
 }
 
 void Terminal::clear_() {
-    for (int start = cmd.length() + offset; start >= 0; start--) {
+    for (auto start = cmd.length() + offset; start >= 0; start--) {
         wmove(input_window, 0, start);
         wdelch(input_window);
     }
@@ -273,7 +273,7 @@ void Terminal::AddStatusWindow(unsigned short numLines) {
     status_window = newpad(_statusWindowSize, _winSizeX);
 
     for (int i = 0; i < numLines; i++)
-        statusStr.push_back(std::string(""));
+        statusStr.emplace_back(std::string(""));
 
     //Update the cursor position
     cursY = _winSizeY - _statusWindowSize - 1;
@@ -417,20 +417,20 @@ bool Terminal::LoadCommandHistory(bool overwrite) {
         if (input.eof()) { break; }
 
         // Strip the newline from the end
-        index = cmdstr.find("\n");
+        index = cmdstr.find('\n');
         if (index != std::string::npos) {
             cmdstr.erase(index);
         }
 
         // Push the command into the command array
-        if (cmdstr != "") { // Just to be safe!
+        if (!cmdstr.empty()) { // Just to be safe!
             cmds.push_back(cmdstr);
         }
     }
 
-    if (cmds.size() >
-        0) { // Push commands into the array in reverse order so that the original order is preserved
-        std::vector<std::string>::iterator iter = cmds.end() - 1;
+    if (!cmds.empty()) {
+        // Push commands into the array in reverse order so that the original order is preserved
+        auto iter = cmds.end() - 1;
         while (true) {
             commands.Push(*iter);
             if (iter == cmds.begin()) { break; }
@@ -469,19 +469,9 @@ bool Terminal::SaveCommandHistory() {
     return true;
 }
 
-Terminal::Terminal() :
-pbuf(NULL),
-original(NULL),
-main(NULL),
-output_window(NULL),
-input_window(NULL),
-status_window(NULL),
-_statusWindowSize(0),
-commandTimeout_(0),
-insertMode_(false),
-debug_(false),
-_scrollbackBufferSize(SCROLLBACK_SIZE),
-_scrollPosition(0) {
+Terminal::Terminal() : pbuf(nullptr), original(nullptr), main(nullptr), output_window(nullptr), input_window(nullptr),
+                       status_window(nullptr), _statusWindowSize(0), commandTimeout_(0), insertMode_(false),
+                       debug_(false), _scrollbackBufferSize(SCROLLBACK_SIZE), _scrollPosition(0) {
     from_script = false;
     prompt_user = false;
     historyFilename_ = "";
@@ -499,7 +489,8 @@ Terminal::~Terminal() {
 }
 
 void Terminal::Initialize() {
-    if (init) { return; }
+    if (init)
+        return;
 
     original = std::cout.rdbuf(); // Back-up cout's streambuf
     pbuf = stream.rdbuf(); // Get stream's streambuf
@@ -508,7 +499,7 @@ void Terminal::Initialize() {
 
     main = initscr();
 
-    if (main == NULL) { // Attempt to initialize ncurses
+    if (main == nullptr) { // Attempt to initialize ncurses
         std::cout.rdbuf(original); // Restore cout's original streambuf
         fprintf(stderr, " Error: failed to initialize ncurses!\n");
     } else {
@@ -523,8 +514,8 @@ void Terminal::Initialize() {
             << "WARNING: Unable to set terminal blocking half delay to 0.5s!\n";
             std::cout
             << "\tThis will increase CPU usage in the command thread.\n";
-            if (nodelay(input_window, true) ==
-                ERR) { //Disable the blocking timeout.
+            if (nodelay(input_window, true) == ERR) {
+                //Disable the blocking timeout.
                 std::cout << "ERROR: Unable to remove terminal blocking!\n";
                 std::cout
                 << "\tThe command thread will be locked until a character is entered. This will reduce functionality of terminal status bar and timeout.\n";
@@ -537,7 +528,7 @@ void Terminal::Initialize() {
         scrollok(input_window, true);
 
         if (NCURSES_MOUSE_VERSION > 0) {
-            mousemask(ALL_MOUSE_EVENTS, NULL);
+            mousemask(ALL_MOUSE_EVENTS, nullptr);
             mouseinterval(0);
         }
 
@@ -580,11 +571,11 @@ void Terminal::SetPrompt(const char* input_) {
         if (pos == prompt.find(paass::terminal_colors::Reset, pos)) {
             lastPos += std::string(paass::terminal_colors::Reset).length();
         } else {
-            for (auto it = attrMap.begin(); it != attrMap.end(); ++it) {
+            for (const auto &it : attrMap) {
                 //If the attribute is at the same position then we found this attribute and we turn it on
-                if (pos == prompt.find(it->first, pos)) {
+                if (pos == prompt.find(it.first, pos)) {
                     //Iterate position to suppress printing the escape string
-                    lastPos += std::string(it->first).length();
+                    lastPos += std::string(it.first).length();
                     break;
                 }
             }
@@ -596,7 +587,7 @@ void Terminal::SetPrompt(const char* input_) {
 }
 
 void Terminal::PrintPrompt() {
-    print(input_window, prompt.c_str());
+    print(input_window, prompt);
     cursX = offset;
     update_cursor_();
     refresh_();
@@ -609,7 +600,7 @@ void Terminal::putch(const char input_) {
 }
 
 // Force text to the output screen
-void Terminal::print(WINDOW* window, std::string input_) {
+void Terminal::print(WINDOW* window, const std::string& input_) {
     size_t pos = 0, lastPos = 0;
     //Search for escape sequences
     while ((pos = input_.find("\033[", lastPos)) != std::string::npos) {
@@ -642,7 +633,7 @@ void Terminal::print(WINDOW* window, std::string input_) {
 // Dump all text in the stream to the output screen
 void Terminal::flush() {
     std::string stream_contents = stream.str();
-    if (stream_contents.size() > 0) {
+    if (!stream_contents.empty()) {
         print(output_window, stream_contents);
         if (logFile.good()) {
             logFile << stream.str();
@@ -673,14 +664,13 @@ void Terminal::EnableTimeout(float timeout/*=0.5*/) {
     commandTimeout_ = timeout;
 }
 
-void Terminal::TabComplete(const std::string& input_,
-                           const std::vector<std::string>& possibilities_) {
-    if (input_.empty() || possibilities_.empty()) return;
+void Terminal::TabComplete(const std::string& input_, const std::vector<std::string>& possibilities_) {
+    if (input_.empty() || possibilities_.empty())
+        return;
 
     std::vector<std::string> matches;
-    std::vector<std::string>::iterator it;
 
-    size_t start = input_.find_last_of(" ");
+    size_t start = input_.find_last_of(' ');
     if (start == std::string::npos)
         start = 0;
     else
@@ -691,57 +681,49 @@ void Terminal::TabComplete(const std::string& input_,
     //Get the string to complete
     std::string strToComplete = input_.substr(start, stop - start);
 
-
-    for (auto it = possibilities_.begin(); it != possibilities_.end(); ++it) {
-        if (it->empty())
+    for (const auto &it: possibilities_) {
+        if (it.empty())
             continue;
-        if (it->find(strToComplete) == 0)
-            matches.push_back(it->substr(strToComplete.length()));
+        if (it.find(strToComplete) == 0)
+            matches.push_back(it.substr(strToComplete.length()));
     }
 
     //No tab complete matches so we do nothing.
-    if (matches.size() == 0) {
+    if (matches.empty())
         return;
-    }
 
         //A unique match so we extend the command with completed text
     else if (matches.size() == 1) {
-        if (matches.at(0).find("/") == std::string::npos &&
+        if (matches.at(0).find('/') == std::string::npos &&
             (unsigned int) (cursX - offset) == cmd.length()) {
             matches.at(0).append(" ");
         }
-        cmd.insert(cursX - offset, matches.at(0).c_str());
+        cmd.insert(cursX - offset, matches.at(0));
         waddstr(input_window, cmd.substr(cursX - offset).c_str());
         cursX += matches.at(0).length();
     } else {
-        //Fill out the matching part
         std::string commonStr = matches.at(0);
-        for (auto it = matches.begin() + 1;
-             it != matches.end() && !commonStr.empty(); ++it) {
+        for (auto it = matches.begin() + 1; it != matches.end() && !commonStr.empty(); ++it) {
             while (!commonStr.empty()) {
                 if ((*it).find(commonStr) == 0) break;
                 commonStr.erase(commonStr.length() - 1);
             }
         }
         if (!commonStr.empty()) {
-            cmd.insert(cursX - offset, commonStr.c_str());
+            cmd.insert(cursX - offset, commonStr);
             waddstr(input_window, cmd.substr(cursX - offset).c_str());
             cursX += commonStr.length();
-        }
-            //Display the options
-        else if (tabCount > 1) {
+        } else if (tabCount > 1) {
             //Compute the header position
             size_t headerPos = cmd.find_last_of(" /", cursX - offset - 1);
             std::string header;
             if (headerPos == std::string::npos)
                 header = cmd;
             else
-                header = cmd.substr(headerPos + 1,
-                                    cursX - offset - 1 - headerPos);
+                header = cmd.substr(headerPos + 1,cursX - offset - 1 - headerPos);
             std::cout << prompt.c_str() << cmd << "\n";
-            for (auto it = matches.begin(); it != matches.end(); ++it) {
-                std::cout << header << (*it) << "\t";
-            }
+            for (const auto &match : matches)
+                std::cout << header << match << "\t";
             std::cout << "\n";
         }
     }
@@ -761,7 +743,7 @@ std::string Terminal::GetCommand(std::string& args, const int& prev_cmd_return_/
     if (cursX == 0) {
         PrintPrompt();
     }
-    std::string output = "";
+    std::string output;
 
     sclock::time_point commandRequestTime = sclock::now();
     sclock::time_point currentTime;
@@ -769,7 +751,7 @@ std::string Terminal::GetCommand(std::string& args, const int& prev_cmd_return_/
     //Update status message
     if (status_window) {
         werase(status_window);
-        print(status_window, statusStr.at(0).c_str());
+        print(status_window, statusStr.at(0));
     }
 
     // Check for commands in the command queue.
@@ -803,7 +785,7 @@ std::string Terminal::GetCommand(std::string& args, const int& prev_cmd_return_/
             //Update status message
             if (status_window) {
                 werase(status_window);
-                print(status_window, statusStr.at(0).c_str());
+                print(status_window, statusStr.at(0));
             }
 
             flush(); // If there is anything in the stream, dump it to the screen
@@ -821,12 +803,10 @@ std::string Terminal::GetCommand(std::string& args, const int& prev_cmd_return_/
                 }
             }
 
-            int keypress = wgetch(input_window);
+            auto keypress = wgetch(input_window);
 
-
-            // Check for internal commands
-            if (keypress ==
-                ERR) { continue; } // No key was pressed in the interval
+            if (keypress == ERR)
+                continue;
 
             if (debug_) {
                 std::cout << "TERM: Curs (" << cursX << "-" << offset << ", "
@@ -840,8 +820,8 @@ std::string Terminal::GetCommand(std::string& args, const int& prev_cmd_return_/
                 std::string temp_cmd = cmd;
                 //Reset the position in the history.
                 commands.Reset();
-                if (temp_cmd != "" && temp_cmd !=
-                                      commands.PeekPrev()) { // Only save this command if it is different than the previous command
+                if (!temp_cmd.empty() && temp_cmd != commands.PeekPrev()) {
+                    // Only save this command if it is different than the previous command
                     commands.Push(temp_cmd);
                 }
                 output = temp_cmd;
@@ -873,8 +853,7 @@ std::string Terminal::GetCommand(std::string& args, const int& prev_cmd_return_/
                 }
 
                 break;
-            } else if (keypress == KEY_BTAB) {}
-            else if (keypress == 4) { // ctrl-d (EOT)
+            } else if (keypress == 4) { // ctrl-d (EOT)
                 output = "CTRL_D";
                 clear_();
                 tabCount = 0;
@@ -896,21 +875,23 @@ std::string Terminal::GetCommand(std::string& args, const int& prev_cmd_return_/
                     cmd.assign(temp_cmd);
                     in_print_(cmd.c_str());
                 }
-            } else if (keypress == KEY_LEFT) { cursX--; } // 260
-            else if (keypress == KEY_RIGHT) { cursX++; } // 261
-            else if (keypress == KEY_PPAGE) { //Page up key
+            } else if (keypress == KEY_LEFT) { // 260
+                cursX--;
+            } else if (keypress == KEY_RIGHT) { // 261
+                cursX++;
+            } else if (keypress == KEY_PPAGE) { //Page up key
                 scroll_(-(_winSizeY - 2));
             } else if (keypress == KEY_NPAGE) { //Page down key
                 scroll_(_winSizeY - 2);
-            } else if (keypress == KEY_BACKSPACE || keypress ==
-                                                    8) { // ncurses.h backspace character (KEY_BACKSPACE=263), ASCII code BS =8
+            } else if (keypress == KEY_BACKSPACE || keypress == 8) {
+                // ncurses.h backspace character (KEY_BACKSPACE=263), ASCII code BS =8
                 if (cursX - offset > 0) {
                     wmove(input_window, 0, --cursX);
                     wdelch(input_window);
                     cmd.erase(cursX - offset, 1);
                 }
-            } else if (keypress == KEY_DC || keypress ==
-                                             127) { // ncurses.h Delete character (KEY_DC=330), ASCII code DEL=127
+            } else if (keypress == KEY_DC || keypress == 127) {
+                // ncurses.h Delete character (KEY_DC=330), ASCII code DEL=127
                 //Remove character from terminal
                 wdelch(input_window);
                 //Remove character from cmd string
@@ -921,9 +902,12 @@ std::string Terminal::GetCommand(std::string& args, const int& prev_cmd_return_/
                 } else {
                     insertMode_ = true;
                 }
-            } else if (keypress == KEY_HOME) { cursX = offset; }
-            else if (keypress == KEY_END) { cursX = cmd.length() + offset; }
-            else if (keypress == KEY_MOUSE) { //Handle mouse events
+            } else if (keypress == KEY_HOME) {
+                cursX = offset;
+            } else if (keypress == KEY_END) {
+                cursX = cmd.length() + offset;
+            } else if (keypress == KEY_MOUSE) {
+                //Handle mouse events
                 MEVENT mouseEvent;
                 //Get information about mouse event.
                 getmouse(&mouseEvent);
@@ -953,14 +937,14 @@ std::string Terminal::GetCommand(std::string& args, const int& prev_cmd_return_/
             }
 
             // Check for cursor too far to the left
-            if (cursX < offset) { cursX = offset; }
+            if (cursX < offset)
+                cursX = offset;
 
             // Check for cursor too far to the right
-            if (cursX > (int) (cmd.length() + offset)) {
+            if (cursX > (int) (cmd.length() + offset))
                 cursX = cmd.length() + offset;
-            }
 
-            if (keypress != ERR) tabCount = 0;
+            tabCount = 0;
             update_cursor_();
             refresh_();
         }
@@ -1061,41 +1045,8 @@ void Terminal::Close() {
     unset_signal_handlers();
 }
 
-unsigned int split_str(std::string str, std::vector<std::string>& args,
-                       char delimiter/*=' '*/) {
-    args.clear();
-
-    //Locate the first non delimiter space.
-    size_t strStart = str.find_first_not_of(delimiter);
-    //In case of a line with only delimiters we return 0.
-    if (strStart == std::string::npos) return 0;
-
-    //Locate the last character that is not a delimiter.
-    size_t strStop = str.find_last_not_of(delimiter) + 1;
-
-    //We loop over the string searching for the delimiter keeping track of where
-    // we found the current delimiter and the previous one.
-    size_t pos = strStart;
-    size_t lastPos = strStart;
-    while ((pos = str.find(delimiter, lastPos)) != std::string::npos) {
-        //Store the substring from the last non delimiter to the current delimiter.
-        args.push_back(str.substr(lastPos, pos - lastPos));
-
-        //We update the last position looking for the first character that is not
-        // a delimiter.
-        lastPos = str.find_first_not_of(delimiter, pos + 1);
-    }
-
-    //Store the last string.
-    if (lastPos != std::string::npos)
-        args.push_back(str.substr(lastPos, strStop - lastPos));
-
-    return args.size();
-}
-
-
 void Terminal::split_commands(const std::string& input_,
-                              std::deque<std::string>& cmds) {
+                              std::deque<std::string>& cmds) const {
     if (input_.find(';') == std::string::npos) return;
 
     //Build a temporary deque of commands split on semicolon.
@@ -1110,17 +1061,23 @@ void Terminal::split_commands(const std::string& input_,
     //Loop until we find no more semicolons.
     while (true) {
         safety++;
-        if (safety > 100) break;
+        if (safety > 100)
+            break;
         stop = input_.find_first_of(';', start);
-        if (debug_) std::cout << "\tsemicolon " << stop << " ";
+        if (debug_)
+            std::cout << "\tsemicolon " << stop << " ";
 
         size_t dblQuotePos = start;
         int dblQuoteCnt = 0;
         while (dblQuotePos < stop && stop != std::string::npos) {
             safety++;
-            if (safety > 100) break;
+            if (safety > 100)
+                break;
+
             dblQuotePos = input_.find_first_of('"', dblQuotePos + 1);
-            if (debug_) std::cout << "dblQuote " << dblQuotePos << " ";
+
+            if (debug_)
+                std::cout << "dblQuote " << dblQuotePos << " ";
 
             if (dblQuotePos == std::string::npos) break;
             else if (dblQuotePos < stop) dblQuoteCnt++;
@@ -1145,9 +1102,8 @@ void Terminal::split_commands(const std::string& input_,
             break;
     }
 
-
     //If the destination queue iis empty we put split commands at the end,
-    // if the detination has commands in it we put the split ones at the beginning.
+    // if the destination has commands in it we put the split ones at the beginning.
     if (cmds.empty()) {
         while (!cmdQueue.empty()) {
             cmds.push_back(cmdQueue.front());
