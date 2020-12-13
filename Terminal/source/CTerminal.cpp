@@ -378,22 +378,22 @@ void Terminal::init_colors_() {
         init_pair(7, COLOR_WHITE, -1);
 
         //Assign colors to map
-        attrMap[TermColors::DkGreen] = COLOR_PAIR(1);
-        attrMap[TermColors::BtGreen] = COLOR_PAIR(1);
-        attrMap[TermColors::DkRed] = COLOR_PAIR(2);
-        attrMap[TermColors::BtRed] = COLOR_PAIR(2);
-        attrMap[TermColors::DkBlue] = COLOR_PAIR(3);
-        attrMap[TermColors::BtBlue] = COLOR_PAIR(3);
-        attrMap[TermColors::DkYellow] = COLOR_PAIR(4);
-        attrMap[TermColors::BtYellow] = COLOR_PAIR(4);
-        attrMap[TermColors::DkMagenta] = COLOR_PAIR(5);
-        attrMap[TermColors::BtMagenta] = COLOR_PAIR(5);
-        attrMap[TermColors::DkCyan] = COLOR_PAIR(6);
-        attrMap[TermColors::BtCyan] = COLOR_PAIR(6);
-        attrMap[TermColors::DkWhite] = COLOR_PAIR(7);
-        attrMap[TermColors::BtWhite] = COLOR_PAIR(7);
-        attrMap[TermColors::Flashing] = A_BLINK;
-        attrMap[TermColors::Underline] = A_UNDERLINE;
+        attrMap[paass::terminal_colors::DkGreen] = COLOR_PAIR(1);
+        attrMap[paass::terminal_colors::BtGreen] = COLOR_PAIR(1);
+        attrMap[paass::terminal_colors::DkRed] = COLOR_PAIR(2);
+        attrMap[paass::terminal_colors::BtRed] = COLOR_PAIR(2);
+        attrMap[paass::terminal_colors::DkBlue] = COLOR_PAIR(3);
+        attrMap[paass::terminal_colors::BtBlue] = COLOR_PAIR(3);
+        attrMap[paass::terminal_colors::DkYellow] = COLOR_PAIR(4);
+        attrMap[paass::terminal_colors::BtYellow] = COLOR_PAIR(4);
+        attrMap[paass::terminal_colors::DkMagenta] = COLOR_PAIR(5);
+        attrMap[paass::terminal_colors::BtMagenta] = COLOR_PAIR(5);
+        attrMap[paass::terminal_colors::DkCyan] = COLOR_PAIR(6);
+        attrMap[paass::terminal_colors::BtCyan] = COLOR_PAIR(6);
+        attrMap[paass::terminal_colors::DkWhite] = COLOR_PAIR(7);
+        attrMap[paass::terminal_colors::BtWhite] = COLOR_PAIR(7);
+        attrMap[paass::terminal_colors::Flashing] = A_BLINK;
+        attrMap[paass::terminal_colors::Underline] = A_UNDERLINE;
     }
 }
 
@@ -646,8 +646,8 @@ void Terminal::SetPrompt(const char *input_) {
 
         //Identify which escape code we found.
         //First try reset code then loop through other codes
-        if (pos == prompt.find(TermColors::Reset, pos)) {
-            lastPos += std::string(TermColors::Reset).length();
+        if (pos == prompt.find(paass::terminal_colors::Reset, pos)) {
+            lastPos += std::string(paass::terminal_colors::Reset).length();
         } else {
             for (auto it = attrMap.begin(); it != attrMap.end(); ++it) {
                 //If the attribute is at the same position then we found this attribute and we turn it on
@@ -688,9 +688,9 @@ void Terminal::print(WINDOW *window, std::string input_) {
 
         //Identify which escape code we found.
         //First try reset code then loop through other codes
-        if (pos == input_.find(TermColors::Reset, pos)) {
+        if (pos == input_.find(paass::terminal_colors::Reset, pos)) {
             wattrset(window, A_NORMAL);
-            lastPos += std::string(TermColors::Reset).length();
+            lastPos += std::string(paass::terminal_colors::Reset).length();
         } else {
             for (auto it = attrMap.begin(); it != attrMap.end(); ++it) {
                 //If the attribute is at the same position then we found this attribute and we turn it on

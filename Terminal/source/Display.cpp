@@ -8,7 +8,7 @@
 
 using namespace std;
 
-using namespace TermColors;
+using namespace paass::terminal_colors;
 
 static const size_t leaderLength = 50;
 

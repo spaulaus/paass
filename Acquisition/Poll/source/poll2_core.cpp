@@ -1526,12 +1526,12 @@ void Poll::UpdateStatus() {
 
     if (file_open) {
         if (acq_running && !record_data)
-            status << TermColors::DkYellow;
+            status << paass::terminal_colors::DkYellow;
         //Add file size to status
         status << " " << StringManipulation::FormatHumanReadableSizes(output_file.GetFilesize());
         status << " " << output_file.GetCurrentFilename();
         if (acq_running && !record_data)
-            status << TermColors::Reset;
+            status << paass::terminal_colors::Reset;
     }
 
     //Update the status bar

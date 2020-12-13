@@ -152,15 +152,15 @@ bool BitFlipper::Test(unsigned int num_bits_, unsigned int input_,
         if (active_bits[i]) {
             if (Display::hasColorTerm) {
                 if (i < 10) {
-                    std::cout << TermColors::DkGreen << "  0" << i << "	1   "
+                    std::cout << paass::terminal_colors::DkGreen << "  0" << i << "	1   "
                               << PadStr(bit_values[i], 12);
                     std::cout << PadStr(running_total[i], 10) << bit_function
-                              << TermColors::Reset << std::endl;
+                              << paass::terminal_colors::Reset << std::endl;
                 } else {
-                    std::cout << TermColors::DkGreen << "  " << i << "	1   "
+                    std::cout << paass::terminal_colors::DkGreen << "  " << i << "	1   "
                               << PadStr(bit_values[i], 12);
                     std::cout << PadStr(running_total[i], 10) << bit_function
-                              << TermColors::Reset << std::endl;
+                              << paass::terminal_colors::Reset << std::endl;
                 }
             } else {
                 if (i < 10) {
