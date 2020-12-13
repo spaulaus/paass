@@ -16,9 +16,9 @@ if (PAASS_BUILD_ACQ)
     target_compile_options(PixieInterface PRIVATE "-DPLX_LINUX")
 ENDIF (PAASS_BUILD_ACQ)
 
-target_include_directories(PixieInterface PUBLIC include ${PROJECT_SOURCE_DIR}/Core/include ${XIA_INCLUDE_DIR}
+target_include_directories(PixieInterface PUBLIC include ${XIA_INCLUDE_DIR}
         ${PROJECT_SOURCE_DIR}/ThirdParty/pugixml/include ${PROJECT_SOURCE_DIR}/Resources/include ${ROOT_INCLUDE_DIR})
-target_link_libraries(PixieInterface PaassCore PaassResources Pugixml-1.11.1)
+target_link_libraries(PixieInterface PaassResources Pugixml-1.11.1)
 
 file(GLOB PIXIE_INTERFACE_PUBLIC_HEADERS include/*.h)
 set_target_properties(PixieInterface PROPERTIES PUBLIC_HEADER "${PIXIE_INTERFACE_PUBLIC_HEADERS}")

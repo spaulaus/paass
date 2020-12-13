@@ -7,5 +7,6 @@ if (PAASS_BUILD_ACQ)
     add_subdirectory(Utilities/listener)
     add_subdirectory(Utilities/monitor)
     add_subdirectory(Utilities/send_alarm)
+    add_subdirectory(Utilities/param_scan)
 endif (PAASS_BUILD_ACQ)
 

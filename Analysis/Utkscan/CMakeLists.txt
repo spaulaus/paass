@@ -55,12 +55,12 @@ if (PAASS_BUILD_UTKSCAN)
 
     #------------------------------------------------------------------------------
 
-    target_link_libraries(${UTKSCAN_NAME} PaassScan AnalysisResources PaassCore Pugixml-1.11.1
+    target_link_libraries(${UTKSCAN_NAME} PaassScan AnalysisResources Terminal Pugixml-1.11.1
             PaassResources ${GSL_LIBRARIES} ${ROOT_LIBRARIES} PaassRootStruct)
 
     target_include_directories(${UTKSCAN_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/Analysis/Resources/include
             ${PROJECT_SOURCE_DIR}/Analysis/ScanLibraries/include ${PROJECT_SOURCE_DIR}/ThirdParty/pugixml/include
-            ${PROJECT_SOURCE_DIR}/Resources/include ${PROJECT_SOURCE_DIR}/Core/include ${ROOT_INCLUDE_DIR}
+            ${PROJECT_SOURCE_DIR}/Resources/include ${PROJECT_SOURCE_DIR}/Terminal/include ${ROOT_INCLUDE_DIR}
             ${GSL_INCLUDE_DIR})
 
     if (PAASS_USE_HRIBF)
