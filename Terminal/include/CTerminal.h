@@ -112,7 +112,8 @@ public:
     ///Initalize terminal debug mode.
     void SetDebug(bool debug = true) { debug_ = debug; };
 
-    /// Initalizes a status window under the input temrinal.
+    /// Creates a status window and the refreshes the output. Takes an optional number of lines, defaulted to 1.
+    /// \param[in] numLines: Vertical size of status window.
     void AddStatusWindow(unsigned short numLines = 1);
 
     ///Set the status message.
@@ -124,17 +125,37 @@ public:
     ///Append some text to the status line.
     void AppendStatus(std::string status, unsigned short line = 0);
 
-    ///Enable tab auto complete functionlity.
+    /**By enabling tab autocomplete the current typed command is returned via GetCommand() with a trailing tab character.
+     *
+     * \param[in] enable State of tab complete.
+     */
     void EnableTabComplete(bool enable = true);
 
-    ///Handle tab complete functionality.
-    void TabComplete(const std::string& input_,
-                     const std::vector<std::string>& possibilities_);
+    /**Take the list of matching tab complete values and output resulting tab completion.
+     * If the list is empty nothing happens, if a unique value is given the command is completed. If there are multiple
+     * matches the common part of the matches is determined and printed to the input. If there is no common part of the
+     * matches and the tab key has been pressed twice the list of matches is printed for the user to decide.
+     *
+     * \param[in] input_ The string to complete.
+     * \param[in] possibilities_ A vector of strings of possible values.
+     */
+    void TabComplete(const std::string& input_, const std::vector<std::string>& possibilities_);
 
-    ///Enable a timeout while waiting fro a command.
+    /**By enabling the timeout the GetCommand() routine returns after a set
+     * timesout period has passed. The current typed text is stored for the next
+     * GetCommand call.
+     *
+     * \param[in] timeout The amount of time to wait before timeout in seconds
+     * 	defaults to 0.5 s.
+     */
     void EnableTimeout(float timeout = 0.5);
 
-    /// Set the command filename for storing previous commands
+    /** This command will clear all current commands from the history if overwrite is
+     * set to true.
+     *
+     * \param[in] filename The filename for the command history.
+     * \param[in] overwrite Flag indicating the current commands should be forgotten.
+     */
     void SetCommandHistory(std::string filename, bool overwrite = false);
 
     /// Set the command prompt
@@ -200,7 +221,10 @@ private:
     /// Number of lines scrolled back
     int _scrollPosition;
 
-    /// Refresh the terminal
+    /**Refreshes the specified window or if none specified all windows.
+     *
+     *\param[in] window The pointer to the window to be updated.
+     */
     void refresh_();
 
     /// Resize the terminal
@@ -225,6 +249,19 @@ private:
     void init_colors_();
 
     /// Read commands from a command script.
+    /// An example CTerminal script is given below. Comments are denoted by a #.
+    /// ```
+    /// # Tell the user something about this script.
+    /// .echo This script is intended to be used to test the script reader (i.e. '.cmd').
+    ///
+    /// # Issue the user a prompt asking if they would like to continue.
+    /// # If the user types anything other than 'yes' or 'y', the script will abort.
+    /// .prompt WARNING! This script will do something. Are you sure you wish to proceed?
+    ///
+    /// help # Do something just to test that the script is working.
+    /// ```
+    /// \param[in] filename_ : The relative path to the file containing CTerminal commands.
+    /// \returns true if the file opened successfully and false otherwise.
     bool LoadCommandFile(const char* filename_);
 
     /// Load a list of previous commands from a file
@@ -236,16 +273,26 @@ private:
     /// Force a character string to the output screen
     void print(WINDOW* window, std::string input_);
 
-    /// Split a string into multiple commands separated by a ';'.
+    /**Split strings into multiple commands separated by ';'.
+     *
+     * \param[in] input_ The string to be parsed.
+     * \param[out] cmds The vector to populate with sub-commands.
+     */
     void split_commands(const std::string& input_, std::deque<std::string>& cmds);
 
     /// Print the command prompt to the screen.
     void PrintPrompt();
 };
 
-/// Split a string about some delimiter.
+/**Split a string on the delimiter character populating the vector args with
+ * any substrings formed. Returns the number of substrings found.
+ *
+ * \param[in] str The string to be parsed.
+ * \param[out] args The vector to populate with substrings.
+ * \param[in] delimiter The character to split the string on.
+ * \return The number of substrings found.
+ */
 unsigned int split_str(std::string str, std::vector<std::string>& args,
                        char delimiter = ' ');
-
 
 #endif

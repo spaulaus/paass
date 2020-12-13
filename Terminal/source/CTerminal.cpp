@@ -8,23 +8,19 @@
 #include <chrono>
 #include <iostream>
 
-#include <unistd.h>
-
-#ifdef USE_NCURSES
-
 #include <csignal>
 #include <stdexcept>
+
+#include <unistd.h>
 
 bool SIGNAL_SEGFAULT = false;
 bool SIGNAL_INTERRUPT = false;
 bool SIGNAL_TERMSTOP = false;
 bool SIGNAL_RESIZE = false;
-#endif
 
 // Make a typedef for clarity when working with chrono.
 typedef std::chrono::system_clock sclock;
 
-/// Return the length of a character string.
 unsigned int cstrlen(const char* str_) {
     unsigned int output = 0;
     while (true) {
@@ -34,7 +30,6 @@ unsigned int cstrlen(const char* str_) {
     return output;
 }
 
-/// Extract a string from a character array.
 std::string csubstr(char* str_, unsigned int start_index_/*=0*/) {
     std::string output = "";
     unsigned int index = start_index_;
@@ -49,7 +44,6 @@ std::string csubstr(char* str_, unsigned int start_index_/*=0*/) {
 // CommandHolder
 ///////////////////////////////////////////////////////////////////////////////
 
-/// Push a new command into the storage array
 void CommandHolder::Push(std::string& input_) {
     input_.erase(input_.find_last_not_of(" \n\t\r") + 1);
     commands[index] = input_;
@@ -60,15 +54,13 @@ void CommandHolder::Push(std::string& input_) {
     if (index >= max_size) { index = 0; }
 }
 
-/// Clear the command array
 void CommandHolder::Clear() {
     for (unsigned int i = 0; i < max_size; i++) {
         commands[i] = "";
     }
 }
 
-/** Convert the external index (relative to the most recent command) to the internal index
-  * which is used to actually access the stored commands in the command array. */
+
 unsigned int CommandHolder::wrap_() {
     if (index < external_index) {
         unsigned int temp = (external_index - index) % max_size;
@@ -80,7 +72,6 @@ unsigned int CommandHolder::wrap_() {
     return (index - external_index);
 }
 
-/// Get the previous command entry
 std::string CommandHolder::GetPrev() {
     if (total == 0) { return "NULL"; }
 
@@ -94,7 +85,6 @@ std::string CommandHolder::GetPrev() {
     return commands[wrap_()];
 }
 
-/// Get the previous command entry but do not change the internal array index
 std::string CommandHolder::PeekPrev() {
     if (total == 0) { return "NULL"; }
 
@@ -102,7 +92,6 @@ std::string CommandHolder::PeekPrev() {
     return commands[index - 1];
 }
 
-/// Get the next command entry
 std::string CommandHolder::GetNext() {
     if (total == 0) { return "NULL"; }
 
@@ -114,7 +103,6 @@ std::string CommandHolder::GetNext() {
     return commands[wrap_()];
 }
 
-/// Get the next command entry but do not change the internal array index
 std::string CommandHolder::PeekNext() {
     if (total == 0) { return "NULL"; }
 
@@ -228,10 +216,6 @@ void Terminal::pause(bool& flag) {
     refresh_();
 }
 
-/**Refreshes the specified window or if none specified all windows.
- *
- *\param[in] window The pointer to the window to be updated.
- */
 void Terminal::refresh_() {
     if (!init) { return; }
     if (SIGNAL_RESIZE) resize_();
@@ -283,10 +267,6 @@ void Terminal::clear_() {
 
 void Terminal::ClearCmd() { Terminal::clear_(); }
 
-/**Creates a status window and the refreshes the output. Takes an optional number of lines, defaulted to 1.
- *
- * \param[in] numLines Vertical size of status window.
- */
 void Terminal::AddStatusWindow(unsigned short numLines) {
     _statusWindowSize = numLines;
     //Create the new status pad.
@@ -371,22 +351,6 @@ void Terminal::init_colors_() {
     }
 }
 
-/** Read commands from a command script.
-  *  param[in] filename_ : The relative path to the file containing CTerminal commands.
-  *  Returns true if the file opened successfully and false otherwise.
-  *
-  * An example CTerminal script is given below. Comments are denoted by a #.
-  *
-  * # Tell the user something about this script.
-  * .echo This script is intended to be used to test the script reader (i.e. '.cmd').
-  * 
-  * # Issue the user a prompt asking if they would like to continue.
-  * # If the user types anything other than 'yes' or 'y', the script will abort.
-  * .prompt WARNING! This script will do something. Are you sure you wish to proceed?
-  * 
-  * help # Do something just to test that the script is working.
-  *
-  */
 bool Terminal::LoadCommandFile(const char* filename_) {
     std::ifstream input(filename_);
 
@@ -592,14 +556,7 @@ void Terminal::Initialize() {
     setup_signal_handlers();
 }
 
-/** This command will clear all current commands from the history if overwrite is 
- * set to true. 
- *
- * \param[in] filename The filename for the command history.
- * \param[in] overwrite Flag indicating the current commands should be forgotten.
- */
-void
-Terminal::SetCommandHistory(std::string filename, bool overwrite/*=false*/) {
+void Terminal::SetCommandHistory(std::string filename, bool overwrite/*=false*/) {
     //Store the command file name.
     historyFilename_ = filename;
 
@@ -706,33 +663,16 @@ bool Terminal::SetLogFile(std::string logFileName) {
 
 }
 
-/**By enabling tab autocomplete the current typed command is returned via GetCommand() with a trailing tab character.
- *
- * \param[in] enable State of tab complete.
- */
+
 void Terminal::EnableTabComplete(bool enable) {
     enableTabComplete = enable;
 }
 
-/**By enabling the timeout the GetCommand() routine returns after a set
- * timesout period has passed. The current typed text is stored for the next
- * GetCommand call.
- *
- * \param[in] timeout The amount of time to wait before timeout in seconds
- * 	defaults to 0.5 s.
- */
+
 void Terminal::EnableTimeout(float timeout/*=0.5*/) {
     commandTimeout_ = timeout;
 }
 
-/**Take the list of matching tab complete values and output resulting tab completion.
- * If the list is empty nothing happens, if a unique value is given the command is completed. If there are multiple
- * matches the common part of the matches is determined and printed to the input. If there is no common part of the
- * matches and the tab key has been pressed twice the list of matches is printed for the user to decide.
- *
- * \param[in] input_ The string to complete.
- * \param[in] possibilities_ A vector of strings of possible values.
- */
 void Terminal::TabComplete(const std::string& input_,
                            const std::vector<std::string>& possibilities_) {
     if (input_.empty() || possibilities_.empty()) return;
@@ -809,7 +749,6 @@ void Terminal::TabComplete(const std::string& input_,
     refresh_();
 }
 
-/// Print a command to the terminal output.
 void Terminal::PrintCommand(const std::string& cmd_) {
     std::cout << prompt << cmd_ << "\n";
     flush();
@@ -1122,14 +1061,6 @@ void Terminal::Close() {
     unset_signal_handlers();
 }
 
-/**Split a string on the delimiter character populating the vector args with 
- * any substrings formed. Returns the number of substrings found.
- *
- * \param[in] str The string to be parsed.
- * \param[out] args The vector to populate with substrings.
- * \param[in] delimiter The character to split the string on.
- * \return The number of substrings found.
- */
 unsigned int split_str(std::string str, std::vector<std::string>& args,
                        char delimiter/*=' '*/) {
     args.clear();
@@ -1162,11 +1093,7 @@ unsigned int split_str(std::string str, std::vector<std::string>& args,
     return args.size();
 }
 
-/**Split strings into multiple commands separated by ';'.
- *
- * \param[in] input_ The string to be parsed.
- * \param[out] cmds The vector to populate with sub-commands.
- */
+
 void Terminal::split_commands(const std::string& input_,
                               std::deque<std::string>& cmds) {
     if (input_.find(';') == std::string::npos) return;
@@ -1232,7 +1159,5 @@ void Terminal::split_commands(const std::string& input_,
             cmdQueue.pop_back();
         }
     }
-
-
     if (debug_) std::cout << "\n";
 }
