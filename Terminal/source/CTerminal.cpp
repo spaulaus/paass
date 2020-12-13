@@ -1,54 +1,31 @@
-/** \file CTerminal.cpp
-  * 
-  * \brief Library to handle all aspects of a stand-alone command line interface
-  *
-  * Library to facilitate the creation of C++ executables with
-  * interactive command line interfaces under a linux environment
-  *
-  * \author Cory R. Thornsberry and Karl Smith
-  * 
-  * \date Nov. 27th, 2015
-  * 
-*/
-
-#include <iostream>
-#include <fstream>
-#include <unistd.h>
-#include <vector>
-#include <chrono>
-
-#ifdef USE_NCURSES
-
-#include <signal.h>
-#include <stdexcept>
-
-#endif
-
+/// @file CTerminal.cpp
+/// @brief Library to handle all aspects of a stand-alone interactive command line interface under a linux environment
+/// @author Cory R. Thornsberry, Karl Smith, S. V. Paulauskas
+/// @date November 27, 2015
 #include "CTerminal.h"
-
 #include "TermColors.h"
 
+#include <chrono>
+#include <iostream>
+
+#include <unistd.h>
+
 #ifdef USE_NCURSES
+
+#include <csignal>
+#include <stdexcept>
 
 bool SIGNAL_SEGFAULT = false;
 bool SIGNAL_INTERRUPT = false;
 bool SIGNAL_TERMSTOP = false;
 bool SIGNAL_RESIZE = false;
-
 #endif
 
 // Make a typedef for clarity when working with chrono.
 typedef std::chrono::system_clock sclock;
 
-template<typename T>
-std::string to_str(const T &input_) {
-    std::stringstream stream;
-    stream << input_;
-    return stream.str();
-}
-
 /// Return the length of a character string.
-unsigned int cstrlen(const char *str_) {
+unsigned int cstrlen(const char* str_) {
     unsigned int output = 0;
     while (true) {
         if (str_[output] == '\0') { break; }
@@ -58,7 +35,7 @@ unsigned int cstrlen(const char *str_) {
 }
 
 /// Extract a string from a character array.
-std::string csubstr(char *str_, unsigned int start_index_/*=0*/) {
+std::string csubstr(char* str_, unsigned int start_index_/*=0*/) {
     std::string output = "";
     unsigned int index = start_index_;
     while (str_[index] != '\0' && str_[index] != ' ') {
@@ -73,7 +50,7 @@ std::string csubstr(char *str_, unsigned int start_index_/*=0*/) {
 ///////////////////////////////////////////////////////////////////////////////
 
 /// Push a new command into the storage array
-void CommandHolder::Push(std::string &input_) {
+void CommandHolder::Push(std::string& input_) {
     input_.erase(input_.find_last_not_of(" \n\t\r") + 1);
     commands[index] = input_;
     total++;
@@ -145,13 +122,10 @@ std::string CommandHolder::PeekNext() {
     return commands[index + 1];
 }
 
-/// Dump all stored commands to the screen
 void CommandHolder::Dump() {
-    for (unsigned int i = 0; i < max_size; i++) {
-        if (commands[i] != "") {
+    for (unsigned int i = 0; i < max_size; i++)
+        if (!commands[i].empty())
             std::cout << " " << i << ": " << commands[i] << std::endl;
-        }
-    }
 }
 
 void CommandHolder::Reset() {
@@ -184,7 +158,7 @@ void setup_signal_handlers() {
     if (signal(SIGSEGV, SIG_IGN) != SIG_IGN) {
         if (signal(SIGSEGV, sig_segv_handler) == SIG_ERR) {
             throw std::runtime_error(
-                    " Error setting up SIGSEGV signal handler!");
+            " Error setting up SIGSEGV signal handler!");
         }
     }
 
@@ -192,7 +166,7 @@ void setup_signal_handlers() {
     if (signal(SIGINT, SIG_IGN) != SIG_IGN) {
         if (signal(SIGINT, sig_int_handler) == SIG_ERR) {
             throw std::runtime_error(
-                    " Error setting up SIGINT signal handler!");
+            " Error setting up SIGINT signal handler!");
         }
     }
 
@@ -200,7 +174,7 @@ void setup_signal_handlers() {
     if (signal(SIGTSTP, SIG_IGN) != SIG_IGN) {
         if (signal(SIGTSTP, sig_tstp_handler) == SIG_ERR) {
             throw std::runtime_error(
-                    " Error setting up SIGTSTP signal handler!");
+            " Error setting up SIGTSTP signal handler!");
         }
     }
 
@@ -245,7 +219,7 @@ void Terminal::resize_() {
 
 }
 
-void Terminal::pause(bool &flag) {
+void Terminal::pause(bool& flag) {
     endwin();
     std::cout.rdbuf(original); // Restore cout's original streambuf
     setvbuf(stdout, NULL, _IOLBF, 0); //Change to line buffering
@@ -307,7 +281,7 @@ void Terminal::clear_() {
     refresh_();
 }
 
-void Terminal::ClearCmd() {Terminal::clear_();}
+void Terminal::ClearCmd() { Terminal::clear_(); }
 
 /**Creates a status window and the refreshes the output. Takes an optional number of lines, defaulted to 1.
  *
@@ -355,7 +329,7 @@ void Terminal::in_char_(const char input_) {
 }
 
 // Force text to the input screen
-void Terminal::in_print_(const char *input_) {
+void Terminal::in_print_(const char* input_) {
     cursX += cstrlen(input_);
     waddstr(input_window, input_);
     update_cursor_();
@@ -413,7 +387,7 @@ void Terminal::init_colors_() {
   * help # Do something just to test that the script is working.
   *
   */
-bool Terminal::LoadCommandFile(const char *filename_) {
+bool Terminal::LoadCommandFile(const char* filename_) {
     std::ifstream input(filename_);
 
     // Check that the script opened successfully.
@@ -532,18 +506,18 @@ bool Terminal::SaveCommandHistory() {
 }
 
 Terminal::Terminal() :
-        pbuf(NULL),
-        original(NULL),
-        main(NULL),
-        output_window(NULL),
-        input_window(NULL),
-        status_window(NULL),
-        _statusWindowSize(0),
-        commandTimeout_(0),
-        insertMode_(false),
-        debug_(false),
-        _scrollbackBufferSize(SCROLLBACK_SIZE),
-        _scrollPosition(0) {
+pbuf(NULL),
+original(NULL),
+main(NULL),
+output_window(NULL),
+input_window(NULL),
+status_window(NULL),
+_statusWindowSize(0),
+commandTimeout_(0),
+insertMode_(false),
+debug_(false),
+_scrollbackBufferSize(SCROLLBACK_SIZE),
+_scrollPosition(0) {
     from_script = false;
     prompt_user = false;
     historyFilename_ = "";
@@ -582,14 +556,14 @@ void Terminal::Initialize() {
 
         if (halfdelay(5) == ERR) { // Timeout after 5/10 of a second
             std::cout
-                    << "WARNING: Unable to set terminal blocking half delay to 0.5s!\n";
+            << "WARNING: Unable to set terminal blocking half delay to 0.5s!\n";
             std::cout
-                    << "\tThis will increase CPU usage in the command thread.\n";
+            << "\tThis will increase CPU usage in the command thread.\n";
             if (nodelay(input_window, true) ==
                 ERR) { //Disable the blocking timeout.
                 std::cout << "ERROR: Unable to remove terminal blocking!\n";
                 std::cout
-                        << "\tThe command thread will be locked until a character is entered. This will reduce functionality of terminal status bar and timeout.\n";
+                << "\tThe command thread will be locked until a character is entered. This will reduce functionality of terminal status bar and timeout.\n";
             }
         }
         keypad(input_window, true); // Capture special keys
@@ -632,7 +606,7 @@ Terminal::SetCommandHistory(std::string filename, bool overwrite/*=false*/) {
     LoadCommandHistory(overwrite);
 }
 
-void Terminal::SetPrompt(const char *input_) {
+void Terminal::SetPrompt(const char* input_) {
     prompt = input_;
 
     //Calculate the offset.
@@ -678,7 +652,7 @@ void Terminal::putch(const char input_) {
 }
 
 // Force text to the output screen
-void Terminal::print(WINDOW *window, std::string input_) {
+void Terminal::print(WINDOW* window, std::string input_) {
     size_t pos = 0, lastPos = 0;
     //Search for escape sequences
     while ((pos = input_.find("\033[", lastPos)) != std::string::npos) {
@@ -759,8 +733,8 @@ void Terminal::EnableTimeout(float timeout/*=0.5*/) {
  * \param[in] input_ The string to complete.
  * \param[in] possibilities_ A vector of strings of possible values.
  */
-void Terminal::TabComplete(const std::string &input_,
-                           const std::vector<std::string> &possibilities_) {
+void Terminal::TabComplete(const std::string& input_,
+                           const std::vector<std::string>& possibilities_) {
     if (input_.empty() || possibilities_.empty()) return;
 
     std::vector<std::string> matches;
@@ -836,7 +810,7 @@ void Terminal::TabComplete(const std::string &input_,
 }
 
 /// Print a command to the terminal output.
-void Terminal::PrintCommand(const std::string &cmd_) {
+void Terminal::PrintCommand(const std::string& cmd_) {
     std::cout << prompt << cmd_ << "\n";
     flush();
     _scrollPosition = 0;
@@ -844,7 +818,7 @@ void Terminal::PrintCommand(const std::string &cmd_) {
     tabCount = 0;
 }
 
-std::string Terminal::GetCommand(std::string &args, const int &prev_cmd_return_/*=0*/) {
+std::string Terminal::GetCommand(std::string& args, const int& prev_cmd_return_/*=0*/) {
     if (cursX == 0) {
         PrintPrompt();
     }
@@ -900,7 +874,7 @@ std::string Terminal::GetCommand(std::string &args, const int &prev_cmd_return_/
                 // Update the current time.
                 currentTime = sclock::now();
                 std::chrono::duration<float> time_span = std::chrono::duration_cast<std::chrono::duration<float>>(
-                        currentTime - commandRequestTime);
+                currentTime - commandRequestTime);
 
                 // If the timeout has passed we simply return the empty output string.
                 if (time_span.count() > commandTimeout_) {
@@ -1003,12 +977,12 @@ std::string Terminal::GetCommand(std::string &args, const int &prev_cmd_return_/
                 //Remove character from cmd string
                 cmd.erase(cursX - offset, 1);
             } else if (keypress == KEY_IC) { // Insert key (331)
-                if (insertMode_){
+                if (insertMode_) {
                     insertMode_ = false;
                 } else {
-                    insertMode_ = true; 
+                    insertMode_ = true;
                 }
-            }else if (keypress == KEY_HOME) { cursX = offset; }
+            } else if (keypress == KEY_HOME) { cursX = offset; }
             else if (keypress == KEY_END) { cursX = cmd.length() + offset; }
             else if (keypress == KEY_MOUSE) { //Handle mouse events
                 MEVENT mouseEvent;
@@ -1098,9 +1072,9 @@ std::string Terminal::GetCommand(std::string &args, const int &prev_cmd_return_/
     if (temp_cmd_string[0] == '.') {
         if (temp_cmd_string == ".cmd") { // Load a command script.
             std::string command_filename = args.substr(
-                    args.find_first_not_of(' ')); // Ignores leading whitespace.
+            args.find_first_not_of(' ')); // Ignores leading whitespace.
             if (!LoadCommandFile(
-                    command_filename.c_str())) { // Failed to load command script.
+            command_filename.c_str())) { // Failed to load command script.
                 std::cout << prompt << "Error! Failed to load command script "
                           << command_filename << ".\n";
             }
@@ -1156,7 +1130,7 @@ void Terminal::Close() {
  * \param[in] delimiter The character to split the string on.
  * \return The number of substrings found.
  */
-unsigned int split_str(std::string str, std::vector<std::string> &args,
+unsigned int split_str(std::string str, std::vector<std::string>& args,
                        char delimiter/*=' '*/) {
     args.clear();
 
@@ -1193,8 +1167,8 @@ unsigned int split_str(std::string str, std::vector<std::string> &args,
  * \param[in] input_ The string to be parsed.
  * \param[out] cmds The vector to populate with sub-commands.
  */
-void Terminal::split_commands(const std::string &input_,
-                              std::deque<std::string> &cmds) {
+void Terminal::split_commands(const std::string& input_,
+                              std::deque<std::string>& cmds) {
     if (input_.find(';') == std::string::npos) return;
 
     //Build a temporary deque of commands split on semicolon.
