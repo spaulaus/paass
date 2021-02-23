@@ -26,6 +26,8 @@
 
 #include "ScanInterface.hpp"
 
+#include "StringManipulationFunctions.hpp"
+
 using namespace std;
 
 void start_run_control(ScanInterface* main_) {
@@ -780,8 +782,8 @@ void ScanInterface::CmdControl() {
         if (!arg.empty() && arg.find('~') != string::npos)
             arg.replace(arg.find('~'), 1, homeDir);
 
-        vector<string> arguments;
-        unsigned int p_args = split_str(arg, arguments);
+        vector<string> arguments = StringManipulation::TokenizeString(arg, " ");
+        unsigned int p_args = arguments.size();
 
         if (cmd == "quit" || cmd == "exit") {
             stop_scan();
