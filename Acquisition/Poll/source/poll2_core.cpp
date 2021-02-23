@@ -642,8 +642,8 @@ void Poll::CommandControl() {
         if(cmd.empty())
             continue;
 
-        std::vector<std::string> arguments;
-        unsigned int p_args = split_str(arg, arguments);
+        std::vector<std::string> arguments = StringManipulation::TokenizeString(arg, " ");
+        unsigned int p_args = arguments.size();
 
         //We clear the error flag when a command is entered.
         had_error = false;
