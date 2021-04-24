@@ -1,7 +1,7 @@
 /// @file poll2.cpp
 /// @brief This program is designed as a replacement of the POLL program for reading
 ///   data from PIXIE-16 crates. The old POLL program relied on a connection
-///   to PACMAN in order to recieve commands whereas this is a stand-alone program
+///   to PACMAN in order to receive commands whereas this is a stand-alone program
 ///   with a built-in command line interface.
 ///   Data is also not transmitted onto a socket (except for shm).
 /// @author S. V. Paulauskas and C. R. Thornsberry
@@ -20,22 +20,22 @@
 #include <sys/stat.h>
 
 
-void start_run_control(Poll *poll_) {
+void start_run_control(Poll* poll_) {
     poll_->RunControl();
 }
 
-void start_cmd_control(Poll *poll_) {
+void start_cmd_control(Poll* poll_) {
     poll_->CommandControl();
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     args::ArgumentParser parser("Data acquisition and module configuration for XIA's Pixie Hardware.");
     args::Group arguments(parser, "arguments", args::Group::Validators::AtLeastOne, args::Options::Global);
 
     args::HelpFlag help_flag(arguments, "help", "Displays this message", {'h', "help"});
-    args::Positional<std::string> configuration(arguments, "cfg", "The configuration file to load.",
-                                                args::Options::Required);
 
+    args::ValueFlag<std::string> configuration(arguments, "cfg", "The configuration file to load.", {'c', "cfg"},
+                                               args::Options::Required);
     args::Flag debug(arguments, "debug", "Turn on debugging", {'d', "debugging"});
     args::Flag is_fast_boot(arguments, "fast-boot", "Performs a partial boot of the system.", {'f', "fast-boot"});
     args::Flag is_verbose(arguments, "verbosity", "How much info gets printed to the terminal.", {'v', "verbose"});
@@ -56,10 +56,14 @@ int main(int argc, char *argv[]) {
 
     try {
         parser.ParseCLI(argc, argv);
-    } catch (args::Help &help) {
+    } catch (args::Help& help) {
         std::cout << parser;
         return EXIT_SUCCESS;
-    } catch (args::ValidationError &e) {
+    } catch (args::ValidationError& e) {
+        std::cerr << e.what() << std::endl;
+        std::cout << parser;
+        return EXIT_FAILURE;
+    } catch (args::Error& e) {
         std::cerr << e.what() << std::endl;
         std::cout << parser;
         return EXIT_FAILURE;
@@ -105,7 +109,7 @@ int main(int argc, char *argv[]) {
             poll.Initialize(configuration.Get(), true);
         else
             poll.Initialize(configuration.Get(), false);
-    } catch (std::exception &exception) {
+    } catch (std::exception& exception) {
         std::cout << "poll2 : Caught exception while initializing Poll. \n" << exception.what() << "\n";
         return EXIT_FAILURE;
     }
