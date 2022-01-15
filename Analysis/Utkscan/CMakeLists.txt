@@ -1,14 +1,8 @@
 option(PAASS_BUILD_UTKSCAN "Build utkscan" ON)
 if (PAASS_BUILD_UTKSCAN)
     #------------------------------------------------------------------------------
-    if (NOT PAASS_USE_HRIBF)
-        set(UTKSCAN_NAME utkscan)
-        add_executable(${UTKSCAN_NAME} core/source/utkscan.cpp)
-    else (PAASS_USE_HRIBF)
-        set(UTKSCAN_NAME utkscanor)
-        add_executable(${UTKSCAN_NAME} core/source/utkscanor.cpp)
-    endif (NOT PAASS_USE_HRIBF)
-
+    set(UTKSCAN_NAME utkscan)
+    add_executable(${UTKSCAN_NAME} core/source/utkscan.cpp)
     #------------------------------------------------------------------------------
 
     option(PAASS_UTKSCAN_GAMMA_GATES "Gamma-Gamma gates in GeProcessor" OFF)
@@ -17,11 +11,6 @@ if (PAASS_BUILD_UTKSCAN)
     option(PAASS_UTKSCAN_VERBOSE "Make Scan More Verbose" OFF)
 
     mark_as_advanced(PAASS_UTKSCAN_GAMMA_GATES PAASS_UTKSCAN_ONLINE PAASS_UTKSCAN_TREE_DEBUG PAASS_UTKSCAN_VERBOSE)
-
-    # newreadout is needed to account for a change to pixie16 readout
-    # structure change on 03/20/08. Is is REQUIRED!!
-    # @TODO : Need to determine if this is still required by the scan code.
-    target_compile_definitions(${UTKSCAN_NAME} PUBLIC -Dnewreadout)
 
     if (PAASS_UTKSCAN_GAMMA_GATES)
         target_compile_definitions(${UTKSCAN_NAME} PUBLIC -DGGATES)
@@ -62,11 +51,6 @@ if (PAASS_BUILD_UTKSCAN)
             ${PROJECT_SOURCE_DIR}/Analysis/ScanLibraries/include ${PROJECT_SOURCE_DIR}/ThirdParty/pugixml/include
             ${PROJECT_SOURCE_DIR}/Resources/include ${PROJECT_SOURCE_DIR}/Core/include ${ROOT_INCLUDE_DIR}
             ${GSL_INCLUDE_DIR})
-
-    if (PAASS_USE_HRIBF)
-        target_link_libraries(${UTKSCAN_NAME} ${HRIBF_LIBRARIES})
-        target_include_directories(${UTKSCAN_NAME} ${PROJECT_SOURCE_DIR}/Analysis/Scanor/include)
-    endif (PAASS_USE_HRIBF)
 
     #------------------------------------------------------------------------------
 
