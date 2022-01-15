@@ -6,9 +6,8 @@ add_subdirectory(Setup)
 #add_subdirectory(Utilities/DataGenerator)
 
 if (PAASS_BUILD_ACQ)
-    find_package(PLX REQUIRED)
-    find_package(XIA REQUIRED)
-    XIA_CONFIG()
+    find_package(BroadcomAPI REQUIRED)
+    find_package(PixieSDK REQUIRED)
 
     add_subdirectory(Interface)
     add_subdirectory(MCA)
