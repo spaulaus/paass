@@ -3,6 +3,3 @@ target_include_directories(paramScan PUBLIC include ${PROJECT_SOURCE_DIR}/Acquis
         ${ROOT_INCLUDE_DIR})
 target_link_libraries(paramScan PixieInterface MCALibrary ${ROOT_LIBRARIES} "-lSpectrum")
 install(TARGETS paramScan DESTINATION bin)
-
-install(DIRECTORY share/traces DESTINATION share)
-install(PROGRAMS bin/viewBaseline.sh DESTINATION bin RENAME viewBaseline)
