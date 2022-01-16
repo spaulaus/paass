@@ -10,7 +10,6 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
-    // Define a new unpacker object.
     Ldf2ParquetUnpacker unpacker;
     Ldf2ParquetInterface scanner;
 

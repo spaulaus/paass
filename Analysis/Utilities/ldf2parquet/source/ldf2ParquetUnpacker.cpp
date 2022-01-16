@@ -33,7 +33,6 @@ bool Ldf2ParquetUnpacker::AddEvent(XiaData *event) {
     if (!event)
         return false;
 
-
     // Handle the individual XiaData. Maybe add it to a detector's event list or something.
     // Do nothing with it for now.
     delete event;
