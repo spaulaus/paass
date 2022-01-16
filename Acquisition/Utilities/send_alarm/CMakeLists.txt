@@ -1,1 +1,0 @@
-install(FILES bin/send_alarm DESTINATION bin)
