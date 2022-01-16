@@ -1,7 +1,5 @@
 ///@file Ldf2ParquetUnpacker.cpp
 ///@brief
-///@author S. V. Paulauskas
-///@date June 13, 2020
 
 #include "Ldf2ParquetUnpacker.hpp"
 #include "XiaData.hpp"

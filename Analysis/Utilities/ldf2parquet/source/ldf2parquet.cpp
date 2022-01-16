@@ -1,7 +1,5 @@
 ///@file ldf2parquet.cpp
 ///@brief The main program for the Ldf2Parquet conversion program
-///@authors S. V. Paulauskas
-///@date June 13, 2020
 #include <iostream>
 
 #include "XiaData.hpp"

@@ -1,7 +1,5 @@
 ///@file Ldf2ParquetInterface.cpp
 ///@brief
-///@author S. V. Paulauskas
-///@date June 13, 2020
 #include <iostream>
 
 #include "Ldf2ParquetInterface.hpp"

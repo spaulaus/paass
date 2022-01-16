@@ -1,7 +1,5 @@
 ///@file Ldf2ParquetUnpacker.hpp
 ///@brief
-///@author S. V. Paulauskas
-///@date June 13, 2020
 
 #ifndef PAASS_Ldf2ParquetUNPACKER_HPP
 #define PAASS_Ldf2ParquetUNPACKER_HPP
