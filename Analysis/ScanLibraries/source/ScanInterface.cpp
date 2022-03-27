@@ -873,8 +873,8 @@ bool ScanInterface::Setup(int argc, char *argv[], Unpacker *unpacker/*=NULL*/) {
     dry_run_mode = false;
     shm_mode = false;
     num_spills_recvd = 0;
-    unsigned int samplingFrequency = 0;
-    string firmware = "";
+    size_t samplingFrequency = 0;
+    size_t firmware = 0;
     string input_filename = "";
 
     // Add derived class options to the option list.
@@ -916,7 +916,7 @@ bool ScanInterface::Setup(int argc, char *argv[], Unpacker *unpacker/*=NULL*/) {
             } else if (strcmp("frequency", longOpts[idx].name) == 0)
                 samplingFrequency = (unsigned int) stoi(optarg);
             else if (strcmp("firmware", longOpts[idx].name) == 0)
-                firmware = optarg;
+                firmware = std::stol(optarg);
             else {
                 for (vector<optionExt>::iterator iter = userOpts.begin();
                      iter != userOpts.end(); iter++) {
@@ -939,7 +939,7 @@ bool ScanInterface::Setup(int argc, char *argv[], Unpacker *unpacker/*=NULL*/) {
                     setup_filename = optarg;
                     break;
                 case 'f' :
-                    firmware = optarg;
+                    firmware = std::stol(optarg);
                     break;
                 case 'h' :
                     OutputCommandLineHelp(argv[0]);
@@ -982,13 +982,13 @@ bool ScanInterface::Setup(int argc, char *argv[], Unpacker *unpacker/*=NULL*/) {
     else
         unpacker_ = unpacker;
 
-    if (samplingFrequency != 0 || firmware != "") {
+    if (samplingFrequency != 0 || firmware != 0) {
         if (samplingFrequency == 0)
             throw invalid_argument("ScanInterface::Setup - The frequency has not been set.");
-        if (firmware == "")
+        if (firmware == 0)
             throw invalid_argument("ScanInterface::Setup - The firmware has not been set.");
-        unpacker_->InitializeDataMask(firmware, samplingFrequency);
-    } else if(setup_filename != "")
+        unpacker_->InitializeDataMask(0, firmware, samplingFrequency);
+    } else if (!setup_filename.empty())
         unpacker_->InitializeDataMask(setup_filename);
     else
         throw invalid_argument("ScanInterface::Setup - Firmware/Frequency Flags or Config file are not set properly. "
@@ -1126,9 +1126,6 @@ bool ScanInterface::Close() {
     // Show the number of lost spill chunks.
     cout << msgHeader << "Read " << databuff.GetNumChunks() << " spill chunks.\n";
     cout << msgHeader << "Lost at least " << databuff.GetNumMissing() << " spill chunks.\n";
-
-    if (write_counts)
-        unpacker_->Write();
 
     if (poll_server) { delete poll_server; }
     if (term) { delete term; }

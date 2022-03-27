@@ -2,8 +2,6 @@
 ///@brief The main program for the Ldf2Parquet conversion program
 #include <iostream>
 
-#include "XiaData.hpp"
-
 #include "Ldf2ParquetInterface.hpp"
 #include "Ldf2ParquetUnpacker.hpp"
 
