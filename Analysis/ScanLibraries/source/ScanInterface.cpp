@@ -28,11 +28,11 @@
 
 using namespace std;
 
-void start_run_control(ScanInterface *main_) {
+void start_run_control(ScanInterface* main_) {
     main_->RunControl();
 }
 
-void start_cmd_control(ScanInterface *main_) {
+void start_cmd_control(ScanInterface* main_) {
     main_->CmdControl();
 }
 
@@ -40,13 +40,13 @@ void start_cmd_control(ScanInterface *main_) {
 // class optionExt
 /////////////////////////////////////////////////////////////////////
 
-optionExt::optionExt(const char *name_, const int &has_arg_, int *flag_, const int &val_, const string &argstr_,
-                     const string &helpstr_) : name(name_), has_arg(has_arg_), flag(flag_), val(val_), argstr(argstr_),
+optionExt::optionExt(const char* name_, const int& has_arg_, int* flag_, const int& val_, const string& argstr_,
+                     const string& helpstr_) : name(name_), has_arg(has_arg_), flag(flag_), val(val_), argstr(argstr_),
                                                helpstr(helpstr_), active(false) {
 }
 
 void
-optionExt::print(const size_t &len_/*=0*/, const string &prefix_/*=""*/) {
+optionExt::print(const size_t& len_/*=0*/, const string& prefix_/*=""*/) {
     stringstream stream;
     stream << prefix_ << "--" << name << " ";
     if (val)
@@ -73,7 +73,7 @@ option optionExt::getOption() {
 // class fileInformation
 /////////////////////////////////////////////////////////////////////
 
-bool fileInformation::at(const size_t &index_, string &name, string &value) {
+bool fileInformation::at(const size_t& index_, string& name, string& value) {
     if (index_ >= parnames.size()) { return false; }
     name = parnames.at(index_);
     value = parvalues.at(index_);
@@ -81,7 +81,7 @@ bool fileInformation::at(const size_t &index_, string &name, string &value) {
 }
 
 template<typename T>
-bool fileInformation::push_back(const string &name_, const T &value_, const string &units_/*=""*/) {
+bool fileInformation::push_back(const string& name_, const T& value_, const string& units_/*=""*/) {
     if (!is_in(name_)) {
         stringstream stream;
         stream << value_;
@@ -95,14 +95,14 @@ bool fileInformation::push_back(const string &name_, const T &value_, const stri
     return false;
 }
 
-bool fileInformation::is_in(const string &name_) {
+bool fileInformation::is_in(const string& name_) {
     for (vector<string>::iterator iter = parnames.begin(); iter != parnames.end(); iter++)
         if (name_ == (*iter))
             return true;
     return false;
 }
 
-string fileInformation::print(const size_t &index_) {
+string fileInformation::print(const size_t& index_) {
     if (index_ >= parnames.size()) { return ""; }
     return string(parnames.at(index_) + ": " + parvalues.at(index_));
 }
@@ -161,7 +161,7 @@ void ScanInterface::stop_scan() {
   * \param[in]  name_ The name of the program.
   * \return Nothing.
   */
-void ScanInterface::OutputCommandLineHelp(char *name_) {
+void ScanInterface::OutputCommandLineHelp(char* name_) {
     SyntaxStr(name_);
     cout << "  Available options:\n";
     for (vector<optionExt>::iterator iter = baseOpts.begin(); iter != baseOpts.end(); iter++) {
@@ -180,7 +180,7 @@ void ScanInterface::OutputCommandLineHelp(char *name_) {
   * \param[in]  offset_ The position, with respect to the start of the file, to seek to.
   * \return True upon success and false otherwise.
   */
-bool ScanInterface::rewind(const unsigned long &offset_/*=0*/) {
+bool ScanInterface::rewind(const unsigned long& offset_/*=0*/) {
     if (!scan_init)
         return false;
 
@@ -208,7 +208,7 @@ bool ScanInterface::rewind(const unsigned long &offset_/*=0*/) {
   * \param[in]  fname_ Input filename to open for reading.
   * \return True upon successfully opening the file and false otherwise.
   */
-bool ScanInterface::open_input_file(const string &fname_) {
+bool ScanInterface::open_input_file(const string& fname_) {
     if (is_running) {
         cout << " ERROR! Unable to open input file while scan is running.\n";
         return false;
@@ -329,11 +329,11 @@ void ScanInterface::AddOption(optionExt opt_) {
   * \param[in]  name_ The name of the program.
   * \return Nothing.
   */
-void ScanInterface::SyntaxStr(char *name_) {
+void ScanInterface::SyntaxStr(char* name_) {
     cout << " usage: " << name_ << " [options]\n";
 }
 
-void ScanInterface::SetOutputInformation(const string &a) {
+void ScanInterface::SetOutputInformation(const string& a) {
     unsigned long found = a.find_last_of("/");
     if (found == string::npos) {
         outputFilename_ = a;
@@ -400,36 +400,39 @@ ScanInterface::ScanInterface() {
 
     //Setup all the arguments that are known to the program.
     baseOpts = {
-            optionExt("batch", no_argument, NULL, 'b', "", "Run in batch mode (i.e. with no command line)"),
-            optionExt("config", required_argument, NULL, 'c', "<path>", "Specify path to setup to use for scan"),
-            optionExt("counts", no_argument, NULL, 0, "", "Write all recorded channel counts to a file"),
-            optionExt("debug", no_argument, NULL, 0, "", "Enable readout debug mode"),
-            optionExt("dry-run", no_argument, NULL, 0, "", "Extract spills from file, but do no processing"),
-            optionExt("fast-fwd", required_argument, NULL, 0, "<word>",
-                      "Skip ahead to a specified word in the file (start of file at zero)"),
-            optionExt("firmware", required_argument, NULL, 'f', "<firmware>", "Sets the firmware revision for decoding the data. "
-                              "See the wiki or HelperEnumerations.hpp for more information."),
-            optionExt("frequency", required_argument, NULL, 0, "<frequency in MHz or MS/s>",
-                      "Specifies the sampling frequency used to collect the data."),
-            optionExt("help", no_argument, NULL, 'h', "", "Display this dialogue"),
-            optionExt("input", required_argument, NULL, 'i', "<filename>", "Specifies the input file to analyze"),
-            optionExt("output", required_argument, NULL, 'o', "<filename>",
-                      "Specifies the name of the output file. Default is \"out\""),
-            optionExt("quiet", no_argument, NULL, 'q', "", "Toggle off verbosity flag"),
-            optionExt("shm", no_argument, NULL, 's', "", "Enable shared memory readout"),
-            optionExt("version", no_argument, NULL, 'v', "", "Display version information")
+    optionExt("batch", no_argument, NULL, 'b', "", "Run in batch mode (i.e. with no command line)"),
+    optionExt("config", required_argument, NULL, 'c', "<path>", "Specify path to setup to use for scan"),
+    optionExt("counts", no_argument, NULL, 0, "", "Write all recorded channel counts to a file"),
+    optionExt("debug", no_argument, NULL, 0, "", "Enable readout debug mode"),
+    optionExt("dry-run", no_argument, NULL, 0, "", "Extract spills from file, but do no processing"),
+    optionExt("fast-fwd", required_argument, NULL, 0, "<word>",
+              "Skip ahead to a specified word in the file (start of file at zero)"),
+    optionExt("firmware", required_argument, NULL, 'f', "<firmware>",
+              "Sets the firmware revision for decoding the data. "
+              "See the wiki or HelperEnumerations.hpp for more information."),
+    optionExt("frequency", required_argument, NULL, 0, "<frequency in MHz or MS/s>",
+              "Specifies the sampling frequency used to collect the data."),
+    optionExt("help", no_argument, NULL, 'h', "", "Display this dialogue"),
+    optionExt("input", required_argument, NULL, 'i', "<filename>", "Specifies the input file to analyze"),
+    optionExt("output", required_argument, NULL, 'o', "<filename>",
+              "Specifies the name of the output file. Default is \"out\""),
+    optionExt("quiet", no_argument, NULL, 'q', "", "Toggle off verbosity flag"),
+    optionExt("shm", no_argument, NULL, 's', "", "Enable shared memory readout"),
+    optionExt("version", no_argument, NULL, 'v', "", "Display version information")
     };
 
     knownArgumentMap_.insert(make_pair("debug", "Toggle debug mode flag (default=false)"));
     knownArgumentMap_.insert(make_pair("quiet", "Toggle quiet mode flag (default=false)"));
     knownArgumentMap_.insert(make_pair("quit", "Close the program"));
-    knownArgumentMap_.insert(make_pair("help", "Usage (h)elp : <cmd> | Display this dialogue or just the dialog for <cmd>"));
+    knownArgumentMap_.insert(
+    make_pair("help", "Usage (h)elp : <cmd> | Display this dialogue or just the dialog for <cmd>"));
     knownArgumentMap_.insert(make_pair("version", "Usage : (v)ersion | Display version information."));
     knownArgumentMap_.insert(make_pair("run", "Start acquisition"));
     knownArgumentMap_.insert(make_pair("stop", "Stop acquisition"));
     knownArgumentMap_.insert(make_pair("file", "Usage : file <fileName> | Load an input file."));
-    knownArgumentMap_.insert(make_pair("rewind", "Usage : rewind [offset] | Rewind to the beginning of the file or to the "
-            "requested number of words"));
+    knownArgumentMap_.insert(
+    make_pair("rewind", "Usage : rewind [offset] | Rewind to the beginning of the file or to the "
+                        "requested number of words"));
     knownArgumentMap_.insert(make_pair("sync", "Wait for the current run to finish"));
 
     optstr = "bc:f:hi:o:qsv";
@@ -470,7 +473,7 @@ void ScanInterface::RunControl() {
         } else if (shm_mode) {
             cout << endl;
             unsigned int data[250000]; // Array for storing spill data. Larger than any RevF spill should be.
-            unsigned int *shm_data = new unsigned int[maxShmSizeL]; // Array to store the temporary shm data (~16 kB)
+            unsigned int* shm_data = new unsigned int[maxShmSizeL]; // Array to store the temporary shm data (~16 kB)
             int dummy;
             int previous_chunk;
             int current_chunk;
@@ -507,7 +510,7 @@ void ScanInterface::RunControl() {
                 }
 
                 if (!poll_server->Select(
-                        select_dummy)) { continue; } // Server timeout
+                select_dummy)) { continue; } // Server timeout
 
                 // Get the spill
                 while (current_chunk != total_chunks) {
@@ -517,9 +520,9 @@ void ScanInterface::RunControl() {
                         break;
                     }
 
-                    nWords = poll_server->RecvMessage((char *) shm_data, maxShmSize) / 4; // Read from the socket
-                    if (strcmp((char *) shm_data, "$CLOSE_FILE") == 0 || strcmp((char *) shm_data, "$OPEN_FILE") == 0 ||
-                        strcmp((char *) shm_data, "$KILL_SOCKET") == 0) { continue; } // Poll2 network flags
+                    nWords = poll_server->RecvMessage((char*) shm_data, maxShmSize) / 4; // Read from the socket
+                    if (strcmp((char*) shm_data, "$CLOSE_FILE") == 0 || strcmp((char*) shm_data, "$OPEN_FILE") == 0 ||
+                        strcmp((char*) shm_data, "$KILL_SOCKET") == 0) { continue; } // Poll2 network flags
                         // Did not read enough bytes
                     else if (nWords < 2) {
                         continue;
@@ -528,8 +531,8 @@ void ScanInterface::RunControl() {
                     if (debug_mode) {
                         cout << "debug: Received " << nWords << " words from the network\n";
                     }
-                    memcpy((char *) &current_chunk, &shm_data[0], 4);
-                    memcpy((char *) &total_chunks, &shm_data[1], 4);
+                    memcpy((char*) &current_chunk, &shm_data[0], 4);
+                    memcpy((char*) &total_chunks, &shm_data[1], 4);
 
                     if (previous_chunk == -1 && current_chunk != 1) {
                         // Started reading in the middle of a spill, ignore the rest of it
@@ -553,7 +556,8 @@ void ScanInterface::RunControl() {
                         nTotalWords += (nWords - 2);
                     } else {
                         if (debug_mode) {
-                            cout << "debug: Abnormally full spill buffer with " << nTotalWords + 2 + nWords << " words!\n";
+                            cout << "debug: Abnormally full spill buffer with " << nTotalWords + 2 + nWords
+                                 << " words!\n";
                         }
                         break;
                     }
@@ -570,8 +574,8 @@ void ScanInterface::RunControl() {
                 }
                 if (!dry_run_mode && full_spill) {
                     int word1 = 2, word2 = 9999;
-                    memcpy(&data[nTotalWords], (char *) &word1, 4);
-                    memcpy(&data[nTotalWords + 1], (char *) &word2, 4);
+                    memcpy(&data[nTotalWords], (char*) &word1, 4);
+                    memcpy(&data[nTotalWords + 1], (char*) &word2, 4);
                     unpacker_->ReadSpill(data, nTotalWords + 2, is_verbose);
                     IdleTask();
                 }
@@ -583,7 +587,7 @@ void ScanInterface::RunControl() {
 
             delete[] shm_data;
         } else if (file_format == 0) {
-            unsigned int *data = NULL;
+            unsigned int* data = NULL;
             bool full_spill;
             bool bad_spill;
             unsigned int nBytes;
@@ -602,7 +606,7 @@ void ScanInterface::RunControl() {
                     continue;
                 }
 
-                if (!databuff.Read(&input_file, (char *) data, nBytes, 1000000, full_spill, bad_spill, dry_run_mode)) {
+                if (!databuff.Read(&input_file, (char*) data, nBytes, 1000000, full_spill, bad_spill, dry_run_mode)) {
                     if (databuff.GetRetval() == 1) {
                         if (debug_mode) {
                             cout << "debug: Encountered single EOF buffer (end of run).\n";
@@ -650,7 +654,8 @@ void ScanInterface::RunControl() {
                             unpacker_->ReadSpill(data, nBytes / 4, is_verbose);
                             IdleTask();
                         } else {
-                            cout << " WARNING: Spill has been flagged as corrupt, skipping (at word " << input_file.tellg() / 4
+                            cout << " WARNING: Spill has been flagged as corrupt, skipping (at word "
+                                 << input_file.tellg() / 4
                                  << " in file)!\n";
                         }
                     }
@@ -667,7 +672,7 @@ void ScanInterface::RunControl() {
                 term->SetStatus("\033[0;33m[IDLE]\033[0m Finished scanning file.");
             } else { cout << endl << endl; }
         } else if (file_format == 1) {
-            unsigned int *data = NULL;
+            unsigned int* data = NULL;
             unsigned int nBytes;
 
             if (!dry_run_mode) { data = new unsigned int[max_spill_size + 2]; }
@@ -675,7 +680,7 @@ void ScanInterface::RunControl() {
             // Reset the buffer reader to default values.
             pldData.Reset();
 
-            while (pldData.Read(&input_file, (char *) data, nBytes, 4 * max_spill_size, dry_run_mode)) {
+            while (pldData.Read(&input_file, (char*) data, nBytes, 4 * max_spill_size, dry_run_mode)) {
                 if (kill_all == true) {
                     break;
                 } else if (!is_running) {
@@ -697,8 +702,8 @@ void ScanInterface::RunControl() {
 
                 if (!dry_run_mode) {
                     int word1 = 2, word2 = 9999;
-                    memcpy(&data[(nBytes / 4)], (char *) &word1, 4);
-                    memcpy(&data[(nBytes / 4) + 1], (char *) &word2, 4);
+                    memcpy(&data[(nBytes / 4)], (char*) &word1, 4);
+                    memcpy(&data[(nBytes / 4) + 1], (char*) &word2, 4);
                     unpacker_->ReadSpill(data, nBytes / 4 + 2, is_verbose);
                     IdleTask();
                 }
@@ -790,7 +795,7 @@ void ScanInterface::CmdControl() {
             cout << "  CTerminal	 v" << CTERMINAL_VERSION << " (" << CTERMINAL_DATE << ")\n";
         } else if (cmd == "help" || cmd == "h") {
             cout << "  Help:\n";
-            if(p_args == 0) {
+            if (p_args == 0) {
                 OutputCommandHelpArguments(knownArgumentMap_);
                 OutputCommandHelpArguments(auxillaryKnownArgumentMap_);
             } else if (knownArgumentMap_.find(arg) != knownArgumentMap_.end()) {
@@ -828,7 +833,7 @@ void ScanInterface::CmdControl() {
                 }
             } else {
                 cout << msgHeader
-                          << "Invalid number of parameters to 'file'\n";
+                     << "Invalid number of parameters to 'file'\n";
                 cout << msgHeader << " -SYNTAX- file <filename>\n";
             }
         } else if (cmd == "rewind") { // Rewind the file to the start position
@@ -838,7 +843,7 @@ void ScanInterface::CmdControl() {
         } else if (cmd == "sync") { // Wait until the current run is completed.
             if (is_running) {
                 cout << msgHeader
-                          << "Waiting for current scan to complete.\n";
+                     << "Waiting for current scan to complete.\n";
                 waiting_for_run = true;
             } else { cout << msgHeader << "Scan is not running.\n"; }
         } else if (!ExtraCommands(cmd, arguments)) { // Unrecognized command. Send it to a derived object.
@@ -847,16 +852,16 @@ void ScanInterface::CmdControl() {
     }
 }
 
-void ScanInterface::OutputCommandHelpArguments(const map<string, string> &args) {
+void ScanInterface::OutputCommandHelpArguments(const map<string, string>& args) {
     for (map<string, string>::const_iterator it = args.begin(); it != args.end(); it++)
         OutputCommandHelpArgument((*it).first, (*it).second);
 }
 
-void ScanInterface::OutputCommandHelpArgument(const std::string &arg, const std::string &help) {
+void ScanInterface::OutputCommandHelpArgument(const std::string& arg, const std::string& help) {
     cout << "   " << setw(7) << left << arg << resetiosflags(std::ios::showbase) << " - " << help << endl;
 }
 
-void ScanInterface::OutputUnkownCommandMessage(const std::string &arg) {
+void ScanInterface::OutputUnkownCommandMessage(const std::string& arg) {
     cout << "You've asked for help with \"" << arg << "\", which is unknown to us." << endl;
 }
 
@@ -865,7 +870,7 @@ void ScanInterface::OutputUnkownCommandMessage(const std::string &arg) {
   * \param[in]  argv Array of strings passed as arguments from the command line.
   * \return True upon success and false otherwise.
   */
-bool ScanInterface::Setup(int argc, char *argv[], Unpacker *unpacker/*=NULL*/) {
+bool ScanInterface::Setup(int argc, char* argv[], Unpacker* unpacker/*=NULL*/) {
     if (scan_init)
         return false;
 
@@ -992,7 +997,7 @@ bool ScanInterface::Setup(int argc, char *argv[], Unpacker *unpacker/*=NULL*/) {
         unpacker_->InitializeDataMask(setup_filename);
     else
         throw invalid_argument("ScanInterface::Setup - Firmware/Frequency Flags or Config file are not set properly. "
-                                       "Cannot Initialize Data Mask.");
+                               "Cannot Initialize Data Mask.");
 
     if (debug_mode)
         unpacker_->SetDebugMode();
@@ -1055,7 +1060,7 @@ bool ScanInterface::Setup(int argc, char *argv[], Unpacker *unpacker/*=NULL*/) {
     try {
         FinalInitialization();
     }
-    catch (exception &ex) {
+    catch (exception& ex) {
         cout << ex.what() << endl;
         cout << "\nFinal initialization failed!\n";
     }
@@ -1141,7 +1146,7 @@ bool ScanInterface::Close() {
   */
 ///@TODO This method needs cleaned up signficantly. This should only take
 /// about 4 lines of code if using string::find_last_of()
-string get_extension(string filename_, string &prefix) {
+string get_extension(string filename_, string& prefix) {
     size_t count = 0;
     size_t last_index = 0;
     string output = "";
