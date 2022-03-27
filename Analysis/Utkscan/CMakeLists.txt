@@ -1,16 +1,8 @@
-option(PAASS_BUILD_UTKSCAN "Build utkscan" ON)
 if (PAASS_BUILD_UTKSCAN)
     #------------------------------------------------------------------------------
     set(UTKSCAN_NAME utkscan)
     add_executable(${UTKSCAN_NAME} core/source/utkscan.cpp)
     #------------------------------------------------------------------------------
-
-    option(PAASS_UTKSCAN_GAMMA_GATES "Gamma-Gamma gates in GeProcessor" OFF)
-    option(PAASS_UTKSCAN_ONLINE "Options for online scans" OFF)
-    option(PAASS_UTKSCAN_TREE_DEBUG "Debugging info for TreeCorrelator" OFF)
-    option(PAASS_UTKSCAN_VERBOSE "Make Scan More Verbose" OFF)
-
-    mark_as_advanced(PAASS_UTKSCAN_GAMMA_GATES PAASS_UTKSCAN_ONLINE PAASS_UTKSCAN_TREE_DEBUG PAASS_UTKSCAN_VERBOSE)
 
     if (PAASS_UTKSCAN_GAMMA_GATES)
         target_compile_definitions(${UTKSCAN_NAME} PUBLIC -DGGATES)

@@ -2,13 +2,10 @@ cmake_minimum_required(VERSION 3.13)
 
 project(paass)
 
-set(CMAKE_MACOSX_RPATH TRUE)
-
 if (CMAKE_COMPILER_IS_GNUCXX)
     if (${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS "7.0.0")
         message(FATAL_ERROR "GCC version 7+ required for regex support.")
     endif ()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -fPIC -fdiagnostics-color=auto")
 endif ()
 
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
@@ -22,10 +19,6 @@ if (NOT CMAKE_BUILD_TYPE)
 endif (NOT CMAKE_BUILD_TYPE)
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
-if (CMAKE_BUILD_TYPE MATCHES "Debug")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
-endif (CMAKE_BUILD_TYPE MATCHES "Debug")
-
 #------------------------------------------------------------------------------
 
 include(CMakeDependentOption)
@@ -33,6 +26,20 @@ include(CMakeDependentOption)
 option(PAASS_BUILD_ACQ "Build and install Acquisition software" ON)
 option(PAASS_BUILD_ANALYSIS "Build analysis related programs" ON)
 option(PAASS_BUILD_TESTS "Builds programs designed to test the package." OFF)
+
+cmake_dependent_option(PAASS_BUILD_EVENT_READER "Program that outputs event information to the terminal" OFF PAASS_BUILD_ANALYSIS OFF)
+cmake_dependent_option(PAASS_BUILD_HEAD_READER "Program that outputs the header information from the file" OFF PAASS_BUILD_ANALYSIS OFF)
+cmake_dependent_option(PAASS_BUILD_HEX_READER "Program that outputs data as hex values" OFF PAASS_BUILD_ANALYSIS OFF)
+cmake_dependent_option(PAASS_BUILD_LDF2PARQUET "Program that can be used to build custom Analysis" OFF PAASS_BUILD_ANALYSIS OFF)
+cmake_dependent_option(PAASS_BUILD_ROOT_SCANNER "Program used for live scanning of files into ROOT hists" OFF PAASS_BUILD_ANALYSIS OFF)
+cmake_dependent_option(PAASS_BUILD_SCOPE "Program used to view traces in data stream" OFF PAASS_BUILD_ANALYSIS OFF)
+cmake_dependent_option(PAASS_BUILD_SKELETON "Program that can be used as a template for custom analysis." OFF PAASS_BUILD_ANALYSIS OFF)
+
+cmake_dependent_option(PAASS_BUILD_UTKSCAN "The primary analysis program" OFF PAASS_BUILD_ANALYSIS OFF)
+cmake_dependent_option(PAASS_UTKSCAN_GAMMA_GATES "Gamma-Gamma gates in GeProcessor" OFF PAASS_BUILD_UTKSCAN OFF)
+cmake_dependent_option(PAASS_UTKSCAN_ONLINE "Options for online scans" OFF PAASS_BUILD_UTKSCAN OFF)
+cmake_dependent_option(PAASS_UTKSCAN_TREE_DEBUG "Debugging info for TreeCorrelator" OFF PAASS_BUILD_UTKSCAN OFF)
+cmake_dependent_option(PAASS_UTKSCAN_VERBOSE "Make Scan More Verbose" OFF PAASS_BUILD_UTKSCAN OFF)
 
 #------------------------------------------------------------------------------
 
