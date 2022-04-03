@@ -90,7 +90,10 @@ protected:
     bool running; ///< True if the scan is running.
     paass::unpacker::modules_data modulesData;
 
-    virtual void ProcessRawRecords();
+    virtual void ProcessRawRecords() {
+        BuildRawEvent();
+        ProcessRawEvent();
+    }
 
     /** Process all events in the event list.
       * \param[in]  addr_ Pointer to a ScanInterface object. Unused by default.

@@ -125,11 +125,6 @@ void Unpacker::InitializeDataMask(const std::string& xml_config_file) {
     }
 }
 
-void Unpacker::ProcessRawRecords() {
-    BuildRawEvent();
-    ProcessRawEvent();
-}
-
 /** ReadSpill is responsible for constructing a list of pixie16 events from
   * a raw data spill. This method performs sanity checks on the spill and
   * calls ReadBuffer in order to construct the event list.
