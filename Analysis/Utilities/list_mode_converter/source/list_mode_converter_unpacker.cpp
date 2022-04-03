@@ -1,6 +1,6 @@
 ///@file Ldf2ParquetUnpacker.cpp
 ///@brief
-#include "Ldf2ParquetUnpacker.hpp"
+#include "list_mode_converter_unpacker.hpp"
 
 #include <arrow/csv/api.h>
 #include <arrow/io/api.h>
@@ -13,7 +13,7 @@
 #include <pixie/data/list_mode.hpp>
 
 
-void Ldf2ParquetUnpacker::ProcessRecords() {
+void list_mode_converter_unpacker::ProcessRecords() {
 //    ARROW_ASSIGN_OR_RAISE(auto output_file,
 //                          arrow::io::FileOutputStream::Open("test.parquet"));
     if (outfile_extension == "jsonl") {

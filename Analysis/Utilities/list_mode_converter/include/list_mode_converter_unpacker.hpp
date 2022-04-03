@@ -9,16 +9,16 @@
 #include "Unpacker.hpp"
 
 ///Class that handles data unpacking for the Ldf2Parquet program.
-class Ldf2ParquetUnpacker : public Unpacker {
+class list_mode_converter_unpacker : public Unpacker {
 public:
     std::ofstream outfile;
     std::string outfile_extension;
 
     /// Default constructor.
-    Ldf2ParquetUnpacker() : Unpacker() {}
+    list_mode_converter_unpacker() : Unpacker() {}
 
     /// Destructor.
-    ~Ldf2ParquetUnpacker() override {
+    ~list_mode_converter_unpacker() override {
         if (outfile.is_open())
             outfile.close();
     }

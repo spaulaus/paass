@@ -1,14 +1,14 @@
-///@file Ldf2ParquetInterface.cpp
+///@file list_mode_converter_interface.cpp
 ///@brief
 #include <iostream>
 
-#include "Ldf2ParquetInterface.hpp"
-#include "Ldf2ParquetUnpacker.hpp"
+#include "list_mode_converter_interface.hpp"
+#include "list_mode_converter_unpacker.hpp"
 #include "StringManipulationFunctions.hpp"
 
 using namespace std;
 
-Ldf2ParquetInterface::Ldf2ParquetInterface() : ScanInterface() {
+list_mode_converter_interface::list_mode_converter_interface() : ScanInterface() {
     init = false;
 }
 
@@ -19,7 +19,7 @@ Ldf2ParquetInterface::Ldf2ParquetInterface() : ScanInterface() {
   * \param[out] arg_ Vector or arguments to the user command.
   * \return True if the command was recognized and false otherwise.
   */
-bool Ldf2ParquetInterface::ExtraCommands(const string& cmd_, vector<string>& args_) {
+bool list_mode_converter_interface::ExtraCommands(const string& cmd_, vector<string>& args_) {
     return true;
 }
 
@@ -29,7 +29,7 @@ bool Ldf2ParquetInterface::ExtraCommands(const string& cmd_, vector<string>& arg
   * as active by ::Setup(). This should be overloaded in the derived class.
   * \return Nothing.
   */
-void Ldf2ParquetInterface::ExtraArguments() {
+void list_mode_converter_interface::ExtraArguments() {
 }
 
 /** ArgHelp is used to allow a derived class to add a command line option
@@ -38,7 +38,7 @@ void Ldf2ParquetInterface::ExtraArguments() {
   * Does nothing useful by default.
   * \return Nothing.
   */
-void Ldf2ParquetInterface::ArgHelp() {
+void list_mode_converter_interface::ArgHelp() {
     // Note that the following single character options are reserved by ScanInterface
     //  b, h, i, o, q, s, and v
 }
@@ -47,7 +47,7 @@ void Ldf2ParquetInterface::ArgHelp() {
   * \param[in]  name_ The name of the program.
   * \return Nothing.
   */
-void Ldf2ParquetInterface::SyntaxStr(char* name_) {
+void list_mode_converter_interface::SyntaxStr(char* name_) {
     cout << " usage: " << string(name_) << " [options]\n";
 }
 
@@ -56,7 +56,7 @@ void Ldf2ParquetInterface::SyntaxStr(char* name_) {
   * \param[in]  prefix_ String to append to the beginning of system output.
   * \return True upon successfully initializing and false otherwise.
   */
-bool Ldf2ParquetInterface::Initialize(string prefix_) {
+bool list_mode_converter_interface::Initialize(string prefix_) {
     if (init)
         return false;
     // Do some initialization.
@@ -66,8 +66,8 @@ bool Ldf2ParquetInterface::Initialize(string prefix_) {
 /** Perform any last minute initialization before processing data.
   * /return Nothing.
   */
-void Ldf2ParquetInterface::FinalInitialization() {
-    auto unpacker = dynamic_cast<Ldf2ParquetUnpacker*>(unpacker_);
+void list_mode_converter_interface::FinalInitialization() {
+    auto unpacker = dynamic_cast<list_mode_converter_unpacker*>(unpacker_);
     unpacker->outfile.open(outputPath_ + outputFilename_);
     unpacker->outfile_extension = StringManipulation::GetFileExtension(outputFilename_);
 }
@@ -76,7 +76,7 @@ void Ldf2ParquetInterface::FinalInitialization() {
   * \param[in] code_ The notification code passed from ScanInterface methods.
   * \return Nothing.
   */
-void Ldf2ParquetInterface::Notify(const string& code_/*=""*/) {
+void list_mode_converter_interface::Notify(const string& code_/*=""*/) {
     if (code_ == "START_SCAN") {}
     else if (code_ == "STOP_SCAN") {}
     else if (code_ == "SCAN_COMPLETE") {

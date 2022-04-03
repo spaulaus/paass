@@ -13,9 +13,9 @@ if(PAASS_BUILD_HEX_READER)
     add_subdirectory(HexReader)
 endif(PAASS_BUILD_HEX_READER)
 
-if (PAASS_BUILD_LDF2PARQUET)
-    add_subdirectory(Ldf2Parquet)
-endif(PAASS_BUILD_LDF2PARQUET)
+if (PAASS_BUILD_LIST_MODE_CONVERTER)
+    add_subdirectory(list_mode_converter)
+endif(PAASS_BUILD_LIST_MODE_CONVERTER)
 
 if(PAASS_BUILD_ROOT_SCANNER)
     add_subdirectory(RootScanner)

@@ -9,13 +9,13 @@
 
 #include "ScanInterface.hpp"
 
-class Ldf2ParquetInterface : public ScanInterface {
+class list_mode_converter_interface : public ScanInterface {
 public:
     /// Default constructor.
-    Ldf2ParquetInterface();
+    list_mode_converter_interface();
 
     /// Destructor.
-    ~Ldf2ParquetInterface() override = default;
+    ~list_mode_converter_interface() override = default;
 
     /** ExtraCommands is used to send command strings to classes derived
       * from ScanInterface. If ScanInterface receives an unrecognized

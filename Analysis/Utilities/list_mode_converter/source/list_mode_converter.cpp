@@ -2,18 +2,18 @@
 ///@brief The main program for the Ldf2Parquet conversion program
 #include <iostream>
 
-#include "Ldf2ParquetInterface.hpp"
-#include "Ldf2ParquetUnpacker.hpp"
+#include "list_mode_converter_interface.hpp"
+#include "list_mode_converter_unpacker.hpp"
 
 using namespace std;
 
 int main(int argc, char *argv[]) {
-    Ldf2ParquetUnpacker unpacker;
-    Ldf2ParquetInterface scanner;
+    list_mode_converter_unpacker unpacker;
+    list_mode_converter_interface scanner;
 
     try {
         // Set the output message prefix.
-        scanner.SetProgramName("ldf2parquet");
+        scanner.SetProgramName("list_mode_converter");
 
         // Initialize the scanner.
         scanner.Setup(argc, argv, &unpacker);
