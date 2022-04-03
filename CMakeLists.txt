@@ -61,9 +61,9 @@ add_definitions("-D USE_ROOT")
 
 find_package(GSL REQUIRED)
 
-if (PAASS_BUILD_LIST_MODE_CONVERTER)
-    find_package(Arrow REQUIRED)
-endif(PAASS_BUILD_LIST_MODE_CONVERTER)
+#if (PAASS_BUILD_LIST_MODE_CONVERTER)
+#    find_package(Arrow REQUIRED)
+#endif(PAASS_BUILD_LIST_MODE_CONVERTER)
 
 #------------------------------------------------------------------------------
 
