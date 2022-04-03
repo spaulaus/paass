@@ -12,20 +12,21 @@
 
 #include <pixie/data/list_mode.hpp>
 
-
 void list_mode_converter_unpacker::ProcessRecords() {
-//    ARROW_ASSIGN_OR_RAISE(auto output_file,
-//                          arrow::io::FileOutputStream::Open("test.parquet"));
     if (outfile_extension == "jsonl") {
         std::string writebuf;
         for (auto& mod: modulesData) {
-            auto recs = mod.second.recs;
-            while (!recs.empty()) {
-                writebuf += xia::pixie::data::list_mode::record_to_json(recs.front()) + "\n";
-                recs.pop_front();
+            for (const auto& rec : mod.second.recs) {
+                writebuf += xia::pixie::data::list_mode::record_to_json(rec) + "\n";
             }
+            mod.second.recs.clear();
         }
-        outfile.write(writebuf.c_str(), writebuf.size());
+        outfile.write(writebuf.c_str(), static_cast<std::streamsize>(writebuf.size()));
+    } else if (outfile_extension == "parquet") {
+//    ARROW_ASSIGN_OR_RAISE(auto output_file,
+//                          arrow::io::FileOutputStream::Open("test.parquet"));
+        std::cout << "list_mode_converter_unpacker::ProcessRecords() - Parquet output not implemented yet!"
+                  << std::endl;
     } else {
         throw std::invalid_argument(
         "list_mode_converter_unpacker::ProcessRecords() - Unknown filetype (" + outfile_extension + ")!");
