@@ -26,5 +26,8 @@ void list_mode_converter_unpacker::ProcessRecords() {
             }
         }
         outfile.write(writebuf.c_str(), writebuf.size());
+    } else {
+        throw std::invalid_argument(
+        "list_mode_converter_unpacker::ProcessRecords() - Unknown filetype (" + outfile_extension + ")!");
     }
 }
