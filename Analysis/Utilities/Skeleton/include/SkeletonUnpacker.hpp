@@ -24,13 +24,7 @@ private:
     ///Add an event to generic statistics output.
     ///@param[in]  event_ Pointer to the current XIA event.
     ///@param[in]  addr_  Pointer to a ScanInterface object.
-    void RawStats(XiaData *event_) {}
-
-    ///Add a channel event to the deque of events to send to the processors.
-    /// This method should only be called from skeletonUnpacker::ProcessRawEvent().
-    /// @param[in]  event_ The raw XiaData to add to the channel event deque.
-    /// @return False.
-    bool AddEvent(XiaData *event_);
+    void RawStats(xia::pixie::data::list_mode::record& event_) {}
 
     ///Process all channel events read in from the rawEvent.
     /// @return False.

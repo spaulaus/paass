@@ -48,7 +48,9 @@ ScopeUnpacker::ScopeUnpacker(const unsigned int &mod/*=0*/, const unsigned int &
     delayInSeconds_ = 2;
     numTracesDisplayed_ = 0;
 
-    filterer_ = new TraceFilter(int((1. / mask_.GetFrequency())*1000));
+    ///@TODO This assumes that all of the modules in the system have the same value, that's not necessarily true!!
+    ///@TODO This also gets initialized before the modulesData get filled.
+//    filterer_ = new TraceFilter(int((1. / modulesData[0].frequency)*1000));
     filterGraph_ = new TGraph();
     filterGraph_->SetLineColor(kRed);
     filtererText_ = new TPaveText(0.15, 0.75, 0.45, 0.85, "NDC");
@@ -162,36 +164,30 @@ bool ScopeUnpacker::SelectFittingFunction(const std::string &func) {
   * \return Nothing.
   */
 void ScopeUnpacker::ProcessRawEvent() {
-    XiaData *current_event = NULL;
-
-    // Fill the processor event deques with events
     while (!rawEvent.empty()) {
         if (!running)
             break;
 
-        //Get the first event in the FIFO.
-        current_event = rawEvent.front();
+        auto current_event = rawEvent.front();
         rawEvent.pop_front();
 
         // Safety catches for null event or empty ->GetTrace().
-        if (!current_event || current_event->GetTrace().empty())
+        if (current_event.trace.empty())
             continue;
 
-        if (current_event->GetModuleNumber() != mod_ &&
-            current_event->GetChannelNumber() != chan_)
+        if (current_event.slot_id - 2 != mod_ && current_event.channel_number != chan_)
             continue;
 
-        pair<double, double> baseline = CalculateBaseline(current_event->GetTrace(), make_pair(0, 10));
-        pair<double, double> maximum = FindMaximum(current_event->GetTrace(), current_event->GetTrace().size());
-        double qdc = CalculateQdc(current_event->GetTrace(), make_pair(5, 15));
+        pair<double, double> baseline = CalculateBaseline(current_event.trace, make_pair(0, 10));
+        pair<double, double> maximum = FindMaximum(current_event.trace, current_event.trace.size());
+        double qdc = CalculateQdc(current_event.trace, make_pair(5, 15));
 
         if (maximum.second < threshLow_ || (threshHigh_ > threshLow_ && maximum.second > threshHigh_)) {
-            delete current_event;
             continue;
         }
 
         //Convert the XiaData object into a ProcessedXiaData object
-        ProcessedXiaData *channel_event = new ProcessedXiaData(*current_event);
+        ProcessedXiaData *channel_event = new ProcessedXiaData();
 
         channel_event->GetTrace().SetBaseline(baseline);
         channel_event->GetTrace().SetMax(maximum);

@@ -4,45 +4,30 @@
 ///@date June 8, 2017
 
 #include <iostream>
-
-#include "unistd.h"
+#include <thread>
 
 #include "EventReaderUnpacker.hpp"
-
-#ifdef USE_HRIBF
-#include "Scanor.hpp"
-#endif
 
 /** Process all events in the event list.
   * \param[in]  addr_ Pointer to a location in memory.
   * \return Nothing.
   */
-void EventReaderUnpacker::ProcessRawEvent(){
-    XiaData *current_event = NULL;
-
+void EventReaderUnpacker::ProcessRawEvent() {
     // Fill the processor event deques with events
-    while(!rawEvent.empty()){
-        if(!running) break;
+    while (!rawEvent.empty()) {
+        if (!running)
+            break;
 
-        current_event = rawEvent.front();
+        auto current_event = rawEvent.front();
         rawEvent.pop_front(); // Remove this event from the raw event deque.
-
-#ifdef USE_HRIBF
-        // If using scanor, output to the generic histogram so we know that something is happening.
-		count1cc_(8000, (current_event->GetModuleNumber()*16+current_event->GetChannelNumber()), 1);
-#endif
-
-        // Check that this channel event exists.
-        if(!current_event)
-            continue;
 
         // Send the event to the scan interface object for processing.
         AddEvent(current_event);
     }
 }
 
-void EventReaderUnpacker::displayBool(const char *msg_, const bool &val_){
-    if(val_) std::cout << msg_ << "YES\n";
+void EventReaderUnpacker::displayBool(const char* msg_, const bool& val_) {
+    if (val_) std::cout << msg_ << "YES\n";
     else std::cout << msg_ << "NO\n";
 }
 
@@ -51,49 +36,40 @@ void EventReaderUnpacker::displayBool(const char *msg_, const bool &val_){
   * \param[in]  event_ The raw XiaData to add to the channel event deque.
   * \return False.
   */
-bool EventReaderUnpacker::AddEvent(XiaData *event_){
-    if(!event_)
-        return false;
-
-    if(numSkip_ == 0){
+bool EventReaderUnpacker::AddEvent(xia::pixie::data::list_mode::record& event_) {
+    if (numSkip_ == 0) {
         std::cout << "*************************************************\n";
-        std::cout << "** Raw Event no. " << eventsRead_ << std::endl;
+        std::cout << "** Raw Event no. " << ++eventsRead_ << std::endl;
         std::cout << "*************************************************\n";
-        std::cout << " Filter Energy: " << event_->GetEnergy() << std::endl;
-        std::cout << " Trigger Time:  " << (unsigned long long)event_->GetTime() << std::endl;
-        std::cout << " Module:        " << event_->GetModuleNumber() << std::endl;
-        std::cout << " Channel:       " << event_->GetChannelNumber() << std::endl;
-        std::cout << " CFD Time:      " << event_->GetCfdFractionalTime() << std::endl;
-        std::cout << " Trace Length:  " << event_->GetTrace().size() << std::endl;
+        std::cout << " Filter Energy: " << event_.energy << std::endl;
+        std::cout << " Trigger Time:  " << event_.time.count() << std::endl;
+        std::cout << " Slot:          " << event_.slot_id << std::endl;
+        std::cout << " Channel:       " << event_.channel_number << std::endl;
+        std::cout << " CFD Time:      " << event_.cfd_fractional_time.count() << std::endl;
+        std::cout << " CFD Trig Src   " << event_.cfd_trigger_source << std::endl;
+        std::cout << " Trace Length:  " << event_.trace_length << std::endl;
 
-        if(showFlags_){
-            displayBool(" Virtual:       ", event_->IsVirtualChannel());
-            displayBool(" Pileup:        ", event_->IsPileup());
-            displayBool(" Saturated:     ", event_->IsSaturated());
-            displayBool(" CFD Force:     ", event_->GetCfdForcedTriggerBit());
-            displayBool(" CFD Trig:      ", event_->GetCfdTriggerSourceBit());
+        if (showFlags_) {
+            displayBool(" Pileup:        ", event_.finish_code);
+            displayBool(" Saturated:     ", event_.trace_out_of_range);
+            displayBool(" CFD Force:     ", event_.cfd_forced_trigger);
         }
 
-        if(showTrace_ && !event_->GetTrace().empty()){
+        if (showTrace_ && !event_.trace.empty()) {
             int numLine = 0;
             std::cout << " Trace:\n  ";
-            for(size_t i = 0; i < event_->GetTrace().size(); i++){
-                std::cout << event_->GetTrace().at(i) << "\t";
-                if(++numLine % 10 == 0) std::cout << "\n  ";
+            for (const auto& val: event_.trace) {
+                std::cout << val << "\t";
+                if (++numLine % 10 == 0) std::cout << "\n  ";
             }
             std::cout << std::endl;
         }
 
         std::cout << std::endl;
-
-        ///@TODO This needs to be replaced with a more C++ compatible version. See here
-        /// https://stackoverflow.com/questions/4184468/sleep-for-milliseconds#10613664
-        sleep(1);
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    } else {
+        numSkip_--;
     }
-    else{ numSkip_--; }
-
-    eventsRead_++;
-    delete event_;
 
     return false;
 }

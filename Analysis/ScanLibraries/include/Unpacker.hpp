@@ -23,6 +23,7 @@
 namespace paass::unpacker {
 struct module_data {
     module_data(size_t firmware, size_t frequency) : revision(firmware), frequency(frequency) {}
+
     module_data(const module_data& ref) : revision(ref.revision), frequency(ref.frequency) {}
 
     size_t revision;
@@ -96,7 +97,6 @@ protected:
     }
 
     /** Process all events in the event list.
-      * \param[in]  addr_ Pointer to a ScanInterface object. Unused by default.
       * \return Nothing.
       */
     virtual void ProcessRawEvent() { rawEvent.clear(); }

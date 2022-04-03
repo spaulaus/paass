@@ -8,11 +8,13 @@
 #include "Trace.hpp"
 #include "XiaData.hpp"
 
+#include <pixie/data/list_mode.hpp>
+
 ///This class contains additional information about the XiaData after
 /// additional processing has been done. The processing includes, but is not
 /// limited to energy/time calibrations, high resolution timing analysis,
 /// trace analysis, etc. 
-class ProcessedXiaData : public XiaData {
+class ProcessedXiaData : public xia::pixie::data::list_mode::record {
 public:
     /// Default constructor.
     ProcessedXiaData() {}
@@ -20,11 +22,7 @@ public:
     ///Constructor taking the base class as an argument so that we can set
     /// the trace information properly
     ///@param[in] evt : The event that we are going to assign here.
-    ProcessedXiaData(XiaData &evt) : XiaData(evt) {
-        trace_ = evt.GetTrace();
-        trace_.SetIsSaturated(evt.IsSaturated());
-        walkCorrectedTime_ = 0;
-    };
+    ProcessedXiaData(xia::pixie::data::list_mode::record &evt) {};
 
     /// Default Destructor.
     ~ProcessedXiaData() {}
