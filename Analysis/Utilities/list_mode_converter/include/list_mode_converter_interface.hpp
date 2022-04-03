@@ -1,8 +1,8 @@
-///@file Ldf2ParquetInterface.hpp
+///@file list_mode_converter_interface.hpp
 ///@brief
 
-#ifndef PAASS_Ldf2ParquetInterface_HPP
-#define PAASS_Ldf2ParquetInterface_HPP
+#ifndef PAASS_LIST_MODE_CONVERTER_INTERFACE_HPP
+#define PAASS_LIST_MODE_CONVERTER_INTERFACE_HPP
 
 #include <string>
 #include <vector>
@@ -86,4 +86,4 @@ private:
 };
 
 
-#endif //PAASS_Ldf2ParquetInterface_HPP
+#endif //PAASS_LIST_MODE_CONVERTER_INTERFACE_HPP

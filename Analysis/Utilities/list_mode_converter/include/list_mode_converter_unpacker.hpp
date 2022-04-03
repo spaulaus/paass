@@ -1,8 +1,8 @@
 ///@file list_mode_converter_unpacker.hpp
-///@brief
+///@brief Outputs list-mode records to various data formats that *aren't* proprietary like LDF or PLD.
 
-#ifndef PAASS_Ldf2ParquetUNPACKER_HPP
-#define PAASS_Ldf2ParquetUNPACKER_HPP
+#ifndef PAASS_LIST_MODE_CONVERTER_UNPACKER_HPP
+#define PAASS_LIST_MODE_CONVERTER_UNPACKER_HPP
 
 #include <fstream>
 
@@ -30,4 +30,4 @@ private:
     void ProcessRecords() override;
 };
 
-#endif //PAASS_Ldf2ParquetUNPACKER_HPP
+#endif //PAASS_LIST_MODE_CONVERTER_UNPACKER_HPP

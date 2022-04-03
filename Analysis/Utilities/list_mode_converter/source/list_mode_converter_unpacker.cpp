@@ -1,5 +1,5 @@
 ///@file list_mode_converter_unpacker.cpp
-///@brief
+///@brief Outputs list-mode records to various data formats that *aren't* proprietary like LDF or PLD.
 
 //#include <arrow/csv/api.h>
 //#include <arrow/io/api.h>
@@ -16,7 +16,7 @@ void list_mode_converter_unpacker::ProcessRecords() {
     if (outfile_extension == "jsonl") {
         std::string writebuf;
         for (auto& mod: modulesData) {
-            for (const auto& rec : mod.second.recs) {
+            for (const auto& rec: mod.second.recs) {
                 writebuf += xia::pixie::data::list_mode::record_to_json(rec) + "\n";
             }
             mod.second.recs.clear();
@@ -26,6 +26,9 @@ void list_mode_converter_unpacker::ProcessRecords() {
 //    ARROW_ASSIGN_OR_RAISE(auto output_file,
 //                          arrow::io::FileOutputStream::Open("test.parquet"));
         std::cout << "list_mode_converter_unpacker::ProcessRecords() - Parquet output not implemented yet!"
+                  << std::endl;
+    } else if (outfile_extension == "csv") {
+        std::cout << "list_mode_converter_unpacker::ProcessRecords() - CSV output not implemented yet!"
                   << std::endl;
     } else {
         throw std::invalid_argument(
