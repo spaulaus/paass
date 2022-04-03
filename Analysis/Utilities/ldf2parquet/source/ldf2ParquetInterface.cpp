@@ -3,7 +3,8 @@
 #include <iostream>
 
 #include "Ldf2ParquetInterface.hpp"
-#include "XiaData.hpp"
+#include "Ldf2ParquetUnpacker.hpp"
+#include "StringManipulationFunctions.hpp"
 
 using namespace std;
 
@@ -18,7 +19,7 @@ Ldf2ParquetInterface::Ldf2ParquetInterface() : ScanInterface() {
   * \param[out] arg_ Vector or arguments to the user command.
   * \return True if the command was recognized and false otherwise.
   */
-bool Ldf2ParquetInterface::ExtraCommands(const string &cmd_, vector<string> &args_) {
+bool Ldf2ParquetInterface::ExtraCommands(const string& cmd_, vector<string>& args_) {
     return true;
 }
 
@@ -46,7 +47,7 @@ void Ldf2ParquetInterface::ArgHelp() {
   * \param[in]  name_ The name of the program.
   * \return Nothing.
   */
-void Ldf2ParquetInterface::SyntaxStr(char *name_) {
+void Ldf2ParquetInterface::SyntaxStr(char* name_) {
     cout << " usage: " << string(name_) << " [options]\n";
 }
 
@@ -66,14 +67,16 @@ bool Ldf2ParquetInterface::Initialize(string prefix_) {
   * /return Nothing.
   */
 void Ldf2ParquetInterface::FinalInitialization() {
-    // Do some last minute initialization before the run starts.
+    auto unpacker = dynamic_cast<Ldf2ParquetUnpacker*>(unpacker_);
+    unpacker->outfile.open(outputPath_ + outputFilename_);
+    unpacker->outfile_extension = StringManipulation::GetFileExtension(outputFilename_);
 }
 
 /** Receive various status notifications from the scan.
   * \param[in] code_ The notification code passed from ScanInterface methods.
   * \return Nothing.
   */
-void Ldf2ParquetInterface::Notify(const string &code_/*=""*/) {
+void Ldf2ParquetInterface::Notify(const string& code_/*=""*/) {
     if (code_ == "START_SCAN") {}
     else if (code_ == "STOP_SCAN") {}
     else if (code_ == "SCAN_COMPLETE") {
@@ -83,7 +86,7 @@ void Ldf2ParquetInterface::Notify(const string &code_/*=""*/) {
     } else if (code_ == "REWIND_FILE") {}
     else {
         cout << msgHeader << "Unknown notification code '" << code_
-                  << "'!\n";
+             << "'!\n";
     }
 }
 

@@ -15,7 +15,7 @@ public:
     Ldf2ParquetInterface();
 
     /// Destructor.
-    ~Ldf2ParquetInterface(){}
+    ~Ldf2ParquetInterface() override = default;
 
     /** ExtraCommands is used to send command strings to classes derived
       * from ScanInterface. If ScanInterface receives an unrecognized

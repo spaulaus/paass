@@ -12,21 +12,19 @@
 
 #include <pixie/data/list_mode.hpp>
 
-//Process all events in the event list.
-void Ldf2ParquetUnpacker::ProcessRawEvent() {
+
+void Ldf2ParquetUnpacker::ProcessRawRecords() {
 //    ARROW_ASSIGN_OR_RAISE(auto output_file,
 //                          arrow::io::FileOutputStream::Open("test.parquet"));
-
-    while (!rawEvent.empty()) {
-        auto current_event = rawEvent.front();
-        rawEvent.pop_front(); // Remove this event from the raw event deque.
-//        std::cout << current_event << std::endl;
+    if (outfile_extension == "jsonl") {
+        std::string writebuf;
+        for (auto& mod: modulesData) {
+            auto recs = mod.second.recs;
+            while (!recs.empty()) {
+                writebuf += xia::pixie::data::list_mode::record_to_json(recs.front()) + "\n";
+                recs.pop_front();
+            }
+        }
+        outfile.write(writebuf.c_str(), writebuf.size());
     }
-}
-
-///Process all channel events read in from the rawEvent.
-///@return False.
-bool Ldf2ParquetUnpacker::ProcessEvents() {
-    // Really we're going to do nothing for processing.
-    return false;
 }
