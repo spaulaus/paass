@@ -2,6 +2,8 @@
 ///@brief Unit tests for the XiaListModeDataDecoder class
 ///@author S. V. Paulauskas
 ///@date December 25, 2016
+#include <stdexcept>
+
 #include "XiaListModeDataEncoder.hpp"
 #include "UnitTestSampleData.hpp"
 
@@ -46,7 +48,7 @@ TEST_SUITE ("Analysis/Scan Libraries/XiaListModeDataEncoder") {
     }
 
     TEST_CASE ("TestEmptyDataThrow") {
-        CHECK_THROWS_AS(encoder.EncodeXiaData(XiaData()), invalid_argument);
+        CHECK_THROWS_AS(encoder.EncodeXiaData(XiaData()), std::invalid_argument);
     }
 
     TEST_CASE ("TestEncodingBasicHeader") {
