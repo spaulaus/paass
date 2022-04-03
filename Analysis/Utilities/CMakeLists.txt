@@ -1,6 +1,3 @@
-# @author S. V. Paulauskas
-
-
 if(PAASS_BUILD_EVENT_READER)
     add_subdirectory(EventReader)
 endif(PAASS_BUILD_EVENT_READER)
