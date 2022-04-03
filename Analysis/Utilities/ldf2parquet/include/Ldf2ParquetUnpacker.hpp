@@ -28,8 +28,8 @@ private:
     /**
      * @brief Processes the records decoded from the list-mode data file without any event building.
      */
-    void ProcessRawRecords() override;
-    
+    void ProcessRecords() override;
+
 };
 
 #endif //PAASS_Ldf2ParquetUNPACKER_HPP

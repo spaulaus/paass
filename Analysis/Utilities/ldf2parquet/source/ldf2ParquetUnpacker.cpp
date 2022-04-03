@@ -13,7 +13,7 @@
 #include <pixie/data/list_mode.hpp>
 
 
-void Ldf2ParquetUnpacker::ProcessRawRecords() {
+void Ldf2ParquetUnpacker::ProcessRecords() {
 //    ARROW_ASSIGN_OR_RAISE(auto output_file,
 //                          arrow::io::FileOutputStream::Open("test.parquet"));
     if (outfile_extension == "jsonl") {

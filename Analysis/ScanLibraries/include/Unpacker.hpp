@@ -90,7 +90,7 @@ protected:
     bool running; ///< True if the scan is running.
     paass::unpacker::modules_data modulesData;
 
-    virtual void ProcessRawRecords() {
+    virtual void ProcessRecords() {
         BuildRawEvent();
         ProcessRawEvent();
     }

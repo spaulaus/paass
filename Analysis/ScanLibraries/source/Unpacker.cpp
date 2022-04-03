@@ -236,7 +236,7 @@ bool Unpacker::ReadSpill(unsigned int* data, unsigned int nWords, bool is_verbos
     }
 
     if (fullSpill) { // if full spill process events
-        ProcessRawRecords();
+        ProcessRecords();
     } else {
         std::cout << std::endl << "ReadSpill: Spill split between buffers" << std::endl;
         return false;
