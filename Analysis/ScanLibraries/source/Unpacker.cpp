@@ -8,7 +8,6 @@
  */
 #include <algorithm>
 #include <cstring>
-#include <fstream>
 #include <iostream>
 #include <limits>
 
@@ -43,29 +42,24 @@ void Unpacker::BuildRawEvent() {
 
     auto start = firstTime + xia::pixie::data::list_mode::record::time_type(numRawEvt * eventWidth_);
 
-    // Loop over all time-sorted modules.
     for (auto& mod: modulesData) {
         auto recs = mod.second.recs;
         if (recs.empty())
             continue;
 
-        auto last_rec = recs.begin();
         for (auto& rec: recs) {
             auto currtime = rec.time;
             /*
-             * In the event of a backward time skip, we remove the offending event from the deque without
-             * adding it to the event lists.
+             * This catch was originally implemented to catch situations where there was left-over data in the
+             * on-board list-mode FIFO that had a larger timestamp than the new data. We'll need to rethink how
+             * to handle this properly.
              */
-            if (currtime < start) {
-                cerr << "BuildRawEvent: Detected backwards time-skip from start=" << std::to_string(start.count())
-                     << " to " << std::to_string(currtime.count()) << "?\n";
-                recs.pop_front();
-                continue;
-            }
+//            if (currtime < start) {
+//                cerr << "BuildRawEvent: Detected backwards time-skip from start=" << std::to_string(start.count())
+//                     << " to " << std::to_string(currtime.count()) << "?\n";
+//                continue;
+//            }
 
-            // If the time difference between the current and previous event is
-            // larger than the event width, finalize the current event, otherwise
-            // treat this as part of the current event
             if ((currtime - start).count() > eventWidth_)
                 break;
 
@@ -80,10 +74,6 @@ void Unpacker::BuildRawEvent() {
     numRawEvt++;
 }
 
-void Unpacker::ProcessRawEvent() {
-    rawEvent.clear();
-}
-
 ///Called form ReadSpill. Scan the current spill and construct a list of events which fired by obtaining the module,
 /// channel, trace, etc. of the timestamped event. This method will construct the event list for later processing.
 ///@param[in] buf : Pointer to an array of unsigned ints containing raw buffer data.
@@ -95,19 +85,14 @@ int Unpacker::ReadBuffer(paass::unpacker::module_data& moduleData) {
     xia::pixie::data::list_mode::decode_data_block(moduleData.buf, moduleData.revision,
                                                    moduleData.frequency, recs, remainder);
     moduleData.buf = remainder;
+
     std::sort(recs.begin(), recs.end());
-    moduleData.recs.insert(moduleData.recs.end(), recs.begin(), recs.end());
+
+    for (auto& rec: recs) {
+        moduleData.recs.push_back(rec);
+    }
+
     return int(recs.size());
-}
-
-Unpacker::Unpacker() : debug_mode(false), eventWidth_(100e-6), running(true),
-                       TOTALREAD(1000000), // Maximum number of data words to read.
-                       numRawEvt(0), // Count of raw events read from file.
-                       firstTime(0) {}
-
-Unpacker::~Unpacker() {
-    rawEvent.clear();
-    modulesData.clear();
 }
 
 void Unpacker::InitializeDataMask(size_t module_number, size_t firmware, size_t frequency) {
@@ -140,6 +125,11 @@ void Unpacker::InitializeDataMask(const std::string& xml_config_file) {
     }
 }
 
+void Unpacker::ProcessRawRecords() {
+    BuildRawEvent();
+    ProcessRawEvent();
+}
+
 /** ReadSpill is responsible for constructing a list of pixie16 events from
   * a raw data spill. This method performs sanity checks on the spill and
   * calls ReadBuffer in order to construct the event list.
@@ -162,7 +152,6 @@ bool Unpacker::ReadSpill(unsigned int* data, unsigned int nWords, bool is_verbos
 
     counter++;
 
-    bool fullSpill = false; // True if spill had all vsn's
     size_t vsn = 0xFFFFFFFF;
 
     while (nWords_read < nWords) {
@@ -177,51 +166,31 @@ bool Unpacker::ReadSpill(unsigned int* data, unsigned int nWords, bool is_verbos
         auto xia_list_mode_buffer_length = total_spill_length - 2;
         vsn = data[nWords_read++];
 
-        if (vsn > maxModuleNumberInFile_ && vsn != 9999 && vsn != 1000)
-            maxModuleNumberInFile_ = vsn;
+        if (total_spill_length > xia::pixie::hw::fifo_size_words) {
+            std::cerr << "ReadSpill: Received a total_spill_length greater than the Pixie-16 list-mode fifo size!"
+                      << std::endl;
+            return false;
+        }
 
-        // Check sanity of record length and vsn
-        if (total_spill_length > xia::pixie::hw::fifo_size_words || (vsn > maxVsn && vsn != 9999 && vsn != 1000)) {
-            if (is_verbose)
-                cout << "ReadSpill: SANITY CHECK FAILED: lenRec = " << total_spill_length << ", vsn = " << vsn
-                     << ", read " << nWords_read << " of " << nWords << endl;
+        if (total_spill_length > nWords) {
+            std::cerr << "ReadSpill:: Total Spill Length (" << total_spill_length << ") greater than expected ("
+                      << nWords << ")." << std::endl;
             return false;
         }
 
         // If the record length is 6, this is an empty channel.
         // Skip this vsn and continue with the next
-        ///@TODO Revision specific, so move to ReadBuffData
         if (total_spill_length == 6) {
             nWords_read += total_spill_length;
             lastVsn = vsn;
             continue;
         }
 
-        // If both the current vsn inspected is within an acceptable range, begin reading the buffer.
-        if (vsn < maxVsn) {
-            if (lastVsn != 0xFFFFFFFF && vsn != lastVsn + 1) {
-                if (is_verbose)
-                    cout << "ReadSpill: MISSING BUFFER " << lastVsn + 1 << ", lastVsn = " << lastVsn << ", vsn = "
-                         << vsn << ", lenrec = " << total_spill_length << endl;
-                fullSpill = false;
-            }
-
-            auto mod = modulesData.find(vsn);
-            if (mod == modulesData.end()) {
-                std::cout << "Unpacker::ReadSpill - modulesData did not contain an entry for VSN = " << vsn
-                          << "! Adding entry assuming same type as VSN = 0." << std::endl;
-            }
-
-            auto moduleData = mod->second;
-            moduleData.buf.insert(moduleData.buf.end(), &data[nWords_read],
-                                  &data[nWords_read + xia_list_mode_buffer_length]);
-            ReadBuffer(moduleData);
-
-            // Update the variables that are keeping track of what has been
-            // analyzed and increment the location in the current buffer
-            lastVsn = vsn;
-            nWords_read += xia_list_mode_buffer_length;
-        } else if (vsn == 1000) { // Buffer with vsn 1000 was inserted with the time for superheavy exp't
+        if (vsn == 9999) {
+            // 9999 is the end spill vsn and indicates that we've reached the end of our spill.
+            continue;
+        }
+        if (vsn == 1000) { // Buffer with vsn 1000 was inserted with the time for superheavy exp't
             memcpy(&theTime, &data[nWords_read + 2], sizeof(time_t));
             if (is_verbose) {
                 /*struct tm * timeinfo;
@@ -230,48 +199,51 @@ bool Unpacker::ReadSpill(unsigned int* data, unsigned int nWords, bool is_verbos
             }
             nWords_read += total_spill_length;
             continue;
-        } else if (vsn == 9999) {
-            // 9999 is the end spill vsn and indicates that we've reached the end of our spill.
-            continue;
-        } else {
-            // Bail out if we have lost our place,
-            // (bad vsn) and process events
-            cout << "ReadSpill: UNEXPECTED VSN " << vsn << endl;
-            break;
         }
+        if (vsn > maxVsn) {
+            // Bail out if we have lost our place, (bad vsn) and process events
+            cout << "ReadSpill: UNEXPECTED VSN =" << vsn << endl;
+            return false;
+        }
+        if (vsn > maxModuleNumberInFile_) {
+            maxModuleNumberInFile_ = vsn;
+            if (modulesData.count(vsn) == 0) {
+                std::cout << "Unpacker::ReadSpill - modulesData did not contain an entry for VSN = " << vsn
+                          << "! Adding entry assuming same type as VSN = 0." << std::endl;
+                modulesData.insert(std::make_pair(vsn, paass::unpacker::module_data(modulesData.begin()->second)));
+            }
+        }
+
+        if (lastVsn != 0xFFFFFFFF && vsn != lastVsn + 1) {
+            if (is_verbose)
+                cout << "ReadSpill: MISSING BUFFER " << lastVsn + 1 << ", lastVsn = " << lastVsn << ", vsn = "
+                     << vsn << ", lenrec = " << total_spill_length << endl;
+        }
+
+        auto& moduleData = modulesData.at(vsn);
+        moduleData.buf.insert(moduleData.buf.end(), &data[nWords_read],
+                              &data[nWords_read + xia_list_mode_buffer_length]);
+        ReadBuffer(moduleData);
+
+        // Update the variables that are keeping track of what has been
+        // analyzed and increment the location in the current buffer
+        lastVsn = vsn;
+        nWords_read += xia_list_mode_buffer_length;
     } // while still have words
-
-    if (nWords > TOTALREAD || nWords_read > TOTALREAD) {
-        cout << "ReadSpill: Values of nn - " << nWords << " nk - " << nWords_read << " TOTALREAD - " << TOTALREAD
-             << endl;
-        return false;
-    }
-
-    // If the vsn is 9999 this is the end of a spill, signal this buffer
-    // for processing and determine if the buffer is split between spills.
-    if (vsn == 9999 || vsn == 1000) {
-        fullSpill = true;
-    }
 
     if (is_verbose && nWords_read != nWords)
         cout << "ReadSpill: Received spill of " << nWords << " words, but read " << nWords_read << " words\n";
 
+
+    bool fullSpill = true;
+    for (auto& mod: modulesData) {
+        fullSpill = mod.second.buf.empty();
+    }
+
     if (fullSpill) { // if full spill process events
-        // Once the vector of pointers eventlist is sorted based on time,
-        // begin the event processing in ScanList().
-        // ScanList will also clear the event list for us.
-        BuildRawEvent();
-        ProcessRawEvent();
-
-        evCount++;
-
-        // Every once in a while (when evcount is a multiple of 1000)
-        // print the time elapsed doing the analysis
-        if ((evCount % 1000 == 0 || evCount == 1) && theTime != 0)
-            cout << endl << "ReadSpill: Data read up to poll status time " << ctime(&theTime);
+        ProcessRawRecords();
     } else {
-        if (is_verbose)
-            cout << "ReadSpill: Spill split between buffers" << endl;
+        std::cout << std::endl << "ReadSpill: Spill split between buffers" << std::endl;
         return false;
     }
     return true;

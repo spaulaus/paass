@@ -20,11 +20,11 @@
 
 #include <pixie/data/list_mode.hpp>
 
-#include "XiaListModeDataMask.hpp"
-
 namespace paass::unpacker {
 struct module_data {
-    module_data(size_t firmware, size_t frequency) : revision(firmware), frequency(frequency) {};
+    module_data(size_t firmware, size_t frequency) : revision(firmware), frequency(frequency) {}
+    module_data(const module_data& ref) : revision(ref.revision), frequency(ref.frequency) {}
+
     size_t revision;
     size_t frequency;
     std::deque<xia::pixie::data::list_mode::record> recs;
@@ -38,31 +38,28 @@ using modules_data = std::map<size_t, module_data>;
 class Unpacker {
 public:
     /// Default constructor.
-    Unpacker();
+    Unpacker() : debug_mode(false), eventWidth_(100e-6), running(true),
+                 numRawEvt(0), // Count of raw events read from file.
+                 firstTime(0) {}
 
     /// Destructor.
-    virtual ~Unpacker();
+    virtual ~Unpacker() {
+        rawEvent.clear();
+        modulesData.clear();
+    }
 
-    ///@return the maximum module read from the input file. The calculation on this cannot be right.
-    unsigned int GetMaxModuleInFile() { return maxModuleNumberInFile_; }
+    double eventWidth_; ///< The width of the raw event in seconds
+    bool debug_mode; ///< True if debug mode is set.
+    std::deque<xia::pixie::data::list_mode::record> rawEvent; ///< A deque containing of all events in the event window.
 
     /// Return the number of raw events read from the file.
     unsigned int GetNumRawEvents() { return numRawEvt; }
-
-    /// Return the width of the raw event window in seconds.
-    double GetEventWidth() { return eventWidth_; }
 
     /// Return the time of the first fired channel event.
     double GetFirstTime() { return firstTime.count(); }
 
     /// Return true if the scan is running and false otherwise.
     bool IsRunning() { return running; }
-
-    /// Toggle debug mode on / off.
-    bool SetDebugMode(bool state_ = true) { return (debug_mode = state_); }
-
-    /// Set the width of events in pixie16 clock ticks.
-    void SetEventWidth(double width) { eventWidth_ = width; }
 
     void InitializeDataMask(size_t module_number, size_t firmware, size_t frequency);
 
@@ -89,17 +86,17 @@ public:
     void Run() { running = true; }
 
 protected:
-    bool debug_mode; ///< True if debug mode is set.
-    double eventWidth_; ///< The width of the raw event in seconds
     unsigned int maxModuleNumberInFile_; ///< The maximum module number that we've encountered in the data file.
-    std::deque<xia::pixie::data::list_mode::record> rawEvent; ///< A deque containing of all events in the event window.
     bool running; ///< True if the scan is running.
+    paass::unpacker::modules_data modulesData;
+
+    virtual void ProcessRawRecords();
 
     /** Process all events in the event list.
       * \param[in]  addr_ Pointer to a ScanInterface object. Unused by default.
       * \return Nothing.
       */
-    virtual void ProcessRawEvent();
+    virtual void ProcessRawEvent() { rawEvent.clear(); }
 
     /** Add an event to generic statistics output.
       * \param[in]  event_ Pointer to the current XIA event. Unused by default.
@@ -119,12 +116,9 @@ protected:
     int ReadBuffer(paass::unpacker::module_data& moduleData);
 
 private:
-    unsigned int TOTALREAD; /// Maximum number of data words to read.
     unsigned int numRawEvt; /// The total count of raw events read from file.
 
     xia::pixie::data::list_mode::record::time_type firstTime; /// The first recorded event time.
-
-    paass::unpacker::modules_data modulesData;
 
     /** Scan the time sorted event list and package the events into a raw
       * event with a size governed by the event width.

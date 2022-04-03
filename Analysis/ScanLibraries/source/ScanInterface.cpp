@@ -817,7 +817,7 @@ void ScanInterface::CmdControl() {
                 cout << msgHeader << "Toggling debug mode ON\n";
                 debug_mode = true;
             }
-            unpacker_->SetDebugMode(debug_mode);
+            unpacker_->debug_mode = !unpacker_->debug_mode;
         } else if (cmd == "quiet") { // Toggle quiet mode
             if (!is_verbose) {
                 cout << msgHeader << "Toggling quiet mode OFF\n";
@@ -999,8 +999,7 @@ bool ScanInterface::Setup(int argc, char* argv[], Unpacker* unpacker/*=NULL*/) {
         throw invalid_argument("ScanInterface::Setup - Firmware/Frequency Flags or Config file are not set properly. "
                                "Cannot Initialize Data Mask.");
 
-    if (debug_mode)
-        unpacker_->SetDebugMode();
+    unpacker_->debug_mode = debug_mode;
 
     // Parse for any extra arguments that are known to the derived class.
     ExtraArguments();
