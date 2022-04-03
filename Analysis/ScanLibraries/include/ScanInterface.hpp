@@ -167,6 +167,12 @@ public:
     bool Close();
 
 protected:
+    std::string workDir; /// Linux system current working directory.
+    std::string homeDir; /// Linux user home directory.
+    std::string setup_filename; //!< Configuration file to be opened
+    std::string outputFilename_; //!< Name of file to be used for output
+    std::string outputPath_;
+
     std::map<std::string, std::string> knownArgumentMap_; //!< Arguments that are known by the parent class.
     std::map<std::string, std::string> auxillaryKnownArgumentMap_; //!< Arguments that are supplied by the derived classes.
 
@@ -279,11 +285,6 @@ private:
 
     std::string prefix; /// Input filename prefix (without extension).
     std::string extension; /// Input file extension.
-    std::string workDir; /// Linux system current working directory.
-    std::string homeDir; /// Linux user home directory.
-    std::string setup_filename; //!< Configuration file to be opened
-    std::string outputFilename_; //!< Name of file to be used for output
-    std::string outputPath_;
 
     int max_spill_size; /// Maximum size of a spill to read.
     int file_format; /// Input file format to use (0=.ldf, 1=.pld, 2=.root).

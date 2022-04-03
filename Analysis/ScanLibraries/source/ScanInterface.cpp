@@ -640,7 +640,7 @@ void ScanInterface::RunControl() {
                 stringstream status;
                 status << "\033[0;32m" << "[READ] " << "\033[0m" << nBytes / 4 << " words ("
                        << 100 * input_file.tellg() / file_length << "%), ";
-                status << "GOOD = " << databuff.GetNumChunks() << ", LOST = " << databuff.GetNumMissing();
+                status << "CHUNK STATS: GOOD = " << databuff.GetNumChunks() << ", LOST = " << databuff.GetNumMissing();
                 if (!batch_mode) { term->SetStatus(status.str()); }
                 else { cout << "\r" << status.str(); }
 
@@ -1013,7 +1013,6 @@ bool ScanInterface::Setup(int argc, char* argv[], Unpacker* unpacker/*=NULL*/) {
         return false;
     }
 
-#ifndef USE_HRIBF
     if (shm_mode) {
         poll_server = new Server();
         if (!poll_server->Init(5555, 1)) {
@@ -1054,7 +1053,6 @@ bool ScanInterface::Setup(int argc, char* argv[], Unpacker* unpacker/*=NULL*/) {
             start_scan();
         } else { cout << msgHeader << "Failed to load input file!\n"; }
     }
-#endif
 
     // Do any last minute initialization.
     try {
