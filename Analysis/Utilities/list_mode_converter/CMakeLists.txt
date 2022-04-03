@@ -10,5 +10,5 @@ target_include_directories(list_mode_converter PUBLIC include
         ${ROOT_INCLUDE_DIR}
         ${PIXIESDK_INCLUDE_DIR})
 target_link_directories(list_mode_converter PUBLIC ${PIXIESDK_LIBRARY_DIR})
-target_link_libraries(list_mode_converter PaassScan Pugixml-1.11.1 PaassResources PixieData)
+target_link_libraries(list_mode_converter PaassScan Pugixml-1.11.1 PaassResources PixieData ${ROOT_LIBRARIES})
 install(TARGETS list_mode_converter DESTINATION bin)
