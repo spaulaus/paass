@@ -93,7 +93,7 @@ bool PixieInterface::Histogram::Write(ofstream &out) {
     return true;
 }
 
-PixieInterface::PixieInterface(const char *fn) : lock("PixieInterface") {
+PixieInterface::PixieInterface(const char *fn) {
     SetColorTerm();
     // Set-up valid configuration keys if they don't exist yet
     if (validConfigKeys.empty()) {

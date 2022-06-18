@@ -40,8 +40,6 @@
 
 #include <stdint.h>
 
-#include "Lock.h"
-
 #ifdef PIF_CATCHER
 const int CCSRA_PILEUP  = 15;
 const int CCSRA_CATCHER = 16;
@@ -253,7 +251,6 @@ private:
     stats_t statistics;
 
     int retval; // return value from pixie functions
-    Lock lock;  // class to prevent simultaneous access to pixies
 
     std::queue<word_t> extraWords[MAX_MODULES];
 
