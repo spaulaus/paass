@@ -32,13 +32,15 @@
 #endif
 #endif
 
+#include <cstdint>
 #include <fstream>
 #include <map>
 #include <queue>
 #include <string>
 #include <set>
 
-#include <stdint.h>
+#include <nlohmann/json.hpp>
+
 
 #ifdef PIF_CATCHER
 const int CCSRA_PILEUP  = 15;
@@ -98,12 +100,7 @@ public:
     ~PixieInterface();
 
 
-    bool ReadConfigurationFile(const char *fn);
-
-    /// @brief Parses the input from configuration file for the ModuleType tag.
-    std::string ParseModuleTypeTag(std::string value);
-
-    bool GetSlots(const char *slotF = NULL);
+    static bool ReadConfigurationFile(const char *fn);
 
     // wrappers to the pixie-16 app functions
     bool Init(bool offlineMode = false);
@@ -227,7 +224,6 @@ private:
     bool ToggleChannelBit(int mod, int chan, const char *parameter, int bit);
 
     static const size_t MAX_MODULES = 14;
-    static const size_t CONFIG_LINE_LENGTH = 80;
     static const size_t TRACE_LENGTH = MAX_ADC_TRACE_LEN;
 
 #ifdef PIF_CATCHER

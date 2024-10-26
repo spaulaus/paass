@@ -28,7 +28,6 @@ int main(int argc, char *argv[]) {
     }
 
     PixieInterface pif("pixie.cfg");
-    pif.GetSlots();
     pif.Init();
     pif.EndRun();
     pif.Boot(PixieInterface::DownloadParameters | PixieInterface::ProgramFPGA | PixieInterface::SetDAC, true);

@@ -17,29 +17,29 @@ using namespace std;
 using namespace Display;
 
 //A variable defined by the pxi library containing the path to the crate configuration.
-extern const char *PCISysIniFile;
+extern const char* PCISysIniFile;
 
 
-set <string> PixieInterface::validConfigKeys;
+set<string> PixieInterface::validConfigKeys;
 
 // some simple histogram functions
 PixieInterface::Histogram::Histogram() : error(NO_ERROR) {
     bzero(data, sizeof(data));
 }
 
-PixieInterface::Histogram::Histogram(const PixieInterface::Histogram &x) {
+PixieInterface::Histogram::Histogram(const PixieInterface::Histogram& x) {
     memcpy(data, x.data, sizeof(data));
 }
 
-const PixieInterface::Histogram &
-PixieInterface::Histogram::operator=(const PixieInterface::Histogram &right) {
+const PixieInterface::Histogram&
+PixieInterface::Histogram::operator=(const PixieInterface::Histogram& right) {
     memcpy(data, right.data, sizeof(data));
 
     return *this;
 }
 
 PixieInterface::Histogram
-PixieInterface::Histogram::operator+(const PixieInterface::Histogram &right) {
+PixieInterface::Histogram::operator+(const PixieInterface::Histogram& right) {
     Histogram x(*this);
 
     for (size_t i = 0; i < HISTO_SIZE; i++) {
@@ -50,7 +50,7 @@ PixieInterface::Histogram::operator+(const PixieInterface::Histogram &right) {
 }
 
 PixieInterface::Histogram
-PixieInterface::Histogram::operator-(const PixieInterface::Histogram &right) {
+PixieInterface::Histogram::operator-(const PixieInterface::Histogram& right) {
     Histogram x(*this);
 
     for (size_t i = 0; i < HISTO_SIZE; i++) {
@@ -65,17 +65,17 @@ PixieInterface::Histogram::operator-(const PixieInterface::Histogram &right) {
     return x;
 }
 
-const PixieInterface::Histogram &
-PixieInterface::Histogram::operator+=(const PixieInterface::Histogram &right) {
+const PixieInterface::Histogram&
+PixieInterface::Histogram::operator+=(const PixieInterface::Histogram& right) {
     return (*this = *this + right);
 }
 
-const PixieInterface::Histogram &
-PixieInterface::Histogram::operator-=(const PixieInterface::Histogram &right) {
+const PixieInterface::Histogram&
+PixieInterface::Histogram::operator-=(const PixieInterface::Histogram& right) {
     return (*this = *this - right);
 }
 
-bool PixieInterface::Histogram::Read(PixieInterface &pif, unsigned int mod,
+bool PixieInterface::Histogram::Read(PixieInterface& pif, unsigned int mod,
                                      unsigned int ch) {
     if (pif.ReadHistogram(data, PixieInterface::HISTO_SIZE, mod, ch))
         return true;
@@ -83,8 +83,8 @@ bool PixieInterface::Histogram::Read(PixieInterface &pif, unsigned int mod,
     return false;
 }
 
-bool PixieInterface::Histogram::Write(ofstream &out) {
-    out.write((char *) data, sizeof(data));
+bool PixieInterface::Histogram::Write(ofstream& out) {
+    out.write((char*) data, sizeof(data));
 
     if (!out.good()) {
         error = ERROR_WRITE;
@@ -93,38 +93,14 @@ bool PixieInterface::Histogram::Write(ofstream &out) {
     return true;
 }
 
-PixieInterface::PixieInterface(const char *fn) {
+PixieInterface::PixieInterface(const char* fn) {
     SetColorTerm();
-    // Set-up valid configuration keys if they don't exist yet
-    if (validConfigKeys.empty()) {
-        // module files
-        validConfigKeys.insert("ModuleType");
-        validConfigKeys.insert("ModuleBaseDir");
-        validConfigKeys.insert("SpFpgaFile");
-        validConfigKeys.insert("TrigFpgaFile");
-        validConfigKeys.insert("ComFpgaFile");
-        validConfigKeys.insert("DspConfFile");
-        validConfigKeys.insert("DspVarFile");
-        // global files
-        validConfigKeys.insert("PixieBaseDir");
-        validConfigKeys.insert("DspSetFile");
-        validConfigKeys.insert("DspWorkingSetFile");
-        validConfigKeys.insert("ListModeFile");
-        validConfigKeys.insert("SlotFile");
-        validConfigKeys.insert("CrateConfig");
+    try {
+        ReadConfigurationFile(fn);
+    } catch (std::invalid_argument &ia) {
+        std::cout << Display::ErrorStr(ia.what());
+        std::rethrow_exception(reinterpret_cast<const exception_ptr&>(ia));
     }
-    if (!ReadConfigurationFile(fn)) {
-        std::cout << Display::ErrorStr()
-                  << " Unable to read configuration file: '" << fn << "'\n";
-        if (configStrings.find("global") == configStrings.end()) {
-            std::cout << Display::InfoStr()
-                      << " Are the configuration files in the running directory?\n";
-            std::cout << "Autoconfigured files are avaialable in "
-                      << INSTALL_PREFIX << "\n";
-        }
-        exit(EXIT_FAILURE);
-    }
-
     statistics = stats_t(Pixie16GetStatisticsSize(), 0);
 }
 
@@ -141,231 +117,36 @@ PixieInterface::~PixieInterface() {
     CheckError();
 }
 
-std::string PixieInterface::ParseModuleTypeTag(std::string value) {
-    std::string moduleType = "invalid";
-    int adcRes = -1, msps = -1;
-    string revision = "";
 
-    string adcResStr = "";
-    size_t adcResLocEnd = value.find('b');
-    if (adcResLocEnd != string::npos) {
-        size_t adcResLocBegin = value.find_last_not_of("0123456789",
-                                                       adcResLocEnd - 1);
-        if (adcResLocBegin == string::npos) adcResLocBegin = 0;
-        else adcResLocBegin++;
-        adcResStr = value.substr(adcResLocBegin, adcResLocEnd - adcResLocBegin);
-    }
+bool PixieInterface::ReadConfigurationFile(const char* fn) {
+    std::ifstream in(fn, std::ios::in);
+    if (in.fail())
+        throw std::invalid_argument("Could not open configuration file" + std::string(fn));
 
-    if (adcResStr.empty()) {
-        std::cout << ErrorStr()
-                  << " Invalid ModuleType, ADC resolution not specified: '"
-                  << InfoStr(value) << "'.\n";
-    } else {
-        try { adcRes = std::stoi(adcResStr); }
-        catch (const std::invalid_argument &ia) {
-            std::cout << ErrorStr() << " Invalid ADC resolution: '" << value
-                      << "' (" << adcResStr << ")\n";
-        }
-    }
+    std::cout << "Reading Poll2 Configuration\n";
+    nlohmann::json jf = nlohmann::json::parse(in);
+    in.close();
+    std::cout << "Finished reading Poll2 Configuration\n";
 
-    string mspsStr = "";
-    size_t mspsLocEnd = value.find('m');
-    if (mspsLocEnd != string::npos) {
-        size_t mspsLocBegin = value.find_last_not_of("0123456789",
-                                                     mspsLocEnd - 1);
-        if (mspsLocBegin == string::npos) mspsLocBegin = 0;
-        else mspsLocBegin++;
-        mspsStr = value.substr(mspsLocBegin, mspsLocEnd - mspsLocBegin);
-    }
-
-    if (mspsStr.empty()) {
-        std::cout << ErrorStr()
-                  << " Invalid ModuleType, sample rate not specified: '"
-                  << InfoStr(value) << "'.\n";
-    } else {
-        try { msps = std::stoi(mspsStr); }
-        catch (const std::invalid_argument &ia) {
-            std::cout << ErrorStr() << " Invalid sample rate: '" << value
-                      << "' (" << mspsStr << ")\n";
-        }
-    }
-
-    size_t revLoc = value.find("rev");
-    string revStr = "not specified";
-    if (revLoc != string::npos) revStr = value.substr(revLoc + 3, 1);
-    if (revStr.length() == 1) {
-        revision = revStr;
-    } else {
-        std::cout << ErrorStr() << " Invalid Revision: '" << value << "' ("
-                  << revStr << ")\n";
-    }
-
-    if (adcRes > 0 && msps > 0 && revision != "") {
-        stringstream moduleTypeStream;
-        moduleTypeStream << adcRes << "b" << msps << "m-rev" << revision;
-        moduleType = moduleTypeStream.str();
-    }
-
-    return moduleType;
-
-}
-
-bool PixieInterface::ReadConfigurationFile(const char *fn) {
-    ifstream in(fn);
-    if (!in)
-        return false;
-
-    stringbuf tag, value;
-    string line;
-
-    std::cout << "Reading Pixie Configuration\n";
-
-    //Loop over lines in config file
-    bool error = false;
-    bool newModule = false;
-    string moduleType = "";
-    while (std::getline(in, line)) {
-        //Get a string stream of current line
-        std::istringstream lineStream(line);
-        //If the line leads with a '#' we ignore it.
-        if (lineStream.peek() == '#') continue;
-
-        //Extract the tag and value
-        std::string tag, value;
-        if ((lineStream >> tag >> value)) {
-            //Check if tag is recognized
-            if (validConfigKeys.find(tag) == validConfigKeys.end()) {
-                cout << "Unrecognized tag " << WarningStr(tag)
-                     << " in PixieInterface configuration file." << endl;
-            }
-
-            //Parse the ModuleType tag.
-            //Moule type is expected as with the following three items ##b, ###m, rev#
-            if (tag == "ModuleType") {
-
-                moduleType = ParseModuleTypeTag(value);
-
-                std::cout << "Module Type: ";
-
-                //If we have multiple entires for one type we throw and error.
-                if (configStrings.find(moduleType) != configStrings.end()) {
-                    error = true;
-
-                    std::cout << ErrorStr(moduleType) << "\n";
-
-                    std::cout << ErrorStr()
-                              << " Duplicate module type information found for "
-                              << moduleType << "!\n";
-                    std::cout
-                            << "        Remove or comment out tags to be ignored.\n";
-
-                    moduleType = "ignored_" + moduleType;
-                } else { std::cout << InfoStr(moduleType) << "\n"; }
-
-                newModule = true;
-            }
-
-                //Store configuration
-            else if (tag == "SpFpgaFile" || tag == "ComFpgaFile" ||
-                     tag == "DspConfFile" || tag == "DspVarFile" ||
-                     tag == "TrigFpgaFile" || tag == "ModuleBaseDir") {
-                if (moduleType == "") {
-                    moduleType = "default";
-                    std::cout << "Module Type: " << InfoStr(moduleType) << "\n";
-                }
-                if (newModule && tag != "ModuleBaseDir") {
-                    std::cout << " PixieBaseDir\t"
-                              << configStrings["global"]["PixieBaseDir"]
-                              << "\n";
-                }
-                newModule = false;
-                if (configStrings[moduleType][tag] != "") {
-                    error = true;
-
-                    std::cout << " " << ErrorStr(tag) << "\t" << value << endl;
-
-                    std::cout << ErrorStr() << " Duplicate " << tag
-                              << " specified for " << moduleType << "!\n";
-                    std::cout
-                            << "        Remove or comment out tags to be ignored.\n";
-
-                    tag = "ignored_" + tag;
-                } else {
-                    std::cout << " " << tag << "\t" << value << endl;
-                }
-                configStrings[moduleType][tag] = ConfigFileName(moduleType,
-                                                                value);
-            } else {
-                std::cout << " " << tag << "\t" << value << endl;
-                configStrings["global"][tag] = ConfigFileName("global", value);
-            }
-
-            //Check if BaseDir is defined differently then in the environment
-            if (tag == "PixieBaseDir") {
-                // check if this matches the environment PXI_ROOT if it is set
-                if (getenv("PXI_ROOT") != NULL) {
-                    if (value != string(getenv("PXI_ROOT"))) {
-                        cout << WarningStr(
-                                "This does not match the value of PXI_ROOT set in the environment")
-                             << endl;
-                    }
-                }
-            }
-        }
-    }
-
-    if (error) return false;
-
-    return true;
-}
-
-bool PixieInterface::GetSlots(const char *slotF) {
-    char restOfLine[CONFIG_LINE_LENGTH];
-
-    if (slotF == NULL)
-        slotF = configStrings["global"]["SlotFile"].c_str();
-
-    ifstream in(slotF);
-
-    if (!in) {
-        cout << ErrorStr("Error opening slot definition file: ")
-             << ErrorStr(slotF) << endl;
-        exit(EXIT_FAILURE);
-    }
-    stringstream line;
-
-    in >> numberCards;
-    in.getline(restOfLine, CONFIG_LINE_LENGTH, '\n');
-
-    if (numberCards > MAX_MODULES) {
-        cout << ErrorStr("Too many cards") << " : " << numberCards << " > "
+    auto num_modules = jf["slots"].size();
+    if (num_modules > MAX_MODULES) {
+        cout << ErrorStr("Too many cards") << " : " << num_modules << " > "
              << MAX_MODULES << endl;
         exit(EXIT_FAILURE);
     }
 
-    for (int i = 0; i < numberCards; i++) {
-        in >> slotMap[i];
-        in.getline(restOfLine, CONFIG_LINE_LENGTH, '\n');
-        if (!in.good()) {
-            cout << ErrorStr("Error reading slot definition file.") << endl;
-            exit(EXIT_FAILURE);
-        }
-    }
-
-    cout << "Slot definition from " << InfoStr(slotF) << endl;
-    cout << "  System with " << numberCards << " cards" << endl;
+    cout << "  System with " << num_modules << " cards" << endl;
     cout << "  ";
 
-    for (int i = 0; i < numberCards; i++) {
+    for (int i = 0; i < num_modules; i++) {
         cout << "||  M  S ";
     }
     cout << "|" << endl << "  ";
 
-    for (int i = 0; i < numberCards; i++) {
-        cout << "|| " << setw(2) << i << " " << setw(2) << slotMap[i] << " ";
+    for (int i = 0; i < num_modules; i++) {
+        cout << "|| " << setw(2) << i << " " << setw(2) << jf["slots"][i]["slot"] << " ";
     }
     cout << "|" << endl;
-    in.close();
 
     return true;
 }
@@ -380,7 +161,7 @@ bool PixieInterface::Init(bool offlineMode) {
 }
 
 bool PixieInterface::Boot(int mode, bool useWorkingSetFile) {
-    string &setFile = useWorkingSetFile ?
+    string& setFile = useWorkingSetFile ?
                       configStrings["global"]["DspWorkingSetFile"]
                                         : configStrings["global"]["DspSetFile"];
 
@@ -426,13 +207,13 @@ bool PixieInterface::Boot(int mode, bool useWorkingSetFile) {
 
         for (int i = 0; i < numberCards; i++) {
             retval = Pixie16BootModule(
-                    &configStrings[moduleTypes.at(i)]["ComFpgaFile"][0],
-                    &configStrings[moduleTypes.at(i)]["SpFpgaFile"][0],
-                    &configStrings[moduleTypes.at(i)]["TrigFpgaFile"][0],
-                    &configStrings[moduleTypes.at(i)]["DspConfFile"][0],
-                    &setFile[0],
-                    &configStrings[moduleTypes.at(i)]["DspVarFile"][0],
-                    i, mode);
+            &configStrings[moduleTypes.at(i)]["ComFpgaFile"][0],
+            &configStrings[moduleTypes.at(i)]["SpFpgaFile"][0],
+            &configStrings[moduleTypes.at(i)]["TrigFpgaFile"][0],
+            &configStrings[moduleTypes.at(i)]["DspConfFile"][0],
+            &setFile[0],
+            &configStrings[moduleTypes.at(i)]["DspVarFile"][0],
+            i, mode);
 
             stringstream leader;
             leader << "Booting Pixie (" << moduleTypes.at(i) << ") Module "
@@ -500,13 +281,13 @@ bool PixieInterface::Boot(int mode, bool useWorkingSetFile) {
     return goodBoot && !hadError;
 }
 
-bool PixieInterface::WriteSglModPar(const char *name, word_t val, int mod) {
+bool PixieInterface::WriteSglModPar(const char* name, word_t val, int mod) {
     word_t dummy;
     return WriteSglModPar(name, val, mod, dummy);
 }
 
-bool PixieInterface::WriteSglModPar(const char *name, word_t val, int mod,
-                                    word_t &pval) {
+bool PixieInterface::WriteSglModPar(const char* name, word_t val, int mod,
+                                    word_t& pval) {
     strncpy(tmpName, name, nameSize);
 
     Pixie16ReadSglModPar(tmpName, &pval, mod);
@@ -519,7 +300,7 @@ bool PixieInterface::WriteSglModPar(const char *name, word_t val, int mod,
     return true;
 }
 
-bool PixieInterface::ReadSglModPar(const char *name, word_t &val, int mod) {
+bool PixieInterface::ReadSglModPar(const char* name, word_t& val, int mod) {
     strncpy(tmpName, name, nameSize);
 
     retval = Pixie16ReadSglModPar(tmpName, &val, mod);
@@ -531,7 +312,7 @@ bool PixieInterface::ReadSglModPar(const char *name, word_t &val, int mod) {
     return true;
 }
 
-void PixieInterface::PrintSglModPar(const char *name, int mod) {
+void PixieInterface::PrintSglModPar(const char* name, int mod) {
     word_t val;
 
     strncpy(tmpName, name, nameSize);
@@ -543,7 +324,7 @@ void PixieInterface::PrintSglModPar(const char *name, int mod) {
     }
 }
 
-void PixieInterface::PrintSglModPar(const char *name, int mod, word_t prev) {
+void PixieInterface::PrintSglModPar(const char* name, int mod, word_t prev) {
     word_t val;
 
     strncpy(tmpName, name, nameSize);
@@ -555,15 +336,15 @@ void PixieInterface::PrintSglModPar(const char *name, int mod, word_t prev) {
     }
 }
 
-bool PixieInterface::WriteSglChanPar(const char *name, double val, int mod,
+bool PixieInterface::WriteSglChanPar(const char* name, double val, int mod,
                                      int chan) {
     double dummy;
     return WriteSglChanPar(name, val, mod, chan, dummy);
 }
 
 bool
-PixieInterface::WriteSglChanPar(const char *name, double val, int mod, int chan,
-                                double &pval) {
+PixieInterface::WriteSglChanPar(const char* name, double val, int mod, int chan,
+                                double& pval) {
     strncpy(tmpName, name, nameSize);
 
     Pixie16ReadSglChanPar(tmpName, &pval, mod, chan);
@@ -576,7 +357,7 @@ PixieInterface::WriteSglChanPar(const char *name, double val, int mod, int chan,
     return true;
 }
 
-bool PixieInterface::ReadSglChanPar(const char *name, double &pval, int mod,
+bool PixieInterface::ReadSglChanPar(const char* name, double& pval, int mod,
                                     int chan) {
     strncpy(tmpName, name, nameSize);
 
@@ -589,7 +370,7 @@ bool PixieInterface::ReadSglChanPar(const char *name, double &pval, int mod,
     return true;
 }
 
-void PixieInterface::PrintSglChanPar(const char *name, int mod, int chan) {
+void PixieInterface::PrintSglChanPar(const char* name, int mod, int chan) {
     double val;
     strncpy(tmpName, name, nameSize);
 
@@ -601,7 +382,7 @@ void PixieInterface::PrintSglChanPar(const char *name, int mod, int chan) {
     }
 }
 
-void PixieInterface::PrintSglChanPar(const char *name, int mod, int chan,
+void PixieInterface::PrintSglChanPar(const char* name, int mod, int chan,
                                      double prev) {
     double val;
     strncpy(tmpName, name, nameSize);
@@ -614,7 +395,7 @@ void PixieInterface::PrintSglChanPar(const char *name, int mod, int chan,
     }
 }
 
-bool PixieInterface::SaveDSPParameters(const char *fn) {
+bool PixieInterface::SaveDSPParameters(const char* fn) {
     if (fn == NULL)
         fn = &configStrings["global"]["DspWorkingSetFile"][0];
     strncpy(tmpName, fn, nameSize);
@@ -637,7 +418,7 @@ bool PixieInterface::AcquireTraces(int mod) {
     return true;
 }
 
-bool PixieInterface::ReadSglChanTrace(unsigned short *buf, unsigned long sz,
+bool PixieInterface::ReadSglChanTrace(unsigned short* buf, unsigned long sz,
                                       unsigned short mod, unsigned short chan) {
     if (sz > TRACE_LENGTH) {
         cout << ErrorStr("Trace length too large.") << endl;
@@ -750,24 +531,23 @@ bool PixieInterface::CheckRunStatus(int mod) {
 
 // only Rev. D has the external FIFO
 #ifdef PIF_FIFO
-unsigned long PixieInterface::CheckFIFOWords(unsigned short mod)
-{
-  // word_t nWords;
-  unsigned int nWords;
 
-  retval = Pixie16CheckExternalFIFOStatus(&nWords, mod);
+unsigned long PixieInterface::CheckFIFOWords(unsigned short mod) {
+    // word_t nWords;
+    unsigned int nWords;
 
-  if (retval < 0) {
-    cout << WarningStr("Error checking FIFO status in module ") << mod << endl;
-    return 0;
-  }
+    retval = Pixie16CheckExternalFIFOStatus(&nWords, mod);
+
+    if (retval < 0) {
+        cout << WarningStr("Error checking FIFO status in module ") << mod << endl;
+        return 0;
+    }
 
     return nWords + extraWords[mod].size();
 }
 
-bool PixieInterface::ReadFIFOWords(word_t *buf, unsigned long nWords,
-                   unsigned short mod, bool verbose)
-{
+bool PixieInterface::ReadFIFOWords(word_t* buf, unsigned long nWords,
+                                   unsigned short mod, bool verbose) {
     unsigned long availWords = CheckFIFOWords(mod);
 
     if (verbose) {
@@ -779,7 +559,8 @@ bool PixieInterface::ReadFIFOWords(word_t *buf, unsigned long nWords,
             word_t minibuf[MIN_FIFO_READ];
 
             if (availWords < MIN_FIFO_READ) {
-                std::cout << Display::ErrorStr() << " Not enough words available in module " << mod << "'s FIFO for read! (" << availWords << "/" << MIN_FIFO_READ << ")\n";
+                std::cout << Display::ErrorStr() << " Not enough words available in module " << mod
+                          << "'s FIFO for read! (" << availWords << "/" << MIN_FIFO_READ << ")\n";
                 return false;
             }
             retval = Pixie16ReadDataFromExternalFIFO(minibuf, MIN_FIFO_READ, mod);
@@ -788,20 +569,20 @@ bool PixieInterface::ReadFIFOWords(word_t *buf, unsigned long nWords,
                 cout << WarningStr("Error reading words from FIFO in module ") << mod << " retVal " << retval << endl;
                 return false;
             }
-            for (int i=0;i<MIN_FIFO_READ;i++) extraWords[mod].push(minibuf[i]);
+            for (int i = 0; i < MIN_FIFO_READ; i++) extraWords[mod].push(minibuf[i]);
         }
     }
     if (verbose) std::cout << " " << extraWords[mod].size();
 
     size_t wordsAdded;
-    for (wordsAdded = 0;wordsAdded<nWords && !extraWords[mod].empty();++wordsAdded) {
+    for (wordsAdded = 0; wordsAdded < nWords && !extraWords[mod].empty(); ++wordsAdded) {
         *buf++ = extraWords[mod].front();
         extraWords[mod].pop();
     }
     if (verbose) std::cout << " " << extraWords[mod].size();
 
     if (nWords <= wordsAdded) {
-        std::cout <<std::endl;
+        std::cout << std::endl;
         return true;
     }
     nWords -= wordsAdded;
@@ -809,7 +590,8 @@ bool PixieInterface::ReadFIFOWords(word_t *buf, unsigned long nWords,
     if (verbose) std::cout << " nWords " << nWords << std::endl;
 
     if (availWords < nWords) {
-        std::cout << Display::ErrorStr() << " Not enough words available in module " << mod << "'s FIFO for read! (" << availWords << "/" << nWords << ")\n";
+        std::cout << Display::ErrorStr() << " Not enough words available in module " << mod << "'s FIFO for read! ("
+                  << availWords << "/" << nWords << ")\n";
         return false;
     }
     retval = Pixie16ReadDataFromExternalFIFO(buf, nWords, mod);
@@ -868,7 +650,7 @@ bool PixieInterface::RemovePresetRunLength(int mod) {
     return true;
 }
 
-bool PixieInterface::ReadHistogram(word_t *hist, unsigned long sz,
+bool PixieInterface::ReadHistogram(word_t* hist, unsigned long sz,
                                    unsigned short mod, unsigned short ch) {
     if (sz > MAX_HISTOGRAM_LENGTH) {
         cout << ErrorStr("Histogram length is too large.") << endl;
@@ -967,7 +749,7 @@ void PixieInterface::CatcherMessage(void)
 #endif
 
 // ### PRIVATE FUNCTIONS BELOW ### //
-bool PixieInterface::ToggleChannelBit(int mod, int chan, const char *parameter,
+bool PixieInterface::ToggleChannelBit(int mod, int chan, const char* parameter,
                                       int bit) {
     double dval;
 
@@ -979,7 +761,7 @@ bool PixieInterface::ToggleChannelBit(int mod, int chan, const char *parameter,
     return WriteSglChanPar(parameter, dval, mod, chan);
 }
 
-string PixieInterface::ConfigFileName(const string &type, const string &str) {
+string PixieInterface::ConfigFileName(const string& type, const string& str) {
     //If the file name starts with a '.' or a '/' then we assume the BaseDir should be ignored.
     if (str[0] == '.' || str[0] == '/') return str;
 
@@ -1008,9 +790,9 @@ bool PixieInterface::CheckError(bool exitOnError) const {
 }
 
 bool
-PixieInterface::GetModuleInfo(const unsigned short &mod, unsigned short *rev,
-                              unsigned int *serNum, unsigned short *adcBits,
-                              unsigned short *adcMsps) {
+PixieInterface::GetModuleInfo(const unsigned short& mod, unsigned short* rev,
+                              unsigned int* serNum, unsigned short* adcBits,
+                              unsigned short* adcMsps) {
     //Return false if error code provided.
     return (Pixie16ReadModuleInfo(mod, rev, serNum, adcBits, adcMsps) == 0);
 }

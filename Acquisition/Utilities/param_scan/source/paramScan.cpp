@@ -223,7 +223,6 @@ int main(int argc, char *argv[]) {
 
     std::cout << "\n";
     PixieInterface pif("pixie.cfg");
-    pif.GetSlots();
 
     pif.Init();
 

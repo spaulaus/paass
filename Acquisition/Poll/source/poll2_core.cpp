@@ -231,7 +231,6 @@ bool Poll::Initialize(){
     }
 
     // Initialize the pixie interface and boot
-    pif->GetSlots();
     if(!pif->Init()){ return false; }
 
     PrintModuleInfo();
